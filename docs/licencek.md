@@ -275,9 +275,10 @@ kifejezetten „fiktív irat”-ként hivatkozva rájuk.
 Ez a bekezdés egy korábbi hiba javításának a nyoma. A táblázat eredetileg csak
 a két érvénytelen adóazonosítót sorolta fel, a fölötte álló mondat viszont
 ÁLTALÁNOS állítást tett („az azonosítók ellenőrzőszáma nem stimmel”) — a
-II. r. alperes adóazonosítójára (`8517029364`) és a TAJ-számra (`041 273 856`)
-ez nem volt igaz. Egy külső átnézés vette észre, pont abban a dokumentumban,
-aminek a minták közzétételét kellene megindokolnia.
+II. r. alperes adóazonosítójára és a TAJ-számra ez nem volt igaz. Egy külső
+átnézés vette észre, pont abban a dokumentumban, aminek a minták közzétételét
+kellene megindokolnia. (A régi értékeket ez a bekezdés SZÁNDÉKOSAN nem idézi:
+a leírásukhoz nem kell megismételni őket.)
 
 A javítás nem az volt, hogy elrontottuk az ellenőrzőszámukat. Két rossz
 irányba lehetett volna elmenni:

@@ -317,7 +317,7 @@ const VALTOZATOK: { szoveg: string; kind: AzonositoKind; talalat: string }[] = [
   { szoveg: 'tel.: 06/26/312-345', kind: 'telefonszam', talalat: '06/26/312-345' },
   { szoveg: 'mobil: +36301234567', kind: 'telefonszam', talalat: '+36301234567' },
   { szoveg: 'Az ügy száma 5.P.20.123/2025/8. volt.', kind: 'birosagi_ugyszam', talalat: '5.P.20.123/2025/8' },
-  { szoveg: 'TAJ szám: 041-273-856', kind: 'taj', talalat: '041-273-856' },
+  { szoveg: 'TAJ szám: 111-111-110', kind: 'taj', talalat: '111-111-110' },
   { szoveg: 'IBAN: HU42104021424957535456561008', kind: 'iban', talalat: 'HU42104021424957535456561008' },
   {
     szoveg: 'székhely: 1052 Budapest, Városház krt. 12/A. 3. em. 4.',
