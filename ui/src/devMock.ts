@@ -197,6 +197,30 @@ A szerződést Szabó ellenjegyezte, majd átadta a feleknek. A kölcsön össze
 
 dr. Bach Tivadar s. k. bíró`;
 
+/**
+ * A MÁSODIK IRAT — ugyanannak az ügynek egy másik irata.
+ *
+ * Rövid, szöveges, és SZÁNDÉKOSAN ugyanazokat a feleket említi, csak fordított
+ * sorrendben: ez az az eset, amit a valódi motorban a közös megjelenési sorrend
+ * old meg (lásd `test/tobb-irat.ts`). A felületen az a fontos, hogy a két irat
+ * KÜLÖN szöveget és külön találat-tartományt kapjon.
+ */
+const DOC2: DocumentInfo = {
+  path: 'C:\\Iratok\\ellenkerelem.txt',
+  fileName: 'ellenkerelem.txt',
+  format: 'txt',
+  pageCount: 1,
+  charCount: 213,
+  looksScanned: false,
+  pendingRevisions: 0,
+  loadWarnings: [],
+};
+
+const TEXT2 = `Nagy Péter I. rendű alperes ellenkérelme
+
+Nagy Péter vitatja a követelést. Kovács János felperes állítása nem helytálló.
+A tárgyalást a Szentendrei Járásbíróság tűzte ki.`;
+
 /** UGYANEZ ÁLNEVESÍTVE — ezt adja a híd `previewText()` pontja. */
 const ANON_TEXT = `Szentendrei Járásbíróság
 12.P.20.845/2026/8.
@@ -1064,6 +1088,11 @@ export function installDevMock(): void {
     mert minden döntést a felhasználó hozott.
   */
   let kerdezesNelkul = false;
+  /*
+    A BETÖLTÖTT IRATOK az álkimenetben. Az első mindig ott van; a második a
+    „+ Dokumentum" gombra kerül mellé, és a „Kivétel" veszi ki.
+  */
+  const dokumentumok: DocumentInfo[] = [DOC];
   /* Az álkimenet is kövesse az összeg/dátum kapcsolót: az előnézet a valódi
      motornál a friss beállításokkal készül, a mocknak sem szabad a kapcsoló
      ellenére az eredeti értékeket mutatnia. */
@@ -1117,7 +1146,29 @@ export function installDevMock(): void {
   w.szivecske = {
     listThemes: () => wait(THEMES, 0),
     chooseDocument: () => wait(DOC.path),
-    openDocument: () => wait(DOC),
+    /*
+      A HÍD LISTÁT AD VISSZA — egy ügy több irata.
+
+      Az álkimenet is így viselkedik, mert különben a többiratos felület
+      (iratsáv, iratváltás, a találatok szűrése a szakasz azonosító-
+      tartományára) fejlesztés közben ki sem próbálható volna: minden
+      egyiratosnak látszana, és a hiba csak éles motorral jönne elő.
+
+      A MÁSODIK IRAT SZÁNDÉKOSAN TXT: így a szöveges nézet ága fut rá, ahol a
+      találatok pozíció szerint kerülnek a szövegre — pont az az út, ami rossz
+      szűrés esetén a MÁSIK irat szavaira rajzolna.
+    */
+    openDocument: (_path: unknown, hozzaad?: boolean) => {
+      if (hozzaad === true && dokumentumok.length === 1) dokumentumok.push(DOC2);
+      else dokumentumok.splice(0, dokumentumok.length, DOC);
+      return wait([...dokumentumok]);
+    },
+    closeDocument: (path: string) => {
+      const i = dokumentumok.findIndex((d) => d.path === path);
+      if (i >= 0 && dokumentumok.length > 1) dokumentumok.splice(i, 1);
+      return wait([...dokumentumok]);
+    },
+    listDocuments: () => wait([...dokumentumok]),
     resolveRevisions: () => wait(DOC),
     /*
       A VIZSGÁLAT LASSÍTVA ÉS MEGSZAKÍTHATÓAN.
@@ -1426,24 +1477,87 @@ export function installDevMock(): void {
         return 'nincs';
       };
       const alap = kerdezesNelkul ? ANALYSIS_AUTO : ANALYSIS;
+
+      /*
+        A MÁSODIK IRAT TALÁLATAI — eltolt azonosítóval, saját pozíciókkal.
+
+        A főfolyamat pontosan ezt teszi (`ID_LEPES`, electron/main.ts): minden
+        irat találatai a saját, nulláról induló számozásukat kapják, aztán az
+        irat sorszámával eltolva kerülnek a közös listába. A felület ebből a
+        tartományból tudja, melyik találat melyik irathoz tartozik.
+      */
+      const kettoIrat = dokumentumok.length > 1;
+      const MASODIK_ELTOLAS = 1_000_000;
+      const masodikMatches = kettoIrat
+        ? [
+            { nev: 'Nagy Péter', eid: 'p2' },
+            { nev: 'Kovács János', eid: 'p1' },
+          ].flatMap(({ nev, eid }, k) => {
+            const start = TEXT2.indexOf(nev);
+            if (start < 0) return [];
+            const forras = matches.find((m) => m.entityId === eid);
+            return [
+              {
+                ...(forras ?? matches[0]!),
+                id: MASODIK_ELTOLAS + k,
+                entityId: eid,
+                surface: nev,
+                page: 0,
+                previewStart: start,
+                previewEnd: start + nev.length,
+                context: `…⟦${nev}⟧…`,
+              },
+            ];
+          })
+        : [];
+
+      const osszesMatch = [...matches, ...masodikMatches];
+
       return wait({
         ...alap,
-        matches,
+        docs: [
+          {
+            doc: DOC,
+            pages: alap.pages,
+            highlights: alap.highlights,
+            previewText: TEXT,
+            matchIdTol: 0,
+            matchIdIg: MASODIK_ELTOLAS - 1,
+          },
+          ...(kettoIrat
+            ? [
+                {
+                  doc: DOC2,
+                  pages: [],
+                  highlights: [],
+                  previewText: TEXT2,
+                  matchIdTol: MASODIK_ELTOLAS,
+                  matchIdIg: 2 * MASODIK_ELTOLAS - 1,
+                },
+              ]
+            : []),
+        ],
+        matches: osszesMatch,
         outcomes: {
-          csere: matches.filter((m) => kimenet(m) === 'csere').length,
-          bizonytalan: matches.filter((m) => kimenet(m) === 'bizonytalan').length,
-          nincs: matches.filter((m) => kimenet(m) === 'nincs').length,
+          csere: osszesMatch.filter((m) => kimenet(m) === 'csere').length,
+          bizonytalan: osszesMatch.filter((m) => kimenet(m) === 'bizonytalan').length,
+          nincs: osszesMatch.filter((m) => kimenet(m) === 'nincs').length,
         },
         // A szereplap „még döntésre vár" száma is a friss listából jön: enélkül
         // a sorok jelvénye és a lista állapota szétcsúszna.
         cast: [...alap.cast, ...(hivatalosBe ? HIVATALOS_CAST : [])].map((c) => ({
           ...c,
-          pendingCount: matches.filter((m) => m.entityId === c.entityId && kimenet(m) === 'bizonytalan')
-            .length,
+          pendingCount: osszesMatch.filter(
+            (m) => m.entityId === c.entityId && kimenet(m) === 'bizonytalan',
+          ).length,
         })),
       });
     },
-    previewText: () => {
+    previewText: (path?: string) => {
+      // A MÁSODIK irat álnevesített szövegét nem gyártjuk le: az álkimenetnek
+      // annyi a dolga, hogy MÁS szöveget adjon vissza — ha ugyanazt adná, egy
+      // rossz útvonal-átadás észrevétlen maradna.
+      if (path === DOC2.path) return wait(TEXT2.replace('Nagy Péter', 'Kavicsi Béni'), 0);
       let t = ANON_TEXT;
       if (osszegCsere) t = t.replace('3 550 000 Ft', '4 118 000 Ft');
       if (datumTolas) t = t.replace('2025. március 14.', '2025. június 2.');

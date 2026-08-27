@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { matchKind, matchOutcome } from './api';
-import type { AnalysisResult, MatchKind, MatchRow } from './api';
+import type { AnalysisResult, DocSection, MatchKind, MatchRow } from './api';
 
 /* ─────────────────────────── dokumentum-nézet ─────────────────────────── */
 
@@ -37,6 +37,7 @@ export const FAJTA_CIMKE: Record<MatchKind, string> = {
 
 export function DocumentView({
   analysis,
+  szakasz,
   selected,
   onSelect,
   hivatalosIdk = new Set<string>(),
@@ -44,6 +45,16 @@ export function DocumentView({
   onToggle,
 }: {
   analysis: AnalysisResult;
+  /**
+   * A MEGJELENÍTETT IRAT saját része: lapképek, kiemelés-koordináták, szöveg.
+   *
+   * Egy ügyben több irat is nyitva lehet, és a bal panel egyszerre egyet mutat
+   * — a találatok listája (`analysis.matches`) viszont MINDEGYIKÉ, mert a
+   * döntések az egész ügyre szólnak. Hiányában az elemzés gyökere áll be, ami
+   * az első irat szakasza: így a fejlesztői álkimenet és az egy iratra írt
+   * hívások változatlanul működnek.
+   */
+  szakasz?: DocSection;
   selected: number | null;
   onSelect: (id: number | null) => void;
   /**
@@ -81,15 +92,19 @@ export function DocumentView({
    */
   onToggle?: (id: number) => void;
 }) {
+  const pages = szakasz?.pages ?? analysis.pages;
+  const highlights = szakasz?.highlights ?? analysis.highlights;
+  const previewText = szakasz?.previewText ?? analysis.previewText;
+
   const byPage = useMemo(() => {
-    const m = new Map<number, typeof analysis.highlights>();
-    for (const h of analysis.highlights) {
+    const m = new Map<number, typeof highlights>();
+    for (const h of highlights) {
       const list = m.get(h.page) ?? [];
       list.push(h);
       m.set(h.page, list);
     }
     return m;
-  }, [analysis.highlights]);
+  }, [highlights]);
 
   const matchById = useMemo(
     () => new Map(analysis.matches.map((m) => [m.id, m])),
@@ -99,10 +114,12 @@ export function DocumentView({
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => gorgessOda(ref.current, selected), [selected]);
 
-  if (analysis.pages.length === 0) {
+  if (pages.length === 0) {
     return (
       <TextView
         analysis={analysis}
+        previewText={previewText}
+        tolIg={szakasz ? [szakasz.matchIdTol, szakasz.matchIdIg] : null}
         selected={selected}
         hivatalosIdk={hivatalosIdk}
         onSelect={onSelect}
@@ -117,7 +134,7 @@ export function DocumentView({
     // hogy ezen a nézeten a VALÓDI nevek állnak, és papírra sosem kerülhet.
     <div className={`viewport source${onToggle ? ' kapcsolhato' : ''}`} ref={ref}>
       <div className="pagewrap">
-        {analysis.pages.map((p) => (
+        {pages.map((p) => (
           <div className="page" key={p.index}>
             <img src={p.dataUrl} alt={`${p.index + 1}. oldal`} draggable={false} />
             {(byPage.get(p.index) ?? []).map((h) => {
@@ -238,6 +255,8 @@ function kiemelesSugo(m: MatchRow, kapcsolhato: boolean): string {
  */
 function TextView({
   analysis,
+  previewText,
+  tolIg,
   selected,
   hivatalosIdk,
   dontesek,
@@ -245,6 +264,10 @@ function TextView({
   onToggle,
 }: {
   analysis: AnalysisResult;
+  /** A MEGJELENÍTETT irat szövege — több irat esetén nem az elemzés gyökeréé. */
+  previewText: string;
+  /** A megjelenített irat találat-azonosító tartománya; `null`: mind. */
+  tolIg: [number, number] | null;
   selected: number | null;
   hivatalosIdk: ReadonlySet<string>;
   dontesek?: Record<number, 'accept' | 'skip'>;
@@ -262,8 +285,15 @@ function TextView({
     ilyet. Átfedő tartományokból a szöveg megkettőződne a képernyőn.
   */
   const darabok = useMemo(() => {
-    const text = analysis.previewText;
+    const text = previewText;
+    /*
+      CSAK EBBEN AZ IRATBAN álló találatok. Több irat mellett a `matches` az
+      egész ügyé, a pozíciók (`previewStart`) viszont IRATONKÉNT nullától
+      indulnak — a másik irat találatait ideszámolva a jelölés véletlenszerű
+      szavakra kerülne. A szakasz azonosító-tartománya választja szét őket.
+    */
     const jelolt = analysis.matches
+      .filter((m) => tolIg === null || (m.id >= tolIg[0] && m.id <= tolIg[1]))
       .filter(
         (m): m is MatchRow & { previewStart: number; previewEnd: number } =>
           typeof m.previewStart === 'number' &&
@@ -285,7 +315,7 @@ function TextView({
     }
     if (poz < text.length) out.push({ kulcs: `t${poz}`, szoveg: text.slice(poz) });
     return out;
-  }, [analysis.previewText, analysis.matches]);
+  }, [previewText, analysis.matches, tolIg]);
 
   return (
     <div className={`viewport source${onToggle ? ' kapcsolhato' : ''}`} ref={ref}>

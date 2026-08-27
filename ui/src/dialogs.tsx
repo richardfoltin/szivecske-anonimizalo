@@ -2299,11 +2299,42 @@ export function ExportDialog({
               szivárgásnál a motor szándékosan semmit nem ír ki, és egy létező
               fájlra mutató sor pontosan azt hazudná, hogy megvan az irat.
             */}
-            {r.ok && (
+            {/*
+              TÖBB IRAT: TÉTELESEN, MELYIK KÉSZÜLT EL ÉS MELYIK NEM.
+
+              A szivárgási kapu IRATONKÉNT zár: ha az egyik iratban bent maradt
+              egy eredeti név, abból nem keletkezik fájl — a többiből igen. A
+              köteget egyetlen „kész" vagy „nem kész" üzenettel elintézni
+              mindkét irányban hazugság volna: vagy elhallgatná a bukott
+              iratot, vagy eltüntetné a kilenc elkészültet. Ezért lista.
+            */}
+            {(result.files?.length ?? 0) > 1 ? (
               <div className="note" style={{ marginTop: 14 }}>
-                Az álnevesített irat:
-                <div className="pathline mono">{result.outputPath}</div>
+                <b>{result.files!.filter((f) => f.report.ok).length}</b> irat készült el a(z){' '}
+                <b>{result.files!.length}</b> betöltöttből.
+                {result.files!.map((f) => (
+                  <div key={f.outputPath} className={`fajlsor${f.report.ok ? '' : ' bukott'}`}>
+                    <span className="jel" aria-hidden="true">
+                      {f.report.ok ? '✓' : '✗'}
+                    </span>
+                    <span className="nev">{f.fileName}</span>
+                    {f.report.ok ? (
+                      <span className="ut mono">{f.outputPath}</span>
+                    ) : (
+                      <span className="ut warntext">
+                        nem készült el — bent maradt név, lásd a jegyzéket
+                      </span>
+                    )}
+                  </div>
+                ))}
               </div>
+            ) : (
+              r.ok && (
+                <div className="note" style={{ marginTop: 14 }}>
+                  Az álnevesített irat:
+                  <div className="pathline mono">{result.outputPath}</div>
+                </div>
+              )
             )}
 
             {/*
@@ -2753,15 +2784,15 @@ export function NewCaseDialog({ onConfirm, onClose }: { onConfirm: () => void; o
 export function OpenOtherDialog({
   fileName,
   onConfirm,
-  onUjUgy,
+  onHozzaad,
   onClose,
 }: {
-  /** A most nyitva lévő irat neve — ez az, ami elveszik. */
+  /** A most nyitva lévő irat neve. */
   fileName: string;
-  /** Megnyitás UGYANEHHEZ az ügyhöz: az álnév-kiosztás megmarad. */
+  /** A mostaniak HELYETT: új ügy, minden eddigi eldobva. */
   onConfirm: () => void;
-  /** Megnyitás ÚJ ügyként: friss álnév-kiosztással. */
-  onUjUgy: () => void;
+  /** A mostaniak MELLÉ: ugyanaz az ügy, semmi nem vész el. */
+  onHozzaad: () => void;
   onClose: () => void;
 }) {
   return (
@@ -2770,29 +2801,30 @@ export function OpenOtherDialog({
         <div className="dialog-head">
           <h2>Másik irat megnyitása</h2>
           <p>
-            A(z) <b>{fileName}</b> felei és a rajta meghozott döntések elvesznek. A mentett fájlok
-            megmaradnak, a képernyőn lévő munka nem.
+            Most a(z) <b>{fileName}</b> van nyitva, felvitt felekkel és döntésekkel. Az új irat
+            melléje kerülhet, vagy a helyére.
           </p>
         </div>
         <div className="dialog-body">
           {/*
-            AZ ÜGY KÉRDÉSE ITT DŐL EL, NEM EGY FEJLÉC-IKONON.
+            NEM AZ ÜGY-TITOKRÓL KÉRDEZÜNK, HANEM ARRÓL, MI TÖRTÉNJEN A MUNKÁVAL.
 
-            Az „Új ügy" korábban külön gomb volt a fejlécben, és a felhasználó
-            joggal kérdezte meg, mire való — hiszen ugyanúgy iratot nyit, mint
-            a megnyitás. A KÜLÖNBSÉG egyetlen dolog: mi lesz az álnév-
-            kiosztással. Ez pedig pontosan itt merül fel: a KÖVETKEZŐ irat
-            megnyitásakor. Ezért két gomb, egymás mellett, kimondva, mit
-            jelentenek — nem egy ikon, aminek a jelentését ki kell találni.
+            Amíg egyszerre csak egy irat lehetett nyitva, itt egy „ugyanaz az
+            ügy / új ügy" választás állt — az álnév-kiosztás sorsáról. Az a
+            kérdés ma nem létezik: ami egyszerre van betöltve, az egy ügy, és
+            egyetlen elemzés fut rájuk. Marad a valódi kérdés: a mostani
+            munkát eldobjuk, vagy az új irat MELLÉ kerül?
           */}
           <div className="note">
-            <b>Ugyanaz az ügy:</b> az álnév-kiosztás megmarad, tehát a következő iratban ugyanaz a
-            valódi név ugyanazt a fedőnevet kapja. Egy per több iratánál ez a helyes: a kimenetek
-            együtt olvashatók maradnak.
+            <b>Hozzáadás:</b> a mostani iratok és a felvitt felek megmaradnak, az új irat
+            melléjük kerül. Egy per több iratánál ez a helyes — a felek végig ugyanazt a fedőnevet
+            kapják, és egyszerre menthető mind. A <b>soronkénti döntések újraszámolódnak</b>, mert
+            az új irat nevei a többi irat találatait is eltolják.
           </div>
           <div className="note" style={{ marginTop: 12 }}>
-            <b>Új ügy:</b> friss álnév-kiosztás. Ugyanaz a valódi név más fedőnevet kap, tehát a
-            két ügy kimenete nem köthető össze. Egy másik ügyfél iratához ez a helyes.
+            <b>Új ügy:</b> a mostani iratok bezárulnak, és minden döntés elvész. Egy másik ügyfél
+            iratához ez a helyes: a fedőnevek újra sorsolódnak, tehát a két ügy kimenete nem
+            köthető össze.
           </div>
           <div className="note" style={{ marginTop: 12 }}>
             Ha a jelenlegi iratot még nem mentetted el, előbb zárd be ezt az ablakot, és futtasd le
@@ -2803,11 +2835,11 @@ export function OpenOtherDialog({
           <button className="btn ghost" onClick={onClose}>
             Mégse
           </button>
-          <button className="btn" onClick={onUjUgy}>
-            Új ügyként nyitom
+          <button className="btn" onClick={onConfirm}>
+            Új ügyet kezdek
           </button>
-          <button className="btn primary" onClick={onConfirm}>
-            Ugyanehhez az ügyhöz
+          <button className="btn primary" onClick={onHozzaad}>
+            Hozzáadom az ügyhöz
           </button>
         </div>
       </div>

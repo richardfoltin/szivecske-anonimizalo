@@ -74,6 +74,21 @@ export interface AnalyzeInput {
    */
   autoThreshold?: number;
   /**
+   * A FELEK MEGJELENÉSI SORRENDJE — kívülről megadva, ha a hívó ismeri.
+   *
+   * Az álnév-kiosztás ebből dönti el, ki kapja a névsor élén álló, legjellemzőbb
+   * fedőnevet (`AssignOptions.appearanceOrder`). Egy irat esetén a munkamenet
+   * maga számolja ki a saját szövegéből — ez a mező üresen marad.
+   *
+   * TÖBB IRAT ESETÉN VISZONT KÖTELEZŐ EGYBŐL DOLGOZNI. Minden irat más
+   * sorrendben említi a feleket: a keresetlevélben a felperes áll elöl, az
+   * ítéletben a bíróság. Iratonként külön számolva ugyanaz a valódi név
+   * IRATONKÉNT MÁS fedőnevet kapna — vagyis pont az veszne el, amiért egy ügy
+   * iratai egyszerre vannak betöltve. Ezért a főfolyamat egyetlen sorrendet
+   * állapít meg az ügyre, és azt adja át mindegyik iratnak.
+   */
+  appearanceOrder?: readonly string[];
+  /**
    * A CÍMKÉK NYELVE a szerep-, adatfajta- és számozott módban. Alapból magyar.
    *
    * A fedőnév-módra nincs hatása: ott a NÉVKÉSZLET dönti el a nyelvet, és a
@@ -373,9 +388,47 @@ export interface DocumentInfo {
   loadWarnings: string[];
 }
 
-export interface AnalysisResult {
+/**
+ * EGY BETÖLTÖTT IRAT SAJÁT RÉSZE az elemzésben.
+ *
+ * A program EGYSZERRE TÖBB IRATOT tart nyitva: egy ügy több irata egy
+ * munkamenetben megy át, hogy ugyanaz a valódi név mindegyikben ugyanazt a
+ * fedőnevet kapja. Ami közös (a felek, a találatok listája, a döntések),
+ * az az `AnalysisResult` gyökerén áll; ami IRATONKÉNT más — a lapképek, a
+ * kiemelések koordinátái, a szöveg —, az ide kerül.
+ *
+ * A `matchIdTol`/`matchIdIg` az irat találatainak azonosító-tartománya. A
+ * találatok azonosítója az egész munkamenetben egyedi (a főfolyamat iratonként
+ * eltolja), így a `decisions` tároló egyetlen kulcstérben marad — a felület
+ * nem tudja véletlenül a MÁSIK irat egy találatára írni a döntést.
+ */
+export interface DocSection {
   doc: DocumentInfo;
   pages: PageImage[];
+  highlights: Highlight[];
+  /** A dokumentum szövege — a szöveges előnézethez (DOCX, TXT). */
+  previewText: string;
+  matchIdTol: number;
+  matchIdIg: number;
+}
+
+export interface AnalysisResult {
+  /**
+   * AZ ELSŐ betöltött irat — a `docs` első eleme, kibontva.
+   *
+   * Nem az „aktív" iraté: melyik látszik éppen, azt a FELÜLET tudja, és neki
+   * ott a `docs` tömb. Ezek a mezők azért maradtak meg, mert a motor és a
+   * tesztek egy iratra írt útjai változatlanul működnek tőlük.
+   */
+  doc: DocumentInfo;
+  pages: PageImage[];
+  /**
+   * MINDEN betöltött irat, betöltési sorrendben. Egy iratnál egyelemű.
+   *
+   * Opcionális, mert a felületi fejlesztői álkimenet (`ui/src/devMock.ts`) is
+   * `AnalysisResult`-ot állít elő; a MOTOR mindig kitölti.
+   */
+  docs?: DocSection[];
   cast: CastRow[];
   matches: MatchRow[];
   highlights: Highlight[];
@@ -439,10 +492,30 @@ export interface VerifyReportUi {
   checkedChars: number;
 }
 
+/** Egy irat mentésének eredménye a kötegben. */
+export interface ExportFileResult {
+  fileName: string;
+  outputPath: string;
+  report: VerifyReportUi;
+  certificatePath?: string | null;
+  warnings?: string[];
+}
+
 export interface ExportResult {
   outputPath: string;
   keyPath: string | null;
   report: VerifyReportUi;
+  /**
+   * MINDEN mentett irat külön-külön. Egy iratnál egyelemű, és a gyökérmezők
+   * (`outputPath`, `report`) ugyanannak az egynek az adatai.
+   *
+   * A SZIVÁRGÁSI KAPU IRATONKÉNT ZÁR. Ha egy irat ellenőrzése bukik, abból
+   * nem keletkezik fájl — a többi viszont igen. A köteg egészét eldobni azt
+   * jelentené, hogy kilenc rendben lévő irat munkája vész el a tizedik miatt;
+   * a bukott iratról viszont a lista tételesen megmondja, hogy nem készült el,
+   * és miért.
+   */
+  files?: ExportFileResult[];
   /** Az anonimizálási jegyzőkönyv szövege. */
   certificate: string;
   /**

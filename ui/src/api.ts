@@ -36,6 +36,7 @@ export type {
   ExportResult,
   Highlight,
   MatchKind,
+  DocSection,
   MatchOutcome,
   MatchRow,
   PartyInput,
@@ -635,8 +636,20 @@ interface SzivecskeApi {
   installUpdate(): Promise<void>;
   onUpdateProgress(cb: (p: UpdateProgress) => void): () => void;
   chooseDocument(): Promise<string | null>;
-  openDocument(path: string): Promise<DocumentInfo>;
-  resolveRevisions(mode: 'accept' | 'reject'): Promise<DocumentInfo>;
+  /**
+   * IRAT MEGNYITÁSA — a meglévők mellé vagy helyettük.
+   *
+   * @param hozzaad igaz: ugyanahhoz az ügyhöz adja hozzá. Egy ügy iratai
+   *   EGYÜTT mennek át az elemzésen, közös álnév-kiosztással — ugyanaz a
+   *   valódi név mindegyik iratban ugyanazt a fedőnevet kapja.
+   * @returns MINDEN betöltött irat leírója, betöltési sorrendben.
+   */
+  openDocument(path: string, hozzaad?: boolean): Promise<DocumentInfo[]>;
+  /** Egy irat kivétele a listából; a visszatérés a maradék. */
+  closeDocument?(path: string): Promise<DocumentInfo[]>;
+  /** A betöltött iratok leírói — induláskor és a lista helyreállításához. */
+  listDocuments?(): Promise<DocumentInfo[]>;
+  resolveRevisions(mode: 'accept' | 'reject'): Promise<DocumentInfo[]>;
   analyze(input: AnalyzeInput): Promise<AnalysisResult>;
   /**
    * A BEZÁRÁS MEGERŐSÍTÉSE — a főfolyamat kérdez, a felület válaszol.
@@ -663,7 +676,8 @@ interface SzivecskeApi {
    */
   closeAsked?(): Promise<void>;
   closeDecision?(valasz: 'save' | 'discard' | 'cancel'): Promise<void>;
-  previewText(): Promise<string>;
+  /** Az álnevesített szöveg; útvonal nélkül az első betöltött iraté. */
+  previewText(path?: string): Promise<string>;
   suggestOutputPath(mode: string): Promise<string>;
   chooseSaveTarget(suggested: string): Promise<string | null>;
   exportDocument(opts: ExportOptions): Promise<ExportResult>;

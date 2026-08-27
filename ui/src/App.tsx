@@ -390,7 +390,27 @@ function stripDetection(p: DetectionResult["parties"][number]) {
 
 export default function App() {
   const [themes, setThemes] = useState<ThemeSummaryUi[]>([]);
-  const [doc, setDoc] = useState<DocumentInfo | null>(null);
+  /**
+   * A BETÖLTÖTT IRATOK — egy ügy, több irat.
+   *
+   * Egy per iratai (keresetlevél, ellenkérelem, ítélet) egyszerre vannak
+   * nyitva, és EGYETLEN elemzés fut rájuk: ugyanaz a valódi név mindegyikben
+   * ugyanazt a fedőnevet kapja. Ez váltotta ki az „Új ügy" gombot, amiről a
+   * felhasználó joggal mondta, hogy nem érti: ami egyszerre van betöltve, az
+   * egy ügy — nincs mit kitalálni hozzá.
+   */
+  const [docs, setDocs] = useState<DocumentInfo[]>([]);
+  /** Melyik irat látszik a bal panelen. A jobb oldali panel MINDEGYIKRE szól. */
+  const [aktivDoc, setAktivDoc] = useState(0);
+  /*
+    A `doc` LEVEZETETT ÉRTÉK MARADT, nem külön állapot.
+
+    Az egy iratra írt utak (a fájlnév kiírása, a szkennelt irat kérdése, a
+    vizsgálat képernyője) így változatlanul működnek, és nincs két igazság
+    arról, melyik irat van nyitva. Ami az EGÉSZ ügyre szól — a változáskövetés
+    blokkolása, a mentés —, az a `docs` listából dolgozik.
+  */
+  const doc: DocumentInfo | null = docs[aktivDoc] ?? docs[0] ?? null;
   const [parties, setParties] = useState<PartyInput[]>([]);
   const [themeId, setThemeId] = useState(DEFAULT_THEME);
   const [mode, setMode] = useState<ReplacementMode>('theme');
@@ -959,7 +979,7 @@ export default function App() {
    * amit a felhasználó az imént megmutatott.
    */
   const openPath = useCallback(
-    async (path: string) => {
+    async (path: string, hozzaad = false) => {
       /*
         EGY BETÖLTÉS, NEM KETTŐ.
 
@@ -986,35 +1006,72 @@ export default function App() {
       */
       const elozoFazis = fazis;
       const elozoKep = vizsgalatKep;
-      const voltIrat = doc !== null;
+      const voltIrat = docs.length > 0;
       setVizsgalat('kihagyva');
       setVizsgalatKep('nyit');
       setHaladas(null);
       setFazis('vizsgalat');
       try {
-        const info = await api.openDocument(path);
-        setDoc(info);
-        // Az előző irat felei nem jöhetnek át: a beállító lap különben a MÁSIK
-        // ügy valódi neveivel nyílna meg, és a felhasználó azokat mentené el ide.
-        setParties([]);
-        setDetected(null);
-        setIdentifiers([]);
-        setDetectError(null);
-        setAnalysis(null);
+        const lista = await api.openDocument(path, hozzaad);
+        setDocs(lista);
+        // Az ÚJONNAN betöltött iratra állunk: azt akarta megnézni, aki
+        // megnyitotta. Hozzáadásnál ez a lista vége, cserénél az egyetlen.
+        setAktivDoc(Math.max(0, lista.length - 1));
+        const info = lista[lista.length - 1];
+        if (!info) throw new Error('Az irat megnyitása nem adott vissza semmit.');
+        /*
+          HOZZÁADÁSKOR A MUNKA MEGMARAD — CSAK A SORONKÉNTI DÖNTÉSEK NEM.
+
+          A hozzáadás ugyanahhoz az ÜGYHÖZ tesz még egy iratot: a felek, az
+          azonosítók és a felismerés eredménye ugyanazokra a személyekre
+          vonatkozik, tehát eldobni őket értelmetlen veszteség volna. (Az első
+          próbán pontosan ez történt: a „+ Dokumentum" végigment a teljes
+          megnyitási úton, és letörölte a felvitt feleket — vagyis az
+          ellenkezőjét annak, amit a gomb ígér.)
+
+          A DÖNTÉSEKET VISZONT NEM LEHET MEGTARTANI, és ez nem óvatoskodás. Az
+          új irat neveit meg kell keresni, tehát a felismerés újra lefut; az
+          új felek pedig új találatokat szúrnak be a MEGLÉVŐ iratokba is,
+          amitől a találatok azonosítója elcsúszik. A megőrzött döntések ezután
+          MÁS SZAVAKRA vonatkoznának — épp arra a kimondott „ne cseréld"-re,
+          amivel a felhasználó egy nevet bent akart hagyni. Ugyanaz a
+          megfontolás, mint a hivatalos szereplők kapcsolójánál.
+        */
         setDecisions({});
         setSelected(null);
         setExportResult(null);
-        // A hivatalos szereplők cseréje MINDEN iratnál kikapcsolva indul: egy
-        // jogszabályi következménnyel járó kapcsolót nem szabad csendben
-        // átvinni a következő iratra (lásd `replaceOfficials`).
-        setReplaceOfficials(false);
-        keziekRef.current = [];
+        if (!hozzaad) {
+          // Az előző ÜGY felei nem jöhetnek át: a beállító lap különben a MÁSIK
+          // ügy valódi neveivel nyílna meg, és a felhasználó azokat mentené el ide.
+          setParties([]);
+          setDetected(null);
+          setIdentifiers([]);
+          setDetectError(null);
+          setAnalysis(null);
+          // A hivatalos szereplők cseréje MINDEN új ügynél kikapcsolva indul: egy
+          // jogszabályi következménnyel járó kapcsolót nem szabad csendben
+          // átvinni a következő ügyre (lásd `replaceOfficials`).
+          setReplaceOfficials(false);
+          keziekRef.current = [];
+        } else {
+          /*
+            A KÉZZEL FELVITT NEVEK ÁTMENTÉSE az újrafutó felismerésen.
+
+            A `startScan` a friss felismerés listájával írja felül a feleket, és
+            csak azt fésüli vissza, ami a `keziekRef`-ben van. Enélkül a
+            hozzáadás elnyelné mindazt, amit a felhasználó kézzel vitt fel — a
+            felismerés ugyanis azokat nem találja meg (épp ezért vitte fel).
+          */
+          const felismertek = new Set((detected?.parties ?? []).map((d) => d.id));
+          keziekRef.current = parties.filter((p) => !felismertek.has(p.id));
+        }
         // Ha egy korábbi irat vizsgálata még fut, az eredménye már nem ide
         // tartozik: a sorszám léptetésével eldobjuk.
         vizsgalatSzamRef.current += 1;
-        // Új irat: a felhasználó még semmihez nem nyúlt, tehát nincs mit
+        // Új ÜGY: a felhasználó még semmihez nem nyúlt, tehát nincs mit
         // elveszíteni — a következő megnyitásnál ne kérdezzünk fölöslegesen.
-        setSajatDontes(false);
+        // Hozzáadásnál viszont a korábbi munka megmaradt, tehát a jelzés is.
+        if (!hozzaad) setSajatDontes(false);
         // Az előnézet az ELŐZŐ iratról szólt: eldobjuk, és az eredetivel
         // indulunk, hogy a felhasználó ne a régi kimenetet lássa új irat alatt.
         setPreview(null);
@@ -1025,8 +1082,9 @@ export default function App() {
         // az egy iratra kapcsol vissza átnézősre — azt a következő megnyitás
         // nem örökölheti, különben a felhasználó beállítása csendben elveszne.
         setAutoModeForDoc(autoMode);
-        // Új irat: a folyamat elejéről indul, nem ott, ahol az előzőt hagytuk.
-        setSetupFul('mire');
+        // Új ÜGY: a folyamat elejéről indul. Hozzáadásnál a felhasználó ott
+        // folytatja, ahol tartott — a fület nem rántjuk vissza alóla.
+        if (!hozzaad) setSetupFul('mire');
         /*
           A BETÖLTŐKÉPERNYŐ NEM SZAKAD MEG A MEGNYITÁS UTÁN.
 
@@ -1065,7 +1123,7 @@ export default function App() {
         }
       }
     },
-    [autoMode, continueAfterOpen, fazis, vizsgalatKep, doc],
+    [autoMode, continueAfterOpen, fazis, vizsgalatKep, docs.length, detected, parties],
   );
 
   const openDocument = useCallback(async () => {
@@ -1139,12 +1197,12 @@ export default function App() {
   const resolveRevisions = useCallback(
     async (m: 'accept' | 'reject') => {
       setBusy(m === 'accept' ? 'Módosítások elfogadása…' : 'Módosítások elutasítása…');
-      let resolved: DocumentInfo | null = null;
+      let resolved: DocumentInfo[] | null = null;
       try {
-        const info = await api.resolveRevisions(m);
-        setDoc(info);
+        const lista = await api.resolveRevisions(m);
+        setDocs(lista);
         setAnalysis(null);
-        resolved = info;
+        resolved = lista;
       } catch (e) {
         setError((e as Error).message);
       } finally {
@@ -1154,7 +1212,9 @@ export default function App() {
       // A változáskövetés-kapun átjutva a betöltési figyelmeztetés kapuja
       // következik: a `continueAfterOpen` itt újra a változáskövetést kérdezné
       // (a feloldott iratban már nincs), ezért a második kaput hívjuk közvetlenül.
-      if (resolved.loadWarnings.length > 0) {
+      // BÁRMELYIK iratban maradt betöltési figyelmeztetés: a kapu ugyanúgy
+      // megáll, mint egy irat esetén — a hiányos kiolvasás ott is szivárgás.
+      if (resolved.some((d) => d.loadWarnings.length > 0)) {
         setDialog('loadWarnings');
         return;
       }
@@ -1250,7 +1310,8 @@ export default function App() {
 
   const startNewCase = useCallback(() => {
     setCaseSecret(newCaseSecret());
-    setDoc(null);
+    setDocs([]);
+    setAktivDoc(0);
     setParties([]);
     setDetected(null);
     setIdentifiers([]);
@@ -1275,9 +1336,9 @@ export default function App() {
   }, []);
 
   const requestNewCase = useCallback(() => {
-    if (doc || parties.length > 0) setDialog('newCase');
+    if (docs.length > 0 || parties.length > 0) setDialog('newCase');
     else startNewCase();
-  }, [doc, parties.length, startNewCase]);
+  }, [docs.length, parties.length, startNewCase]);
 
   const doExport = useCallback(
     // A paraméter neve szándékosan más, mint az azonos jelentésű állapoté: a
@@ -1358,7 +1419,15 @@ export default function App() {
    * jelszót adott a kulcsfájlhoz, kiválasztotta a fájlnevet, és CSAK EKKOR
    * kapott hibaüzenetet. Az állapotot ezért a felület tartja fenn.
    */
-  const revisionsBlocked = (doc?.pendingRevisions ?? 0) > 0;
+  /*
+    BÁRMELYIK IRAT feloldatlan változáskövetése blokkol. A mentés kötegben megy,
+    és egyetlen irat <w:del> eleme is szó szerint őrzi az eredeti szöveget —
+    ha csak az éppen NÉZETT iratot vizsgálnánk, a felhasználó a másikban
+    maradt módosítás miatt kapna érthetetlen elakadást.
+  */
+  const revisionsBlocked = docs.some((d) => d.pendingRevisions > 0);
+  /** Hány feloldatlan módosítás van összesen — a fejléc jelzéséhez. */
+  const revisionsDb = docs.reduce((n, d) => n + d.pendingRevisions, 0);
 
   const requestExport = useCallback(() => {
     if (!analysis) return;
@@ -1383,7 +1452,9 @@ export default function App() {
     if (view !== 'preview' || !analysis || preview !== null || previewError !== null) return;
     let el = true;
     void api
-      .previewText()
+      // A MEGJELENÍTETT irat álnevesített szövege — több irat mellett a
+      // főfolyamat különben az elsőét adná vissza, akármelyiket is nézzük.
+      .previewText(doc?.path)
       .then((t) => {
         if (el) setPreview(t);
       })
@@ -1393,7 +1464,7 @@ export default function App() {
     return () => {
       el = false;
     };
-  }, [view, analysis, preview, previewError]);
+  }, [view, analysis, preview, previewError, doc?.path]);
 
   /**
    * Nyomtatás.
@@ -1799,7 +1870,8 @@ export default function App() {
     // Fejlesztői belépő: a felület átnézéséhez ne kelljen végigkattintani a folyamatot.
     const preset = devPreset();
     if (preset) {
-      setDoc(preset.doc);
+      setDocs([preset.doc]);
+      setAktivDoc(0);
       setParties(preset.parties);
       // A felismerés eredménye is kell: enélkül minden sor „kézzel felvéve"
       // jelvényt kapna, és a törvény szerint bent maradó nevek szakasza meg sem
@@ -1999,6 +2071,17 @@ export default function App() {
     () => new Map((detected?.officials ?? []).map((o) => [o.id, o.fullName])),
     [detected],
   );
+
+  /**
+   * A MEGJELENÍTETT IRAT SZAKASZA az elemzésben.
+   *
+   * A bal panel egyszerre egy iratot mutat; a jobb oldali lista viszont az
+   * egész ügyre szól. A szakasz adja a lapképeket, a kiemelés helyét és a
+   * szöveget — ha a motor még nem ad `docs` tömböt (régebbi híd, fejlesztői
+   * álkimenet), akkor `undefined`, és a nézetek az elemzés gyökeréből
+   * dolgoznak, ahogy eddig.
+   */
+  const aktivSzakasz = analysis?.docs?.[aktivDoc] ?? analysis?.docs?.[0];
 
   const keziIdk = useMemo(() => {
     const felismert = new Set([
@@ -2475,8 +2558,70 @@ export default function App() {
     if (!csakKulcs) ujraKert();
   };
 
+  /**
+   * IRATVÁLTÁS a bal panelen.
+   *
+   * Az előnézetet el KELL dobni: az a MÁSIK irat álnevesített szövege volt, és
+   * a képernyőn maradva úgy nézne ki, mintha az újonnan választott irat
+   * tartalma volna. A kijelölés is elmegy, mert az egy másik irat találatára
+   * mutatott — ott a görgetés a semmibe vinne.
+   */
+  const iratValt = (index: number): void => {
+    if (index === aktivDoc) return;
+    setAktivDoc(index);
+    setPreview(null);
+    setPreviewError(null);
+    setSelected(null);
+  };
+
+  /**
+   * IRAT HOZZÁADÁSA AZ ÜGYHÖZ.
+   *
+   * Nem kérdez rá semmire, és ez szándékos: a hozzáadás NEM VESZÍT EL semmit —
+   * a meglévő iratok, a felek és a döntések a helyükön maradnak. Ettől lett
+   * érthető az, ami az „Új ügy" gombbal nem volt: ami egyszerre van betöltve,
+   * az egy ügy, közös álnév-kiosztással.
+   */
+  const iratHozzaad = useCallback(async () => {
+    const path = await api.chooseDocument();
+    if (!path) return;
+    await openPath(path, true);
+  }, [openPath]);
+
   /** Nevet veszek fel kézzel — a Felek-párbeszéd, most már kérésre. */
   const keziFelvitel = (): void => setDialog('parties');
+
+  /**
+   * IRAT KIVÉTELE AZ ÜGYBŐL.
+   *
+   * A döntéseket EL KELL DOBNI. A találatok azonosítója az irat betöltési
+   * sorrendjéből származik (a főfolyamat iratonként eltolja); egy irat
+   * kivételével a mögötte állók azonosítója elcsúszik, a megőrzött döntések
+   * tehát MÁS SZAVAKRA vonatkoznának. Egy elveszett kattintás bosszantó, egy
+   * átcsúszott „ne cseréld" néma hiba a kész iratban.
+   */
+  const iratBezar = useCallback(
+    async (path: string) => {
+      try {
+        const lista = (await api.closeDocument?.(path)) ?? [];
+        setDocs(lista);
+        setAktivDoc(0);
+        setDecisions({});
+        setSelected(null);
+        setPreview(null);
+        setPreviewError(null);
+        if (lista.length === 0) {
+          setAnalysis(null);
+          setFazis('beallitas');
+        } else {
+          ujraKert();
+        }
+      } catch (e) {
+        setError((e as Error).message);
+      }
+    },
+    [ujraKert],
+  );
 
   /** Vizsgálat újra — a kézzel felvitt neveket megőrizve. */
   const ujraVizsgalat = (): void => {
@@ -2718,7 +2863,7 @@ export default function App() {
             title="A feloldatlan változáskövetés miatt nem menthető. Kattints: itt lehet feloldani."
           >
             <FejlecIkon nev="figyelem" />
-            <span className="btnszo">{doc.pendingRevisions} feloldatlan módosítás</span>
+            <span className="btnszo">{revisionsDb} feloldatlan módosítás</span>
           </button>
         )}
         {/*
@@ -2803,7 +2948,7 @@ export default function App() {
           haladas={haladas}
           hiba={detectError}
           leallithato={leallithato}
-          valtozaskovetes={revisionsBlocked && doc ? doc.pendingRevisions : 0}
+          valtozaskovetes={revisionsDb}
           onValtozaskovetes={() => setDialog('revisions')}
           talalatok={parties.length + identifiers.length}
           onIndit={() => void startScan()}
@@ -2842,6 +2987,56 @@ export default function App() {
       {doc && fazis === 'beallitas' && (
         <div className="setuppage">
           <div className="setupdoc">
+            {/*
+              AZ IRATSÁV — az ügy összes irata egy sorban.
+
+              Ez váltotta ki az „Új ügy" gombot. Amíg egyszerre csak egy irat
+              lehetett nyitva, a felhasználónak fejben kellett tartania, hogy a
+              következő megnyitás MEGTARTJA az álnév-kiosztást, az „Új ügy"
+              pedig eldobja — és a különbség sehol nem látszott. Itt viszont
+              látszik: ami ebben a sorban áll, az egy ügy, és egyetlen elemzés
+              fut rájuk. Hozzáadni egy kattintás, kivenni egy másik.
+
+              Egy iratnál is kint van a sáv: a „+ Dokumentum" gomb így nem
+              bukkan elő a semmiből a második iratnál, hanem végig ott áll.
+            */}
+            <div className="iratsav">
+              {docs.map((d, i) => (
+                <button
+                  key={d.path}
+                  className={`iratful${i === aktivDoc ? ' active' : ''}`}
+                  title={`${d.path}\n${d.format.toUpperCase()} · ${d.pageCount} ${
+                    d.format === 'docx' ? 'dokumentumrész' : 'oldal'
+                  }`}
+                  onClick={() => iratValt(i)}
+                >
+                  <span className="nev">{d.fileName}</span>
+                  {/*
+                    A KIVÉTEL NEM GOMB A GOMBBAN: az érvénytelen HTML, és a
+                    képernyőolvasó sem tud mit kezdeni vele. Ezért a jel csak
+                    rajz, a művelet pedig az iratsáv MELLETT álló gombé — az
+                    éppen nézett iratra vonatkozik, és kimondja, melyikre.
+                  */}
+                </button>
+              ))}
+              {docs.length > 1 && (
+                <button
+                  className="btn ghost sm iratki"
+                  title={`„${doc.fileName}" kivétele az ügyből — a fájlhoz nem nyúlunk`}
+                  onClick={() => void iratBezar(doc.path)}
+                >
+                  Kivétel
+                </button>
+              )}
+              <div className="spacer" />
+              <button
+                className="btn ghost sm"
+                title="Ugyanehhez az ügyhöz még egy irat — közös álnév-kiosztással"
+                onClick={() => void iratHozzaad()}
+              >
+                + Dokumentum
+              </button>
+            </div>
             <div className="setupdoc-head">
               <b>{doc.fileName}</b>
               {analysis ? (
@@ -2945,6 +3140,7 @@ export default function App() {
               */
               <DocumentView
                 analysis={analysis}
+                {...(aktivSzakasz ? { szakasz: aktivSzakasz } : {})}
                 selected={selected}
                 hivatalosIdk={hivatalosIdk}
                 dontesek={decisions}
@@ -3075,9 +3271,13 @@ export default function App() {
           </span>
           <span className="sep" />
           <span>
-            {analysis.doc.charCount.toLocaleString('hu-HU')} karakter átvizsgálva
+            {/* MINDEN betöltött irat együtt: a jobb oldali lista is az egészre
+                szól, tehát az állapotsor sem szólhat csak az elsőről. */}
+            {docs.reduce((n, d) => n + d.charCount, 0).toLocaleString('hu-HU')} karakter
+            átvizsgálva
+            {docs.length > 1 && ` · ${docs.length} irat`}
           </span>
-          {analysis.doc.looksScanned && (
+          {docs.some((d) => d.looksScanned) && (
             <>
               <span className="sep" />
               <span style={{ color: 'var(--amber)', fontWeight: 600 }}>
@@ -3085,10 +3285,13 @@ export default function App() {
               </span>
             </>
           )}
-          {analysis.doc.format === 'docx' && (
+          {docs.some((d) => d.format === 'docx') && (
             <>
               <span className="sep" />
-              <span>{analysis.doc.pageCount} dokumentumrész átvizsgálva</span>
+              <span>
+                {docs.filter((d) => d.format === 'docx').reduce((n, d) => n + d.pageCount, 0)}{' '}
+                dokumentumrész átvizsgálva
+              </span>
             </>
           )}
         </footer>
@@ -3129,7 +3332,7 @@ export default function App() {
       )}
       {dialog === 'revisions' && doc && (
         <RevisionsDialog
-          count={doc.pendingRevisions}
+          count={revisionsDb}
           busy={busy !== null}
           onResolve={resolveRevisions}
           onClose={() => setDialog(null)}
@@ -3171,30 +3374,31 @@ export default function App() {
         <OpenOtherDialog
           fileName={doc.fileName}
           onConfirm={() => {
-            const p = pendingOpen?.path ?? null;
-            setPendingOpen(null);
-            setDialog(null);
-            if (p) void openPath(p);
-            else void openDocument();
-          }}
-          onUjUgy={() => {
-            const p = pendingOpen?.path ?? null;
-            setPendingOpen(null);
-            setDialog(null);
             /*
-              ÚJ ÜGY: EGYETLEN DOLOG VÁLTOZIK, az álnév-kiosztás alapja.
-
-              A többit a megnyitás úgyis eldobja (felek, döntések, elemzés),
-              ezért itt nem a teljes `startNewCase` fut le — az a nyitóképernyőre
-              vinne vissza, és a felhasználónak MÉGEGYSZER meg kellene nyitnia
-              ugyanazt az iratot. A kulcsfájl útvonala viszont az előző ügyé
-              volt: azt elengedjük, különben a mentés után a RÉGI kulcsot
-              ajánlanánk az újhoz.
+              ÚJ ÜGY: a mostani iratok helyére. A fedőnevek újrasorsolódnak
+              (`caseSecret`), különben a másik ügyfél iratában ugyanaz a valódi
+              név ugyanazt a fedőnevet kapná, és a két kimenet összeköthető
+              volna. A kulcsfájl útvonala is az előző ügyé volt.
             */
+            const p = pendingOpen?.path ?? null;
+            setPendingOpen(null);
+            setDialog(null);
             setCaseSecret(newCaseSecret());
             setKeyFilePath(null);
             if (p) void openPath(p);
             else void openDocument();
+          }}
+          onHozzaad={() => {
+            /*
+              HOZZÁADÁS: SEMMI NEM VÉSZ EL. A meglévő iratok, a felek és a
+              döntések a helyükön maradnak — az új irat melléjük kerül, és a
+              következő elemzés már mindegyikre fut.
+            */
+            const p = pendingOpen?.path ?? null;
+            setPendingOpen(null);
+            setDialog(null);
+            if (p) void openPath(p, true);
+            else void iratHozzaad();
           }}
           onClose={() => {
             setPendingOpen(null);

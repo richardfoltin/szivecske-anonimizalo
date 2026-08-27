@@ -200,7 +200,17 @@ export interface AblakkeretAllapot {
 const api = {
   listThemes: () => ipcRenderer.invoke('themes:list'),
   chooseDocument: () => ipcRenderer.invoke('doc:choose'),
-  openDocument: (path: string) => ipcRenderer.invoke('doc:open', path),
+  /**
+   * IRAT MEGNYITÁSA. A `hozzaad` igaz értékére a meglévők MELLÉ kerül —
+   * ugyanaz az ügy, közös álnév-kiosztással —, egyébként lecseréli az egészet.
+   * A visszatérés MINDEN betöltött irat leírója, betöltési sorrendben.
+   */
+  openDocument: (path: string, hozzaad?: boolean) =>
+    ipcRenderer.invoke('doc:open', path, hozzaad),
+  /** Egy irat kivétele a listából; a visszatérés a maradék. */
+  closeDocument: (path: string) => ipcRenderer.invoke('doc:close', path),
+  /** A betöltött iratok leírói. */
+  listDocuments: () => ipcRenderer.invoke('doc:list'),
   resolveRevisions: (mode: 'accept' | 'reject') => ipcRenderer.invoke('doc:resolveRevisions', mode),
   detectParties: () => ipcRenderer.invoke('doc:detectParties'),
 
@@ -300,7 +310,8 @@ const api = {
     return () => ipcRenderer.removeListener('update:progress', h);
   },
   analyze: (input: unknown) => ipcRenderer.invoke('doc:analyze', input),
-  previewText: () => ipcRenderer.invoke('doc:previewText'),
+  /** Az álnevesített szöveg; útvonal nélkül az első betöltött iraté. */
+  previewText: (path?: string) => ipcRenderer.invoke('doc:previewText', path),
   suggestOutputPath: (mode: string) => ipcRenderer.invoke('doc:suggestOutputPath', mode),
   chooseSaveTarget: (suggested: string) => ipcRenderer.invoke('doc:chooseSaveTarget', suggested),
   exportDocument: (opts: unknown) => ipcRenderer.invoke('doc:export', opts),

@@ -202,6 +202,14 @@ export interface AnalyzeInput {
    */
   autoThreshold?: number;
   /**
+   * A FELEK MEGJELENÉSI SORRENDJE — kívülről megadva, ha a hívó ismeri.
+   *
+   * A részletes indoklás a közös típusnál áll (`AnalyzeInput`, types.ts).
+   * Röviden: több irat esetén EGYETLEN sorrendből kell dolgozni, különben
+   * ugyanaz a valódi név iratonként más fedőnevet kapna.
+   */
+  appearanceOrder?: readonly string[];
+  /**
    * A CÍMKÉK NYELVE a szerep-, adatfajta- és számozott módban. Alapból magyar.
    *
    * A fedőnév-módra nincs hatása: ott a névkészlet dönti el, milyen nyelvűek a
@@ -519,7 +527,16 @@ export class DocumentSession {
     const assignments = assignPseudonyms(entities, theme, {
       caseSecret: input.caseSecret,
       preferSimilarLength: true,
-      appearanceOrder: appearanceOrder(nameHitsByUnit),
+      /*
+        A HÍVÓ SORRENDJE ERŐSEBB A SAJÁTNÁL.
+
+        Egy irat esetén nincs különbség: a hívó nem ad semmit, mi a saját
+        szövegünkből számolunk. Több irat esetén viszont a főfolyamat EGYETLEN
+        sorrendet állapít meg az egész ügyre, és azt adja át mindegyik iratnak
+        — enélkül ugyanaz a valódi név iratonként más fedőnevet kapna, és a
+        kimenetek nem volnának együtt olvashatók.
+      */
+      appearanceOrder: input.appearanceOrder ?? appearanceOrder(nameHitsByUnit),
     });
     // Kézi felülírás a felületről.
     for (const p of parties) {

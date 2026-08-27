@@ -61,8 +61,14 @@ import { ModelClient, megszakitasHiba, type AblakHaladas } from '../src/ai/clien
 */
 import type {
   AnalysisResult,
+  AutoDecisionRow,
+  CastRow,
+  DocSection,
+  DocumentInfo,
+  ExportFileResult,
   ExportOptions,
   ExportResult,
+  MatchRow,
   ModelStatus as ModelRunStatus,
   ThemeSummary,
 } from '../src/app/types.js';
@@ -195,7 +201,50 @@ let themes: Theme[] = [];
  */
 let sajatTemak = new Set<string>();
 let homonyms = new Set<string>();
-let session: DocumentSession | null = null;
+/**
+ * A BETÖLTÖTT IRATOK — egy ügy, több irat.
+ *
+ * Korábban egyetlen `session` állt itt. Az ügyek viszont ritkán állnak egy
+ * iratból: egy perhez tartozik a keresetlevél, az ellenkérelem és az ítélet,
+ * és MINDHÁROMBAN ugyanannak a névnek ugyanazt a fedőnevet kell kapnia,
+ * különben a kimenetek nem olvashatók együtt.
+ *
+ * Ezt eddig egy „ügy-titok" (`caseSecret`) tartotta össze a felületen: a
+ * felhasználónak kellett tudnia, hogy a következő irat megnyitása MEGTARTJA a
+ * kiosztást, az „Új ügy" pedig eldobja. Ez a különbség nem volt kitalálható —
+ * a felhasználó jelezte is. Innentől nincs mit kitalálni: ami egyszerre van
+ * betöltve, az egy ügy, és egyetlen elemzés fut rájuk.
+ *
+ * A SORREND A BETÖLTÉSÉ, és ez nem közömbös: a találatok azonosítója ebből a
+ * sorrendből származik (`ID_LEPES`), és az álnév-kiosztás is a megjelenési
+ * sorrendet nézi.
+ */
+let sessions: DocumentSession[] = [];
+
+/**
+ * Az első irat — a régi, egy iratra írt utak innen dolgoznak tovább.
+ *
+ * Nem „aktív irat": melyik látszik éppen, az a FELÜLET dolga, és ő az egész
+ * listát megkapja. A főfolyamatnak nincs szüksége rá, hogy tudja.
+ */
+function elsoSession(): DocumentSession | null {
+  return sessions[0] ?? null;
+}
+
+/**
+ * A TALÁLAT-AZONOSÍTÓK IRATONKÉNTI ELTOLÁSA.
+ *
+ * Minden munkamenet nulláról számozza a saját találatait. Egyetlen listába
+ * fűzve az azonosítók ütköznének, és a `decisions` tároló — ami azonosító
+ * szerint kulcsolt — a MÁSIK irat egy találatára írná a felhasználó döntését.
+ * Néma hiba volna, és pont a legdrágább fajta: egy kimondott „ne cseréld"
+ * másik szóra csúszna át.
+ *
+ * Az eltolás iratonként egymillió. Ennél több találat egyetlen iratban nem
+ * fordul elő (a leghosszabb mért iratunk néhány ezret adott), és az
+ * osztás/maradék visszabontás így egyértelmű marad.
+ */
+const ID_LEPES = 1_000_000;
 let models: ModelStore;
 let settings: SettingsStore;
 let feluletFajl = '';
@@ -2009,15 +2058,47 @@ function registerHandlers(): void {
     return res.canceled ? null : (res.filePaths[0] ?? null);
   });
 
-  handle('doc:open', async (_e, path: string) => {
-    session = await DocumentSession.open(path, homonyms);
+  /**
+   * IRAT MEGNYITÁSA — hozzáadva a mostaniakhoz, vagy helyettük.
+   *
+   * @param hozzaad ha igaz, a meglévő iratok MELLÉ kerül (ugyanaz az ügy);
+   *                egyébként lecseréli az egészet (új ügy kezdése).
+   * @returns minden betöltött irat leírója, betöltési sorrendben
+   */
+  handle('doc:open', async (_e, path: string, hozzaad?: boolean): Promise<DocumentInfo[]> => {
+    const uj = await DocumentSession.open(path, homonyms);
+    if (hozzaad === true) {
+      /*
+        UGYANAZT AZ IRATOT NEM VESSZÜK FEL KÉTSZER.
+
+        A kétszer felvett irat kétszer is mentődne — ugyanarra a kimeneti
+        névre —, és a találatlistán minden neve duplán állna. A második
+        megnyitás ezért a MEGLÉVŐT frissíti a helyén: ha a fájl közben
+        megváltozott, a friss tartalom számít.
+      */
+      const meglevo = sessions.findIndex((x) => x.info.path === uj.info.path);
+      if (meglevo >= 0) sessions[meglevo] = uj;
+      else sessions.push(uj);
+    } else {
+      sessions = [uj];
+    }
     lastAnalysis = null;
     // Az ELŐZŐ irat modell-állapota nem örökölhető. Ha itt bent maradna, egy
     // sikeres futás után megnyitott következő irat jegyzőkönyvébe az kerülne,
     // hogy a modell lefutott — pedig ezt az iratot el sem olvasta.
     utolsoModellAllapot = null;
-    return session.info;
+    return sessions.map((x) => x.info);
   });
+
+  /** Egy irat kivétele a listából. A visszatérés a maradék. */
+  handle('doc:close', (_e, path: string): DocumentInfo[] => {
+    sessions = sessions.filter((x) => x.info.path !== path);
+    lastAnalysis = null;
+    return sessions.map((x) => x.info);
+  });
+
+  /** A betöltött iratok leírói — a felület induláskor ebből épül fel. */
+  handle('doc:list', (): DocumentInfo[] => sessions.map((x) => x.info));
 
   /**
    * A felek felismerése: a nyelvi modell olvassa az iratot, a szerkezeti
@@ -2047,7 +2128,7 @@ function registerHandlers(): void {
   });
 
   handle('doc:detectParties', async (e): Promise<FelismeresValasz> => {
-    if (!session) throw new Error('Nincs megnyitott irat.');
+    if (sessions.length === 0) throw new Error('Nincs megnyitott irat.');
     const s = settings.get();
     if (!s.autoDetect) {
       // Felismerés nélkül a modell definíció szerint nem olvasott. A választ
@@ -2077,7 +2158,19 @@ function registerHandlers(): void {
 
     try {
       jelezdAHaladast(e, 'szoveg');
-      const text = session.fullText();
+      /*
+        A FELISMERÉS AZ ÖSSZES BETÖLTÖTT IRATOT OLVASSA.
+
+        Egy ügy iratai nem ugyanazokat a neveket említik: a tanú nevét gyakran
+        csak a jegyzőkönyv tartalmazza, a kezesét csak a szerződés. Iratonként
+        külön felismerve mindegyik lista hiányos volna — és a hiányzó név
+        pontosan az, ami bent marad a kimenetben.
+
+        Az iratok közé ÜRES SOR kerül, nem puszta összefűzés: enélkül az egyik
+        irat utolsó szava összeragadna a következő elsőjével, és a szerkezeti
+        felismerés egy nem létező összetett nevet látna a határon.
+      */
+      const text = sessions.map((x) => x.fullText()).join('\n\n');
       let modelEntities: Awaited<ReturnType<ModelClient['extract']>>['entities'] | undefined;
       let modelNote = '';
       /*
@@ -2187,21 +2280,38 @@ function registerHandlers(): void {
     }
   });
 
-  handle('doc:resolveRevisions', async (_e, mode: 'accept' | 'reject') => {
-    if (!session) throw new Error('Nincs megnyitott irat.');
-    // A feloldott dokumentumot memóriában nyitjuk újra: az eredeti fájl
-    // változatlan marad, és a szöveg nem kerül ideiglenes fájlba.
-    const resolved = await session.resolveRevisions(mode);
-    session = await DocumentSession.fromBytes(session.info.path, resolved, homonyms);
+  handle('doc:resolveRevisions', async (_e, mode: 'accept' | 'reject'): Promise<DocumentInfo[]> => {
+    if (sessions.length === 0) throw new Error('Nincs megnyitott irat.');
+    /*
+      MINDEN ÉRINTETT IRATBAN FELOLDJUK, nem csak az elsőben.
+
+      A mentést bármelyik irat feloldatlan változáskövetése blokkolja — a
+      törölt szöveg a fájlban szó szerint bent maradna. Ha csak az elsőt
+      oldanánk fel, a felhasználó a „Feloldom most" után is blokkolt mentést
+      kapna, és semmi nem mondaná meg, miért.
+
+      A feloldott dokumentumot memóriában nyitjuk újra: az eredeti fájl
+      változatlan marad, és a szöveg nem kerül ideiglenes fájlba.
+    */
+    const ujak: DocumentSession[] = [];
+    for (const sess of sessions) {
+      if (sess.info.pendingRevisions === 0) {
+        ujak.push(sess);
+        continue;
+      }
+      const resolved = await sess.resolveRevisions(mode);
+      ujak.push(await DocumentSession.fromBytes(sess.info.path, resolved, homonyms));
+    }
+    sessions = ujak;
     lastAnalysis = null;
     // A változáskövetés feloldásával MEGVÁLTOZOTT a szöveg: a korábbi futás
     // már nem erről az iratról szól, tehát nem is állíthatjuk róla.
     utolsoModellAllapot = null;
-    return session.info;
+    return sessions.map((x) => x.info);
   });
 
   handle('doc:analyze', async (_e, input: AnalyzeInput): Promise<AnalysisResult> => {
-    if (!session) throw new Error('Nincs megnyitott irat.');
+    if (sessions.length === 0) throw new Error('Nincs megnyitott irat.');
     const theme = themes.find((t) => t.id === input.themeId) ?? themes[0];
     if (!theme) throw new Error('Nincs telepített témacsomag.');
 
@@ -2223,14 +2333,166 @@ function registerHandlers(): void {
     const teljes: AnalyzeInput = { ...input, model };
 
     lastInput = teljes;
-    lastAnalysis = session.analyze(teljes, theme, homonyms);
+    lastAnalysis = mindenIratotElemez(teljes, theme);
     return lastAnalysis;
   });
 
-  handle('doc:previewText', () => {
-    if (!session) throw new Error('Nincs megnyitott irat.');
-    return session.anonymizedText();
+  /** Az álnevesített szöveg — annak az iratnak, amelyiket a felület mutatja. */
+  handle('doc:previewText', (_e, path?: string) => {
+    const s = path === undefined ? elsoSession() : sessions.find((x) => x.info.path === path);
+    if (!s) throw new Error('Nincs megnyitott irat.');
+    return s.anonymizedText();
   });
+
+  /**
+   * MINDEN BETÖLTÖTT IRAT ELEMZÉSE, EGY EREDMÉNYBE FŰZVE.
+   *
+   * Ami KÖZÖS, az a felek listája és a döntések: ugyanaz a bemenet megy
+   * mindegyik iratra, tehát ugyanaz a valódi név mindegyikben ugyanazt a
+   * fedőnevet kapja. Ez a többiratos működés egész lényege.
+   *
+   * Ami IRATONKÉNT MÁS, az a lapkép, a kiemelés helye és a szöveg — az a
+   * `docs` tömbbe kerül, iratonként egy szakaszba.
+   *
+   * A DÖNTÉSEK SZÉTOSZTÁSA a kényes rész. A felület egyetlen kulcstérben
+   * tartja őket (eltolt azonosítókkal), a munkamenetek viszont mind a saját,
+   * nulláról induló számozásukat ismerik. Ezért minden iratnak a SAJÁT
+   * tartományából visszafordított térképet adjuk át — enélkül a második irat
+   * megkapná az elsőnek szánt döntéseket, és néma cserehibát okozna.
+   */
+  function mindenIratotElemez(input: AnalyzeInput, theme: Theme): AnalysisResult {
+    const szakaszok: DocSection[] = [];
+    const matches: MatchRow[] = [];
+    const autoAccepted: AutoDecisionRow[] = [];
+    const warnings: string[] = [];
+    const counts = { auto: 0, review: 0, reject: 0 };
+    const outcomes = { csere: 0, bizonytalan: 0, nincs: 0 };
+    /** entityId → összefűzött szereplősor; a darabszámok összeadódnak. */
+    const cast = new Map<string, CastRow>();
+    let elso: AnalysisResult | null = null;
+
+    /*
+      EGYETLEN MEGJELENÉSI SORREND AZ EGÉSZ ÜGYRE.
+
+      Az álnév-kiosztás ebből dönti el, ki kapja a névsor élén álló,
+      legjellemzőbb fedőnevet. Iratonként külön számolva a keresetlevélben a
+      felperes állna elöl, az ítéletben a bíróság — vagyis UGYANAZ A VALÓDI NÉV
+      IRATONKÉNT MÁS FEDŐNEVET KAPNA. Az ügy iratai így nem volnának együtt
+      olvashatók, és a felhasználó a kimenetekből nem tudná összerakni, ki
+      kicsoda: pont az veszne el, amiért egyszerre vannak betöltve.
+
+      A sorrend az ELSŐ iratból jön: azt elemezzük először, a saját sorrendjével,
+      és a többi ugyanazt kapja. Aki csak egy későbbi iratban szerepel, annak
+      nincs helye a listán — ő a kulcsból számolt nevet kapja, ugyanúgy minden
+      iratban, mert a lista mindegyiknél azonos.
+    */
+    const nevFelek = new Set(
+      input.parties.filter((p) => p.kind !== 'identifier').map((p) => p.id),
+    );
+    let kozosSorrend: string[] | null = null;
+
+    sessions.forEach((sess, i) => {
+      const eltolas = i * ID_LEPES;
+      // A döntések visszabontása erre az iratra: csak a SAJÁT tartománya, és
+      // a helyi számozásra visszafordítva.
+      const sajatDontesek: Record<number, 'accept' | 'skip'> = {};
+      for (const [kulcs, ertek] of Object.entries(input.decisions ?? {})) {
+        const globalis = Number(kulcs);
+        if (globalis < eltolas || globalis >= eltolas + ID_LEPES) continue;
+        sajatDontesek[globalis - eltolas] = ertek;
+      }
+      const res = sess.analyze(
+        {
+          ...input,
+          decisions: sajatDontesek,
+          ...(kozosSorrend === null ? {} : { appearanceOrder: kozosSorrend }),
+        },
+        theme,
+        homonyms,
+      );
+      if (i === 0) {
+        elso = res;
+        /*
+          A SORRENDET AZ ELSŐ IRAT TALÁLATAIBÓL OLVASSUK KI. A találatok az irat
+          sorrendjében állnak, tehát az entitások első előfordulása megadja a
+          sorrendet. Az azonosítók (lakcím, adószám) kimaradnak: nekik nincs
+          álnevük, csak adatfajta-megjelölésük, tehát a prioritási listán nincs
+          keresnivalójuk.
+        */
+        const latott = new Set<string>();
+        const sorrend: string[] = [];
+        for (const m of res.matches) {
+          if (!nevFelek.has(m.entityId) || latott.has(m.entityId)) continue;
+          latott.add(m.entityId);
+          sorrend.push(m.entityId);
+        }
+        kozosSorrend = sorrend;
+      }
+
+      szakaszok.push({
+        doc: res.doc,
+        pages: res.pages,
+        highlights: res.highlights.map((h) => ({ ...h, matchId: h.matchId + eltolas })),
+        previewText: res.previewText,
+        matchIdTol: eltolas,
+        matchIdIg: eltolas + ID_LEPES - 1,
+      });
+
+      for (const m of res.matches) matches.push({ ...m, id: m.id + eltolas });
+      for (const a of res.autoAccepted ?? []) {
+        autoAccepted.push({ ...a, matchId: a.matchId + eltolas });
+      }
+      /*
+        A FIGYELMEZTETÉS MEGMONDJA, MELYIK IRATRÓL SZÓL. Több irat mellett egy
+        cím nélküli „A 2. oldalon nincs használható ToUnicode tábla" mondat
+        megválaszolhatatlan kérdés: melyik irat második oldalán?
+      */
+      for (const w of res.warnings) {
+        warnings.push(sessions.length > 1 ? `${res.doc.fileName}: ${w}` : w);
+      }
+      counts.auto += res.counts.auto;
+      counts.review += res.counts.review;
+      counts.reject += res.counts.reject;
+      if (res.outcomes) {
+        outcomes.csere += res.outcomes.csere;
+        outcomes.bizonytalan += res.outcomes.bizonytalan;
+        outcomes.nincs += res.outcomes.nincs;
+      }
+      for (const c of res.cast) {
+        const meglevo = cast.get(c.entityId);
+        if (meglevo === undefined) {
+          cast.set(c.entityId, { ...c });
+          continue;
+        }
+        /*
+          UGYANAZ A SZEREPLŐ, TÖBB IRATBAN. A csereszöveg és a szerep azonos
+          (ugyanaz a bemenet, ugyanaz a kiosztás) — a DARABSZÁMOK viszont
+          iratonként keletkeznek, tehát összeadódnak. Enélkül a lista az
+          ELSŐ irat előfordulásait mutatná az egész ügyre.
+        */
+        meglevo.occurrences += c.occurrences;
+        meglevo.pendingCount += c.pendingCount;
+      }
+    });
+
+    const fo = elso as AnalysisResult | null;
+    if (!fo) throw new Error('Nincs megnyitott irat.');
+    const elsoSzakasz = szakaszok[0]!;
+    return {
+      ...fo,
+      doc: elsoSzakasz.doc,
+      pages: elsoSzakasz.pages,
+      previewText: elsoSzakasz.previewText,
+      highlights: elsoSzakasz.highlights,
+      docs: szakaszok,
+      cast: [...cast.values()],
+      matches,
+      warnings,
+      counts,
+      outcomes,
+      autoAccepted,
+    };
+  }
 
   handle('doc:chooseSaveTarget', async (_e, suggested: string) => {
     const res = await dialog.showSaveDialog({
@@ -2241,7 +2503,7 @@ function registerHandlers(): void {
   });
 
   handle('doc:export', async (_e, opts: ExportOptions): Promise<ExportResult> => {
-    if (!session) throw new Error('Nincs megnyitott irat.');
+    if (sessions.length === 0) throw new Error('Nincs megnyitott irat.');
     // A jegyzőkönyvet A MUNKAMENET írja ki, nem ez a kezelő. Itt korábban egy
     // sajátkezű `writeFileSync` állt, és az két ígéretet is megszegett:
     //
@@ -2257,16 +2519,63 @@ function registerHandlers(): void {
     //     (vagy bármi mást azon a néven) némán megsemmisítette.
     //
     // A visszaadott `certificate` szöveg megmarad — a felület abból dolgozik.
-    return session.export(opts);
+
+    /*
+      A KÖTEG: MINDEN BETÖLTÖTT IRAT MENTÉSE, IRATONKÉNT ZÁRÓ KAPUVAL.
+
+      A szivárgási kapu (`session.export`) iratonként dönt: ha egy iratban
+      bent maradt egy eredeti név, abból NEM keletkezik fájl. A kötegre ezt
+      kétféleképp lehetne kiterjeszteni, és csak az egyik helyes:
+
+        – Az egész köteget eldobni egy bukott irat miatt: kilenc rendben lévő
+          irat munkája veszne el a tizedik miatt, és a felhasználó semmit nem
+          kapna a kezébe.
+        – A rendben lévőket kiírni, a bukottat nem — ÉS TÉTELESEN MEGMONDANI,
+          melyik nem készült el, és miért.
+
+      A második a helyes: a védendő tulajdonság az, hogy SZIVÁRGÓ FÁJL SOSEM
+      keletkezik — nem az, hogy hiba esetén semmi sem.
+
+      A KULCSFÁJL EGYSZER KÉSZÜL. A leképezés mindegyik iratban ugyanaz (közös
+      kiosztás), tehát iratonként egy-egy kulcsfájl ugyanannak a táblázatnak N
+      másolata volna — mindegyik ugyanazzal a jelszóval, N helyen szórva.
+    */
+    const files: ExportFileResult[] = [];
+    let fo: ExportResult | null = null;
+    let keyPath: string | null = null;
+
+    for (const [i, sess] of sessions.entries()) {
+      const cel =
+        sessions.length === 1
+          ? opts.outputPath
+          : join(dirname(opts.outputPath), kimenetiNev(sess.info.path, opts.mode));
+      const r = await sess.export({ ...opts, outputPath: cel, keepKey: opts.keepKey && i === 0 });
+      if (r.keyPath) keyPath = r.keyPath;
+      files.push({
+        fileName: sess.info.fileName,
+        outputPath: r.outputPath,
+        report: r.report,
+        certificatePath: r.certificatePath ?? null,
+        warnings: r.warnings,
+      });
+      if (i === 0) fo = r;
+    }
+    if (!fo) throw new Error('Nincs megnyitott irat.');
+    return { ...fo, keyPath, files };
   });
 
-  handle('doc:suggestOutputPath', (_e, mode: string) => {
-    if (!session) return '';
-    const p = session.info.path;
-    const ext = extname(p);
-    const stem = basename(p, ext);
+  /** A kimeneti fájlnév egy irathoz: az eredeti neve, a mód utótagjával. */
+  function kimenetiNev(path: string, mode: string): string {
+    const ext = extname(path);
+    const stem = basename(path, ext);
     const suffix = mode === 'role' ? 'obh' : 'alnevesitett';
-    return join(dirname(p), `${stem}-${suffix}${ext}`);
+    return `${stem}-${suffix}${ext}`;
+  }
+
+  handle('doc:suggestOutputPath', (_e, mode: string) => {
+    const s0 = elsoSession();
+    if (!s0) return '';
+    return join(dirname(s0.info.path), kimenetiNev(s0.info.path, mode));
   });
 
   handle('shell:showItem', (_e, path: string) => {

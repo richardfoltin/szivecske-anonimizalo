@@ -2732,6 +2732,62 @@ textarea:focus {
   flex-direction: column;
   border-right: 1px solid var(--line);
 }
+/*
+  AZ IRATSÁV — az ügy iratai egy sorban, a bal panel tetején.
+
+  Fülek, nem lista: egyszerre egy irat látszik alattuk, és a fülforma épp ezt
+  mondja el. A jobb oldali panel viszont MINDEGYIKRE szól — ezért nem a fülek
+  fölött, hanem a bal panelen belül állnak.
+*/
+.iratsav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-2);
+  flex: 0 0 auto;
+  overflow-x: auto;
+}
+.iratful {
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  font-size: 12px;
+  color: var(--ink-soft);
+  max-width: 190px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 0 1 auto;
+  transition: background 0.14s, border-color 0.14s;
+}
+.iratful:hover:not(.active) {
+  background: var(--surface);
+}
+.iratful.active {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+.iratful .nev {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* A kivétel a NÉZETT iratra vonatkozik, és csak több iratnál van értelme. */
+.iratsav .iratki {
+  flex: 0 0 auto;
+  color: var(--muted);
+}
+.iratsav .spacer {
+  flex: 1 1 auto;
+  min-width: 8px;
+}
+
 .setupdoc .viewport {
   flex: 1;
   min-height: 0;
@@ -3695,6 +3751,32 @@ textarea:focus {
 }
 .keepctl .setrow:last-child {
   border-bottom: 0;
+}
+
+/* A köteg fájlsorai: pipa vagy kereszt, név, útvonal. */
+.fajlsor {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 7px;
+  font-size: 11.5px;
+}
+.fajlsor .jel {
+  flex: 0 0 auto;
+  color: var(--mint);
+  font-weight: 700;
+}
+.fajlsor.bukott .jel {
+  color: var(--amber);
+}
+.fajlsor .nev {
+  font-weight: 600;
+  flex: 0 0 auto;
+}
+.fajlsor .ut {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 
 .warntext {
