@@ -31,6 +31,7 @@
 
 import { HU_LETTER_CLASS } from './phonology.js';
 import { AUTO_REPLACE_THRESHOLD, findIdentifierTokens } from './identifiers.js';
+import { AZONOSITO_NEV, type AzonositoKind } from '../app/types.js';
 
 const L = HU_LETTER_CLASS;
 
@@ -46,39 +47,20 @@ const NA = `(?![${L}])`;
 /** Magyar toldalék a címkeszó végén: "bankszámlájára", "adószáma". */
 const TOLDALEK = `[a-záéíóöőúüű]*`;
 
-export type AzonositoKind =
-  | 'ado_azonosito_jel'
-  | 'taj'
-  | 'adoszam'
-  | 'cegjegyzekszam'
-  | 'bankszamlaszam'
-  | 'iban'
-  | 'helyrajzi_szam'
-  | 'iranyitoszam'
-  | 'telefonszam'
-  | 'szemelyazonosito_igazolvany'
-  | 'birosagi_ugyszam'
-  | 'email'
-  | 'rendszam'
-  | 'cim';
+/*
+  A FAJTALISTA ÉS A MAGYAR NEVEK A `app/types.ts`-BE KÖLTÖZTEK.
 
-/** Megjelenítendő magyar név a szereplapon. */
-export const AZONOSITO_NEV: Record<AzonositoKind, string> = {
-  ado_azonosito_jel: 'adóazonosító jel',
-  taj: 'TAJ-szám',
-  adoszam: 'adószám',
-  cegjegyzekszam: 'cégjegyzékszám',
-  bankszamlaszam: 'bankszámlaszám',
-  iban: 'IBAN',
-  helyrajzi_szam: 'helyrajzi szám',
-  iranyitoszam: 'irányítószám',
-  telefonszam: 'telefonszám',
-  szemelyazonosito_igazolvany: 'személyazonosító igazolvány száma',
-  birosagi_ugyszam: 'bírósági ügyszám',
-  email: 'e-mail cím',
-  rendszam: 'rendszám',
-  cim: 'cím',
-};
+  Nem szétszórás: az a fájl a motor és a FELÜLET közös nyelve, és a jobb gombos
+  menü „Azonosító" almenüje ugyanebből a szótárból épül. Itt maradva vagy az
+  egész felismerő motor bekerült volna a felületi kötegbe egyetlen szótár
+  kedvéért, vagy a lista MÁSODSZOR is leíródott volna a felület oldalán — és a
+  másolat előbb-utóbb szétcsúszik.
+
+  Az újrakiadás megtartja a régi importokat: aki eddig innen kérte, ezután is
+  megkapja, ugyanazt az egy példányt.
+*/
+export { AZONOSITO_NEV };
+export type { AzonositoKind };
 
 /**
  * Az ellenőrzőszám állapota.

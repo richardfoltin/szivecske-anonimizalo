@@ -31,7 +31,9 @@ import type { TemaEredmeny } from '../../src/app/temagyar.js';
 export type {
   AnalysisResult,
   AutoDecisionRow,
+  AzonositoKind,
   CastRow,
+  EntityKind,
   DocumentInfo,
   ExportOptions,
   ExportResult,
@@ -44,6 +46,7 @@ export type {
   PartyInput,
   PreviewPages,
   ReplacementMode,
+  TextSpan,
   ThemeSummary,
   VerifyReportUi,
 } from '../../src/app/types.js';
@@ -61,6 +64,16 @@ export type {
   fájlrendszer, se motor, se `node:` modul nem kerül vele a felületi kötegbe.
 */
 export { matchKind, matchOutcome } from '../../src/app/types.js';
+
+/*
+  AZ AZONOSÍTÓFAJTÁK MAGYAR NEVE — a motor szótára, nem felületi másolat.
+
+  A jobb gombos menü „Azonosító" almenüje ebből épül, és a szereplap ugyanezt
+  írja ki. Egy felületi második lista előbb-utóbb lemaradna egy fajtáról: a
+  motor megtanulná a tizenötödiket, a menüben tizennégy maradna, és a
+  felhasználó azt hinné, hogy azt a fajtát a program nem ismeri.
+*/
+export { AZONOSITO_NEV } from '../../src/app/types.js';
 
 /*
   A SAJÁT NÉVKÉSZLET típusai UGYANABBÓL A FORRÁSBÓL jönnek, mint a motoré.

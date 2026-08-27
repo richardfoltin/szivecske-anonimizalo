@@ -92,7 +92,18 @@ export interface TextSegment {
   streamId: string;
   /** A szöveget kirajzoló utasítások bájttartományai — ezeket töröljük. */
   opRanges: ByteRange[];
-  /** A szakasz teljes szélessége pontban (a rajzolt utolsó glifa végéig). */
+  /**
+   * A szakasz teljes szélessége pontban, a rajzolt utolsó glifa végéig.
+   *
+   * A FUTAMOKBÓL SZÁMOLJUK, mert a fájlból közvetlenül nem olvasható ki: a
+   * kinyerő a glifák szélességét nem követi (a futamok helyét a PDF saját
+   * pozicionáló utasításai adják). Az utolsó futam után viszont nincs több
+   * pozíció, amiből a vége kiderülne — az az egy futam becsléssel zárul,
+   * ugyanazzal az aránnyal, amit a kiemelés téglalapja is használ.
+   *
+   * Egy betűnyi bizonytalanság egy teljes soron; ennyi kell ahhoz, hogy a
+   * lapkép fölé fektetett, kijelölhető szöveg a betűkön üljön.
+   */
   width: number;
   /**
    * A szakaszon belüli rajzolási lépések: melyik szövegrész hol kezdődik az
@@ -110,6 +121,23 @@ export interface TextRun {
   /** A szakasz szövegén belüli karakterhatárok. */
   textStart: number;
   textEnd: number;
+}
+
+/**
+ * EGY SZAKASZ SZÉLESSÉGE A FUTAMOK HELYÉBŐL.
+ *
+ * A futamok x-ei a PDF saját pozicionáló utasításaiból származnak, tehát
+ * PONTOSAK — a szakasz eleje és az utolsó futam kezdete közti távolság nem
+ * becslés. Ami hiányzik, az kizárólag az utolsó futam saját szélessége: utána
+ * már nincs több pozíció a fájlban. Ott a kiemelés téglalapjával azonos arányt
+ * használjuk (0,55 × betűméret karakterenként), hogy a kettő ne mondjon mást
+ * ugyanarról a sorról.
+ */
+function szakaszSzelesseg(seg: TextSegment): number {
+  const utolso = seg.runs[seg.runs.length - 1];
+  if (!utolso) return 0;
+  const utolsoHossz = Math.max(1, utolso.textEnd - utolso.textStart);
+  return Math.max(0, utolso.x - seg.x + seg.fontSize * 0.55 * utolsoHossz);
 }
 
 export interface FontInfo {
@@ -269,7 +297,12 @@ function walkStream(
   };
 
   const flush = (): void => {
-    if (cur.seg && cur.seg.text.trim().length > 0) segments.push(cur.seg);
+    if (cur.seg && cur.seg.text.trim().length > 0) {
+      // A szélesség CSAK ITT állapítható meg: a szakasz addig nyitva van, amíg
+      // újabb futam kerülhet bele, és a szélességét az utolsó futam helye adja.
+      cur.seg.width = szakaszSzelesseg(cur.seg);
+      segments.push(cur.seg);
+    }
     cur.seg = null;
   };
 

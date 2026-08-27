@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { matchKind, matchOutcome } from './api';
 import type {
   AnalysisResult,
@@ -6,6 +6,7 @@ import type {
   MatchKind,
   MatchRow,
   PreviewPages,
+  TextSpan,
 } from './api';
 
 /* ─────────────────────────── dokumentum-nézet ─────────────────────────── */
@@ -49,6 +50,7 @@ export function DocumentView({
   hivatalosIdk = new Set<string>(),
   dontesek,
   onToggle,
+  onContext,
 }: {
   analysis: AnalysisResult;
   /**
@@ -97,9 +99,19 @@ export function DocumentView({
    * működése, ahol a kijelölés a szereplapra mutat vissza.
    */
   onToggle?: (id: number) => void;
+  /**
+   * JOBB KATTINTÁS AZ IRATON — a javító menü kérése.
+   *
+   * A `matchId` annak a találatnak az azonosítója, amelyikre a kattintás
+   * esett; `null`, ha nem találatra (olyankor a kijelölt szöveg a tárgy). A
+   * menü TARTALMÁT nem itt döntjük el: ez a nézet a találatokról tud, a
+   * felekről és a döntésekről nem — azok az `App.tsx`-ben laknak.
+   */
+  onContext?: (e: React.MouseEvent, matchId: number | null) => void;
 }) {
   const pages = szakasz?.pages ?? analysis.pages;
   const highlights = szakasz?.highlights ?? analysis.highlights;
+  const textSpans = szakasz?.textSpans ?? analysis.textSpans ?? [];
   const previewText = szakasz?.previewText ?? analysis.previewText;
 
   const byPage = useMemo(() => {
@@ -131,6 +143,7 @@ export function DocumentView({
         onSelect={onSelect}
         {...(dontesek ? { dontesek } : {})}
         {...(onToggle ? { onToggle } : {})}
+        {...(onContext ? { onContext } : {})}
       />
     );
   }
@@ -138,11 +151,16 @@ export function DocumentView({
   return (
     // A „source" osztály nem díszítés: a nyomtatási szabályok ebből tudják,
     // hogy ezen a nézeten a VALÓDI nevek állnak, és papírra sosem kerülhet.
-    <div className={`viewport source${onToggle ? ' kapcsolhato' : ''}`} ref={ref}>
+    <div
+      className={`viewport source${onToggle ? ' kapcsolhato' : ''}`}
+      ref={ref}
+      {...(onContext ? { onContextMenu: (e: React.MouseEvent) => onContext(e, hlAlatta(e)) } : {})}
+    >
       <div className="pagewrap">
         {pages.map((p) => (
           <div className="page" key={p.index}>
             <img src={p.dataUrl} alt={`${p.index + 1}. oldal`} draggable={false} />
+            <SzovegReteg spans={textSpans} page={p.index} />
             {(byPage.get(p.index) ?? []).map((h) => {
               const nyers = matchById.get(h.matchId);
               const m = nyers ? frissSor(nyers, dontesek) : undefined;
@@ -227,6 +245,99 @@ function gorgessOda(tarto: HTMLElement | null, selected: number | null): void {
   el.scrollIntoView({ block: 'center', behavior: 'smooth' });
 }
 
+/**
+ * KIJELÖLHETŐ, ÁTLÁTSZÓ SZÖVEG A LAPKÉP FÖLÖTT — a PDF-olvasók fogása.
+ *
+ * MIÉRT KELL. A PDF a felületen kép: a lapot a natív rajzoló festi meg, és a
+ * képen nincs szöveg, amit meg lehetne fogni. A jobb gombos „jelöld ki, és
+ * mondd meg, minek értelmezze" tehát pontosan azon a formátumon nem működött
+ * volna, ami a program fő tárgya — a bírósági iratok PDF-ben járnak. Ez a
+ * réteg minden szövegszakaszt a saját helyére tesz, átlátszó betűvel: nem
+ * látszik, de kijelölhető, és a kijelölés a KÉPEN LÁTHATÓ szavakon fut végig.
+ *
+ * A RÉTEG A KIEMELÉSEK ALATT VAN. Fölöttük ülve elnyelné a kattintást, és az
+ * iraton nem lehetne többé ki-be kapcsolni egy cserét — pedig az a bal panel
+ * fő működése. Így viszont a kijelölés ott indul, ahol új dolgot lehet
+ * felvenni (a jelöletlen szövegen), a már megjelölt szavakra pedig a
+ * kiemelés saját jobb gombos menüje válaszol.
+ *
+ * A VÍZSZINTES IGAZÍTÁS mérésből jön. A betűméretet a motor adja (a lap
+ * arányában, tehát a nagyítást magától követi), de a mi betűnk nem az iratéi:
+ * ugyanaz a szöveg nálunk szélesebb vagy keskenyebb. A `scaleX` a mért
+ * szélességet ráhúzza a ténylegesen kirajzoltra — enélkül a sor végére a
+ * kijelölés fél szónyit csúszna el a betűkről.
+ */
+function SzovegReteg({ spans, page }: { spans: TextSpan[]; page: number }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const sajat = useMemo(() => spans.filter((s) => s.page === page), [spans, page]);
+
+  useLayoutEffect(() => {
+    const tarto = ref.current;
+    if (!tarto) return;
+    const igazit = (): void => {
+      const elemek = tarto.querySelectorAll<HTMLElement>('span[data-w]');
+      for (const el of elemek) {
+        const cel = Number(el.dataset.w);
+        if (!Number.isFinite(cel) || cel <= 0) continue;
+        // A mérés a saját, torzítatlan szélességen fut — különben minden
+        // újramérés az ELŐZŐ nyújtást szorozná tovább.
+        el.style.transform = 'none';
+        const sajatSzelesseg = el.getBoundingClientRect().width;
+        if (sajatSzelesseg > 0) el.style.transform = `scaleX(${cel / sajatSzelesseg})`;
+      }
+    };
+    igazit();
+    // A lapkép a panel szélességével nagyítódik: méretváltáskor újra kell mérni.
+    const figyelo = new ResizeObserver(igazit);
+    figyelo.observe(tarto);
+    return () => figyelo.disconnect();
+  }, [sajat]);
+
+  if (sajat.length === 0) return null;
+
+  return (
+    /*
+      NEM `aria-hidden`. Ez a réteg a lap EGYETLEN olvasható szövege: a lapkép
+      egy PNG, alt-szövege csak az oldalszám. Elrejtve a PDF a képernyőolvasó
+      számára üres lap volna — a réteggel viszont felolvasható.
+    */
+    <div className="szovegreteg" ref={ref}>
+      {sajat.map((s, i) => (
+        <span
+          key={i}
+          data-w={s.width * 100}
+          style={{
+            left: `${s.left * 100}%`,
+            top: `${s.top * 100}%`,
+            height: `${s.height * 100}%`,
+            fontSize: `${s.fontSize * 100}cqw`,
+          }}
+        >
+          {s.text}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * MELYIK TALÁLATRA ESETT A JOBB KATTINTÁS — egyetlen figyelővel, mindkét nézeten.
+ *
+ * A kiemelés a lapképen `div`, a szövegben `mark`; ami közös bennük, az a
+ * `data-hl` azonosító. A `closest` ezt keresi meg a kattintás helyétől
+ * felfelé, tehát a nézetnek elég EGY `onContextMenu` figyelője — nem kell
+ * mindegyik jelölésre külön, és a kettő nem is tud kétszer elsülni.
+ *
+ * `null`: nem jelölésre kattintottak. Olyankor a menü a kijelölt szövegről
+ * szól.
+ */
+function hlAlatta(e: React.MouseEvent): number | null {
+  const el = (e.target as HTMLElement | null)?.closest?.('[data-hl]');
+  if (!el) return null;
+  const n = Number((el as HTMLElement).dataset.hl);
+  return Number.isFinite(n) ? n : null;
+}
+
 function frissSor(m: MatchRow, dontesek: Record<number, 'accept' | 'skip'> | undefined): MatchRow {
   const d = dontesek?.[m.id];
   return d === undefined ? m : { ...m, decision: d };
@@ -268,6 +379,7 @@ function TextView({
   dontesek,
   onSelect,
   onToggle,
+  onContext,
 }: {
   analysis: AnalysisResult;
   /** A MEGJELENÍTETT irat szövege — több irat esetén nem az elemzés gyökeréé. */
@@ -280,6 +392,7 @@ function TextView({
   /** Kapcsoló nélküli (munkalapi) nézetben a kattintás kijelöl — mint a lapképesen. */
   onSelect: (id: number | null) => void;
   onToggle?: (id: number) => void;
+  onContext?: (e: React.MouseEvent, matchId: number | null) => void;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => gorgessOda(ref.current, selected), [selected]);
@@ -324,7 +437,11 @@ function TextView({
   }, [previewText, analysis.matches, tolIg]);
 
   return (
-    <div className={`viewport source${onToggle ? ' kapcsolhato' : ''}`} ref={ref}>
+    <div
+      className={`viewport source${onToggle ? ' kapcsolhato' : ''}`}
+      ref={ref}
+      {...(onContext ? { onContextMenu: (e: React.MouseEvent) => onContext(e, hlAlatta(e)) } : {})}
+    >
       <div className="textview">
         {darabok.map((d) =>
           d.m === undefined ? (

@@ -6,6 +6,8 @@ import {
   // állapot és a jelmagyarázat ebből következik, nem külön tárolt adatból.
   matchKind,
   matchOutcome,
+  // A motor szótára az azonosítófajtákhoz — a jobb gombos menü ebből épül.
+  AZONOSITO_NEV,
   type AnalysisResult,
   type MatchKind,
   type MatchOutcome,
@@ -15,6 +17,8 @@ import {
   type DocumentInfo,
   type ExportResult,
   type IratBeallitas,
+  type AzonositoKind,
+  type EntityKind,
   type PartyInput,
   type PreviewPages,
   type DetectionResult,
@@ -22,6 +26,8 @@ import {
   type ThemeSummaryUi,
 } from './api';
 import { DocumentView, FAJTA_CIMKE, KIMENET_CIMKE, OsszegzoLap, PreviewView } from './panels';
+import { KontextMenu, type MenuAllas, type MenuTetel } from './kontextmenu';
+import { ROLES } from './dialogs';
 import {
   DocumentSetup,
   MODE_LABEL,
@@ -538,6 +544,15 @@ export default function App() {
   const [sajatDontes, setSajatDontes] = useState(false);
   const [caseSecret, setCaseSecret] = useState(newCaseSecret);
   const [view, setView] = useState<View>('source');
+  /**
+   * A JOBB GOMBOS MENÜ ÁLLÁSA — hol áll, és mi van benne.
+   *
+   * A tartalom a MEGNYITÁS pillanatában készül el (`iratContext`), nem
+   * kirajzoláskor: a menü arról a találatról szól, amelyikre a kattintás
+   * esett, és arról a kijelölésről, ami akkor állt fenn. Élő számításból a
+   * menü a háttérben futó újraelemzéstől a kezünk alatt változna meg.
+   */
+  const [menu, setMenu] = useState<MenuAllas | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   /**
    * AZ ÁLNEVESÍTETT IRAT LAPKÉPEI — PDF-en ez az előnézet.
@@ -2569,6 +2584,250 @@ export default function App() {
     ujraKert();
   };
 
+  /* ─────────────── jobb gombos menü az iraton ─────────────── */
+
+  /**
+   * ÚJ FÉLLISTA ÉRVÉNYRE JUTTATÁSA — a menü minden művelete ezen megy át.
+   *
+   * A DÖNTÉSEKET EL KELL DOBNI, és ez nem óvatoskodás. A találat azonosítója
+   * az iratbeli SORRENDJE (`addRow`, src/app/session.ts): egy név felvételével
+   * vagy kivételével a mögötte állók azonosítója elcsúszik, a `decisions`
+   * viszont erre az azonosítóra hivatkozik. A megőrzött döntések tehát MÁS
+   * SZAVAKRA vonatkoznának — épp arra a kimondott „ne cseréld"-re, amivel a
+   * felhasználó egy nevet bent akart hagyni. Ugyanez a megfontolás áll a
+   * hivatalos szereplők kapcsolója mögött is (`setupBeallitas`).
+   */
+  const felekFrissit = (ujFelek: PartyInput[], ujAzonositok: PartyInput[]): void => {
+    setParties(ujFelek);
+    setIdentifiers(ujAzonositok);
+    setDecisions({});
+    setSelected(null);
+    setHasWork(true);
+    setSajatDontes(true);
+    void runAnalysis(ujFelek, themeId, mode, {}, ujAzonositok);
+  };
+
+  /**
+   * EGY ÚJ FÉL A KIJELÖLT SZÖVEGBŐL.
+   *
+   * A pozíciót nem adjuk át, és nem is kell: a motor a felszíni alakot KERESI
+   * meg az iratban (`SeedMatcher`), tehát a kijelölés minden előfordulása
+   * megkapja a jelölést — nem csak az, amelyikre a felhasználó rákattintott.
+   * Ez a helyes viselkedés: aki azt mondja, hogy „a Szikla Agrár Kft. egy
+   * szervezet", nem egyetlen mondatról beszél.
+   */
+  const kijelolesFelvesz = (
+    szoveg: string,
+    kind: EntityKind,
+    role: string,
+    identifierKind?: AzonositoKind,
+  ): void => {
+    const uj: PartyInput = {
+      id: `k${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+      kind,
+      fullName: szoveg,
+      // A nemet nem találgatjuk a felületen: ahhoz a szöveg kell, az pedig
+      // sosem hagyja el a főfolyamatot. Az „N" a kézi felvitel alapállása is.
+      gender: 'N',
+      role,
+      ...(identifierKind ? { identifierKind } : {}),
+    };
+    if (kind === 'identifier') felekFrissit(parties, [...identifiers, uj]);
+    else felekFrissit([...parties, uj], identifiers);
+  };
+
+  /** A találathoz tartozó fél — akár a felek, akár az azonosítók közül. */
+  const felhezTartozo = (entityId: string): PartyInput | null =>
+    parties.find((p) => p.id === entityId) ?? identifiers.find((p) => p.id === entityId) ?? null;
+
+  /** A fél kivétele a listából — az aláhúzás ettől mindenhol eltűnik. */
+  const felTorles = (entityId: string): void => {
+    felekFrissit(
+      parties.filter((p) => p.id !== entityId),
+      identifiers.filter((p) => p.id !== entityId),
+    );
+  };
+
+  /**
+   * ÁTÉRTELMEZÉS: ugyanaz a szöveg, más fajta.
+   *
+   * A fél átkerülhet a két lista között (egy tévesen névnek nézett számsor
+   * azonosító lesz, és fordítva), ezért mindkettőből kivesszük, és a fajtának
+   * megfelelőbe tesszük vissza — UGYANAZZAL az azonosítóval, hogy a kézzel
+   * megadott álnév (`manualReplacement`) se vesszen el.
+   */
+  const felAtertelmez = (
+    entityId: string,
+    kind: EntityKind,
+    role: string,
+    identifierKind?: AzonositoKind,
+  ): void => {
+    const regi = felhezTartozo(entityId);
+    if (!regi) return;
+    const uj: PartyInput = { ...regi, kind, role, ...(identifierKind ? { identifierKind } : {}) };
+    if (kind !== 'identifier') delete uj.identifierKind;
+    const maradekFelek = parties.filter((p) => p.id !== entityId);
+    const maradekAzon = identifiers.filter((p) => p.id !== entityId);
+    if (kind === 'identifier') felekFrissit(maradekFelek, [...maradekAzon, uj]);
+    else felekFrissit([...maradekFelek, uj], maradekAzon);
+  };
+
+  /**
+   * A „MINEK ÉRTELMEZZE" ÁGAK — ugyanaz a szerkezet felvételnél és
+   * átértelmezésnél.
+   *
+   * Egyetlen helyen áll, mert a két menü ugyanazt a kérdést teszi fel, csak
+   * más következménnyel. Két külön felsorolásból az egyik előbb-utóbb lemaradna
+   * egy fajtáról, és a felhasználó azt hinné, hogy egy szó nem lehet az, ami.
+   */
+  const fajtaAgak = (
+    valaszt: (kind: EntityKind, role: string, ik?: AzonositoKind) => void,
+  ): MenuTetel[] => [
+    {
+      fajta: 'almenu',
+      cimke: 'Személy',
+      sugo: 'Fedőnevet kap. Az eljárási szerep abban segít, hogy a program a megfelelő alakot adja neki.',
+      tetelek: ROLES.map((r) => ({
+        fajta: 'gomb' as const,
+        cimke: r,
+        onValaszt: () => valaszt('person', r),
+      })),
+    },
+    {
+      fajta: 'almenu',
+      cimke: 'Szervezet',
+      sugo: 'Cég, hivatal, intézmény — kitalált cégnevet kap, a cégforma megmarad.',
+      tetelek: [
+        { fajta: 'gomb', cimke: 'szervezet', onValaszt: () => valaszt('org', 'szervezet') },
+        { fajta: 'gomb', cimke: 'felperes', onValaszt: () => valaszt('org', 'felperes') },
+        { fajta: 'gomb', cimke: 'alperes', onValaszt: () => valaszt('org', 'alperes') },
+        { fajta: 'gomb', cimke: 'hitelező', onValaszt: () => valaszt('org', 'hitelező') },
+        { fajta: 'gomb', cimke: 'egyéb', onValaszt: () => valaszt('org', 'egyéb') },
+      ],
+    },
+    {
+      fajta: 'gomb',
+      cimke: 'Hely',
+      sugo: 'Település, közterület — kitalált helynevet kap.',
+      onValaszt: () => valaszt('place', 'egyéb'),
+    },
+    {
+      fajta: 'almenu',
+      cimke: 'Azonosító',
+      sugo: 'Számsor vagy cím: nem fedőnevet kap, hanem az adatfajta megnevezését — „[adószám]".',
+      tetelek: (Object.keys(AZONOSITO_NEV) as AzonositoKind[]).map((k) => ({
+        fajta: 'gomb' as const,
+        cimke: AZONOSITO_NEV[k],
+        onValaszt: () => valaszt('identifier', AZONOSITO_NEV[k], k),
+      })),
+    },
+  ];
+
+  /** Rövidítve, hogy a menü fejléce ne nőjön az irat szélességére. */
+  const rovidit = (t: string, max = 42): string =>
+    t.length <= max ? t : `${t.slice(0, max - 1)}…`;
+
+  /** Jelölésre kattintva: kikapcsolás, aláhúzás törlése, átértelmezés. */
+  const talalatMenu = (m: MatchRow): MenuTetel[] => {
+    const most = decisions[m.id] ?? m.decision;
+    const cserelodik = matchOutcome({ ...m, ...(most ? { decision: most } : {}) }) === 'csere';
+    const fajta = matchKind(m, hivatalosIdk);
+    const fel = felhezTartozo(m.entityId);
+
+    const tetelek: MenuTetel[] = [
+      {
+        fajta: 'cim',
+        szoveg: rovidit(m.surface),
+        also: cserelodik
+          ? `${FAJTA_CIMKE[fajta]} — lecserélve erre: ${m.replacement ?? '—'}`
+          : `${FAJTA_CIMKE[fajta]} — most nem cserélődik`,
+      },
+      { fajta: 'valaszto' },
+      {
+        fajta: 'gomb',
+        cimke: cserelodik ? 'Ezt az előfordulást ne cserélje' : 'Ezt az előfordulást cserélje',
+        sugo: 'Csak ez az egy hely — a szó többi előfordulása nem változik. Ugyanaz, mint balra rákattintani.',
+        onValaszt: () => iratKattintas(m.id),
+      },
+    ];
+
+    /*
+      AZ ALÁHÚZÁS TÖRLÉSE CSAK OTT, AHOL VAN MIT TÖRÖLNI.
+
+      Az összeg és a dátum nem „fél": nincs listasoruk, amit ki lehetne venni —
+      őket a beállító lap fajtakapcsolója kapcsolja ki, egyben. Egy itt
+      felkínált „vedd ki a listából" ezeknél némán nem csinálna semmit, ami
+      rosszabb, mint a hiánya.
+    */
+    if (fel) {
+      tetelek.push(
+        {
+          fajta: 'gomb',
+          bont: true,
+          cimke: `Nem ${FAJTA_CIMKE[fajta]} — vedd le róla az aláhúzást`,
+          sugo:
+            'A programot ezzel javítod: a szó kikerül a listából, és az irat EGYETLEN helyén ' +
+            'sem lesz többé megjelölve.',
+          onValaszt: () => felTorles(m.entityId),
+        },
+        { fajta: 'valaszto' },
+        {
+          fajta: 'almenu',
+          cimke: 'Inkább ez legyen…',
+          sugo: 'Ugyanaz a szöveg, más fajta — a csereszöveg is ehhez igazodik.',
+          tetelek: fajtaAgak((kind, role, ik) => felAtertelmez(m.entityId, kind, role, ik)),
+        },
+      );
+    }
+    return tetelek;
+  };
+
+  /** Kijelölésre: vegyük fel új félként, a választott fajtával. */
+  const kijelolesMenu = (): MenuTetel[] => {
+    /*
+      A SORTÖRÉS SZÓKÖZZÉ VÁLIK. A PDF-ben a sortörés fizikai: egy két sorba
+      tört cégnév kijelölve sortöréssel érkezne, a motor pedig pontosan azt a
+      karakterláncot keresné — és sosem találná meg. Az iratbeli szöveg
+      ugyanezen a normalizáláson megy át (`buildPageText`).
+    */
+    const szoveg = (window.getSelection()?.toString() ?? '').replace(/\s+/g, ' ').trim();
+    if (szoveg.length === 0) {
+      return [
+        {
+          fajta: 'cim',
+          szoveg: 'Nincs kijelölve semmi',
+          also:
+            'Jelöld ki a szöveget az iraton, és kattints rá jobb gombbal — akkor megmondhatod, ' +
+            'minek értelmezze a program. Egy már aláhúzott szón a jobb kattintás a jelölést javítja.',
+        },
+      ];
+    }
+    return [
+      {
+        fajta: 'cim',
+        szoveg: rovidit(szoveg),
+        also: 'Minek értelmezze a program? Minden előfordulása megjelölődik.',
+      },
+      { fajta: 'valaszto' },
+      ...fajtaAgak((kind, role, ik) => kijelolesFelvesz(szoveg, kind, role, ik)),
+    ];
+  };
+
+  /**
+   * A MENÜ ÖSSZEÁLLÍTÁSA — két eset, egy belépési pont.
+   *
+   * Ha a kattintás JELÖLÉSRE esett, arról a találatról szól; egyébként a
+   * kijelölt szövegről. A sorrend nem véletlen: aki egy aláhúzott szóra kattint
+   * jobb gombbal, a jelölésről kérdez — akkor is, ha korábban kijelölt valamit
+   * máshol, és a kijelölés még ott áll.
+   */
+  const iratContext = (e: React.MouseEvent, matchId: number | null): void => {
+    if (!analysis) return;
+    const m = matchId === null ? undefined : analysis.matches.find((x) => x.id === matchId);
+    e.preventDefault();
+    setMenu({ x: e.clientX, y: e.clientY, tetelek: m ? talalatMenu(m) : kijelolesMenu() });
+  };
+
   const setupBeallitas = (valtozas: Partial<DokumentumBeallitasok>): void => {
     if (valtozas.mode !== undefined) setMode(valtozas.mode);
     if (valtozas.themeId !== undefined) setThemeId(valtozas.themeId);
@@ -3265,6 +3524,7 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
                 dontesek={decisions}
                 onSelect={setSelected}
                 onToggle={iratKattintas}
+                onContext={iratContext}
               />
             ) : (
               <div className="viewport source">
@@ -3622,6 +3882,16 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
       {dialog === 'keyfile' && (
         <KeyFileDialog initialPath={keyFilePath} onClose={() => setDialog(null)} />
       )}
+
+      {/*
+        A JOBB GOMBOS MENÜ A LAP FÖLÖTT ÁLL, nem a nézeten belül.
+
+        A dokumentumpanel saját görgetősávot kap (`overflow: auto`), és egy
+        azon belül kirajzolt menü a panel szélénél levágódna — épp a hosszú
+        almenük (az eljárási szerepek, az azonosítófajták) tűnnének el belőle.
+        A képernyőponthoz kötött, legfelső szintű menü ettől szabad.
+      */}
+      {menu !== null && <KontextMenu allas={menu} onClose={() => setMenu(null)} />}
 
       {dialog === 'autoReport' && (
         <AutoReportDialog

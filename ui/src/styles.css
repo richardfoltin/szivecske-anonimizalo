@@ -474,6 +474,15 @@ textarea {
   box-shadow: var(--shadow);
   border-radius: 3px;
   overflow: hidden;
+  /*
+    MÉRETHIVATKOZÁS a fölé fektetett szövegrétegnek.
+
+    A betűméretet a motor a LAP arányában adja meg (pont/lapszélesség), a lap
+    pedig a panel szélességéhez igazodva nagyítódik. A `cqw` ezt a két dolgot
+    köti össze: a réteg betűi maguktól követik a nagyítást, JavaScript nélkül —
+    máskülönben minden panelméretezésnél újra kellene számolni mindegyiket.
+  */
+  container-type: inline-size;
 }
 .page img {
   display: block;
@@ -4163,5 +4172,198 @@ textarea:focus {
   }
   @page {
     margin: 20mm 18mm;
+  }
+}
+
+/* ─────────────────────── jobb gombos menü az iraton ─────────────────────── */
+
+/*
+  A MENÜ A KÉPERNYŐHÖZ VAN KÖTVE, NEM A PANELHEZ.
+
+  A dokumentumpanel görgethető (`overflow: auto`), és egy azon belül kirajzolt
+  menü a panel szélénél levágódna — épp a hosszú almenük (az eljárási szerepek,
+  az azonosítófajták) tűnnének el belőle. Ezért `fixed`, a React fája legfelső
+  szintjén.
+
+  A RÉTEG a párbeszédek (40) ALATT van: ha valamiért mégis nyitva maradna, egy
+  párbeszéd akkor is föléje kerül, és nem lehet vele kizárni a felhasználót a
+  saját programjából.
+*/
+.kmenu-fatyol {
+  position: fixed;
+  inset: 0;
+  z-index: 34;
+}
+.kmenu {
+  position: fixed;
+  z-index: 35;
+  min-width: 232px;
+  max-width: 340px;
+  padding: 5px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  font-size: 12.5px;
+  /* Hosszú lista (tizennégy eljárási szerep) is elfér: a menü görög, nem lóg ki. */
+  max-height: min(70vh, 520px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+/*
+  A MENÜ FEJE NEM VÁLASZTHATÓ SOR: azt mondja meg, MIRE vonatkozik a menü.
+
+  Enélkül a „vedd le róla az aláhúzást" parancs a levegőben lógna — több
+  aláhúzott szó áll egymás mellett, és a jobb kattintás után már nem látszik,
+  melyiket találta el az egér.
+*/
+.kmenu-cim {
+  padding: 7px 9px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.kmenu-cim > b {
+  color: var(--ink);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.kmenu-also {
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+.kmenu-vonal {
+  height: 1px;
+  background: var(--line);
+  margin: 4px 2px;
+}
+.kmenu-sor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 9px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 12.5px;
+  text-align: left;
+  transition: background 0.1s;
+}
+.kmenu-szo {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.kmenu-nyil {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1;
+}
+.kmenu-sor:hover,
+.kmenu-sor:focus-visible {
+  background: var(--surface-2);
+  outline: none;
+}
+.kmenu-ag.nyitva > .kmenu-sor {
+  background: var(--surface-2);
+}
+/*
+  AZ ALÁHÚZÁS TÖRLÉSE MÁS MŰVELET, MINT A TÖBBI — a szín ezt mondja el.
+
+  A többi sor a csere állását állítja, ez viszont a program egy TÉVEDÉSÉT
+  javítja ki: a szó kikerül a listából. Nem piros (nem veszélyes: a felek
+  listáján bármikor visszavehető), de nem is ugyanolyan, mint a szomszédai.
+*/
+.kmenu-sor.bont {
+  color: var(--rose-deep);
+}
+.kmenu-sor.bont:hover,
+.kmenu-sor.bont:focus-visible {
+  background: var(--rose-soft);
+}
+
+/*
+  AZ ALMENÜ A SZÜLŐ SOR MELLETT NYÍLIK.
+
+  A `.kmenu-ag` a helyzeti alap, az almenü hozzá képest áll — így a hosszú
+  listák nem tolják szét a főmenüt. A kifelé lógást a `balra` osztály fordítja
+  meg, amit a menü maga mér ki: keskeny ablakon a bal panel a képernyő jobb
+  feléig ér, ott a jobbra nyíló almenü levágódna.
+*/
+.kmenu-ag {
+  position: relative;
+}
+.kmenu-ag > .kmenu.al {
+  position: absolute;
+  left: calc(100% - 2px);
+  top: -5px;
+  min-width: 190px;
+}
+.kmenu-ag > .kmenu.al.balra {
+  left: auto;
+  right: calc(100% - 2px);
+}
+
+/*
+  A KIJELÖLÉS AZ IRATON LÁTSZÓDJON — enélkül a jobb kattintásnak nincs tárgya.
+
+  A szövegnézet eddig is kijelölhető volt (`user-select: text`), a kijelölés
+  színe viszont a böngésző alapértelmezése maradt, ami ezen a rózsaszínes
+  háttéren idegen kék folt. A jelöléseken (`mark`) átmenő kijelölésnek is
+  ugyanígy kell kinéznie, különben a felhasználó nem látja, meddig ér.
+*/
+.textview ::selection,
+.textview::selection {
+  background: rgba(196, 87, 125, 0.26);
+  color: inherit;
+}
+
+/*
+  A KIJELÖLHETŐ SZÖVEGRÉTEG a lapkép fölött (PDF).
+
+  ÁTLÁTSZÓ, DE NEM LÁTHATATLAN: a betű színe átlátszó, a KIJELÖLÉSE viszont
+  festődik — pontosan úgy, ahogy a PDF-olvasókban. A felhasználó tehát a képen
+  látható szót jelöli ki, és látja is, meddig ér.
+
+  A RÉTEG A KIEMELÉSEK ALATT ÁLL (a `.hl` utána jön a fában). Fölöttük ülve
+  elnyelné a kattintást, és az iraton nem lehetne többé ki-be kapcsolni egy
+  cserét — pedig az a bal panel fő működése.
+*/
+.szovegreteg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  user-select: text;
+  /* A kurzor is elárulja, hogy itt szöveg van, nem csak egy kép. */
+  cursor: text;
+  line-height: 1;
+}
+.szovegreteg span {
+  position: absolute;
+  white-space: pre;
+  transform-origin: 0 0;
+  color: transparent;
+  /* A `-webkit-text-fill-color` kell ahhoz, hogy a kijelölés SE fesse ki a
+     betűt: enélkül a kijelölt szó fölött a mi betűnk is megjelenne, két
+     egymásra csúszott szöveggé téve a sort. */
+  -webkit-text-fill-color: transparent;
+}
+.szovegreteg span::selection {
+  background: rgba(196, 87, 125, 0.3);
+  -webkit-text-fill-color: transparent;
+}
+
+/*
+  NYOMTATÁSKOR NINCS RÁ SZÜKSÉG. Az eredeti nézet amúgy sem kerül papírra, de
+  a réteg egy hibás betűszín-öröklésnél olvasható szöveggé válhatna a lapkép
+  fölött — kétszer kiírt, egymásra csúszott sorokká.
+*/
+@media print {
+  .szovegreteg {
+    display: none !important;
   }
 }

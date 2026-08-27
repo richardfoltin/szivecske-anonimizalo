@@ -2454,6 +2454,9 @@ function registerHandlers(): void {
       szakaszok.push({
         doc: res.doc,
         pages: res.pages,
+        // A kijelölhető szövegréteg IRATONKÉNT más, mint a lapkép: eltolást
+        // nem igényel, mert nem hivatkozik találatra.
+        textSpans: res.textSpans ?? [],
         highlights: res.highlights.map((h) => ({ ...h, matchId: h.matchId + eltolas })),
         previewText: res.previewText,
         matchIdTol: eltolas,
@@ -2504,6 +2507,7 @@ function registerHandlers(): void {
       ...fo,
       doc: elsoSzakasz.doc,
       pages: elsoSzakasz.pages,
+      textSpans: elsoSzakasz.textSpans ?? [],
       previewText: elsoSzakasz.previewText,
       highlights: elsoSzakasz.highlights,
       docs: szakaszok,

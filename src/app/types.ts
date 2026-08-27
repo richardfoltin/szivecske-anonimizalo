@@ -8,7 +8,54 @@
 
 // Csak típus: a fordítás után nyoma sem marad, tehát a felületi csomagba sem
 // kerül bele a magyar azonosító-felismerő.
-import type { AzonositoKind } from '../hu/azonositok.js';
+/**
+ * AZ AZONOSÍTÓ FAJTÁI — ÉS A MAGYAR NEVÜK, EGY HELYEN.
+ *
+ * Ez a lista korábban a `hu/azonositok.ts`-ben lakott, a felismerő kódja
+ * mellett. Attól fogva, hogy a FELÜLET is szüksége lett rá (a jobb gombos menü
+ * „Azonosító" almenüje ezekből áll), két rossz választás maradt volna: vagy a
+ * teljes felismerő motor bekerül a felületi kötegbe egyetlen szótár kedvéért,
+ * vagy a lista MÁSODSZOR is leíródik a felület oldalán — és a másolat előbb-
+ * utóbb szétcsúszik: a motor megtanul egy tizenötödik fajtát, a menüben pedig
+ * tizennégy marad.
+ *
+ * A `types.ts` a közös nyelv: se fájlrendszer, se motor, se `node:` modul nem
+ * kerül vele a felületre. A `hu/azonositok.ts` innen veszi át (és tovább is
+ * adja, hogy a régi importok változatlanul működjenek).
+ */
+export type AzonositoKind =
+  | 'ado_azonosito_jel'
+  | 'taj'
+  | 'adoszam'
+  | 'cegjegyzekszam'
+  | 'bankszamlaszam'
+  | 'iban'
+  | 'helyrajzi_szam'
+  | 'iranyitoszam'
+  | 'telefonszam'
+  | 'szemelyazonosito_igazolvany'
+  | 'birosagi_ugyszam'
+  | 'email'
+  | 'rendszam'
+  | 'cim';
+
+/** Megjelenítendő magyar név a szereplapon és a jobb gombos menüben. */
+export const AZONOSITO_NEV: Record<AzonositoKind, string> = {
+  ado_azonosito_jel: 'adóazonosító jel',
+  taj: 'TAJ-szám',
+  adoszam: 'adószám',
+  cegjegyzekszam: 'cégjegyzékszám',
+  bankszamlaszam: 'bankszámlaszám',
+  iban: 'IBAN',
+  helyrajzi_szam: 'helyrajzi szám',
+  iranyitoszam: 'irányítószám',
+  telefonszam: 'telefonszám',
+  szemelyazonosito_igazolvany: 'személyazonosító igazolvány száma',
+  birosagi_ugyszam: 'bírósági ügyszám',
+  email: 'e-mail cím',
+  rendszam: 'rendszám',
+  cim: 'cím',
+};
 
 /**
  * Mit takarunk ki. Az 'identifier' azért külön fajta, és nem a 'place' vagy az
@@ -183,6 +230,34 @@ export interface PageImage {
   /** Az oldal mérete pontban — a kiemelések ehhez képest vannak megadva. */
   pageWidth: number;
   pageHeight: number;
+}
+
+/**
+ * EGY KIJELÖLHETŐ SZÖVEGSZAKASZ A LAPKÉP FÖLÖTT.
+ *
+ * A PDF a felületen KÉP: a lapot a natív rajzoló festi meg, és a képen nincs
+ * szöveg, amit meg lehetne fogni. Emiatt a jobb gombos „jelöld ki, és mondd
+ * meg, minek értelmezze" pontosan azon a formátumon nem működött volna, ami a
+ * program fő tárgya — a bírósági iratok PDF-ben járnak.
+ *
+ * A megoldás ugyanaz, amit a PDF-olvasók használnak: a kép fölé ÁTLÁTSZÓ
+ * szöveget rakunk, ugyanoda, ugyanakkorát. Nem látszik, de kijelölhető, és a
+ * kijelölés a képen látható szavakon fut végig.
+ *
+ * Az arányok (0..1) a lap méretéhez képest értendők, mint a `Highlight`-nál —
+ * így a réteg a lapképpel EGYÜTT nagyítódik, külön számolás nélkül.
+ */
+export interface TextSpan {
+  page: number;
+  /** A szakasz bal felső sarka és magassága a lap arányában. */
+  left: number;
+  top: number;
+  height: number;
+  /** A ténylegesen kirajzolt szélesség a lap arányában — ehhez igazítjuk a betűt. */
+  width: number;
+  /** Betűméret a lapszélesség arányában (így a nagyítás magától követi). */
+  fontSize: number;
+  text: string;
 }
 
 export interface Highlight {
@@ -406,6 +481,14 @@ export interface DocSection {
   doc: DocumentInfo;
   pages: PageImage[];
   highlights: Highlight[];
+  /**
+   * A LAPKÉP FÖLÉ FEKTETETT, KIJELÖLHETŐ SZÖVEG — csak PDF-en.
+   *
+   * Üres lista DOCX-en és TXT-n: ott a nézet magát a szöveget rajzolja ki,
+   * tehát eleve kijelölhető. Opcionális, mert a felületi fejlesztői álkimenet
+   * is `DocSection`-t állít elő.
+   */
+  textSpans?: TextSpan[];
   /** A dokumentum szövege — a szöveges előnézethez (DOCX, TXT). */
   previewText: string;
   matchIdTol: number;
@@ -439,6 +522,8 @@ export interface AnalysisResult {
    */
   doc: DocumentInfo;
   pages: PageImage[];
+  /** A kijelölhető szövegréteg az ELSŐ irathoz — a `docs` első elemének mása. */
+  textSpans?: TextSpan[];
   /**
    * MINDEN betöltött irat, betöltési sorrendben. Egy iratnál egyelemű.
    *

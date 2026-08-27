@@ -41,7 +41,15 @@ export function Overlay({ children, onClose }: { children: React.ReactNode; onCl
 
 /* ─────────────────────────── felek ─────────────────────────── */
 
-const ROLES = [
+/**
+ * ELJÁRÁSI SZEREPEK — a felek párbeszédének legördülőjéhez ÉS a jobb gombos
+ * menü „Személy" almenüjéhez.
+ *
+ * Exportálva, mert két helyen kell, és egy második lista némán elcsúszna: a
+ * legördülőben ott volna a „kezes", a menüben nem — a felhasználó pedig azt
+ * hinné, hogy a kettő nem ugyanaz a mező.
+ */
+export const ROLES = [
   'felperes',
   'I. r. alperes',
   'II. r. alperes',

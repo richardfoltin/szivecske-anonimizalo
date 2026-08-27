@@ -116,6 +116,7 @@ import type {
   PageImage,
   PartyInput,
   ReplacementMode,
+  TextSpan,
 } from './types.js';
 
 /** Magyar ékezeteket tartalmazó pótbetűkészletek, sorrendben. */
@@ -808,6 +809,7 @@ export class DocumentSession {
     return {
       doc: this.info,
       pages: this.pages,
+      textSpans: this.textSpans(),
       cast,
       matches,
       highlights,
@@ -863,6 +865,46 @@ export class DocumentSession {
   /** A dokumentum teljes szövege — a felek automatikus felismeréséhez. */
   fullText(): string {
     return this.units.map((u) => u.text).join('\n\n');
+  }
+
+  /**
+   * A KIJELÖLHETŐ SZÖVEGRÉTEG a lapképekhez — csak PDF-en.
+   *
+   * Ugyanabból a bejárásból, amiből a kiemelés helye (`highlightFor`): a
+   * szakasz alapvonala, a betűmérete és a ténylegesen kirajzolt szélessége már
+   * megvan, ez csak arányokra váltja őket. Két külön geometria a képen látható
+   * szó és a fölé fektetett szöveg közé lassan éket verne — a kijelölés
+   * elcsúszna a betűkről, és a felhasználó mást jelölne ki, mint amit lát.
+   *
+   * Üres lista lapkép nélkül: a réteg megjelenítése a lapképhez kötött, és
+   * nélküle csak a memóriát terhelné.
+   */
+  private textSpans(): TextSpan[] {
+    if (this.pages.length === 0) return [];
+    const out: TextSpan[] = [];
+    for (const unit of this.units) {
+      const pdf = unit.pdf;
+      if (!pdf) continue;
+      for (const span of pdf.pageText.spans) {
+        const seg = span.segment;
+        if (seg.text.trim().length === 0 || seg.width <= 0 || seg.fontSize <= 0) continue;
+        // UGYANAZ A KÉT ARÁNYSZÁM, mint a `highlightFor`-ban: a betűtest az
+        // alapvonal fölött és alatt. Külön számokból a kijelölés és a
+        // kiemelés más magasan ülne ugyanazon a szón.
+        const ascent = seg.fontSize * 0.82;
+        const descent = seg.fontSize * 0.24;
+        out.push({
+          page: unit.page,
+          left: seg.x / pdf.pageWidth,
+          top: (pdf.pageHeight - (seg.y + ascent)) / pdf.pageHeight,
+          width: seg.width / pdf.pageWidth,
+          height: (ascent + descent) / pdf.pageHeight,
+          fontSize: seg.fontSize / pdf.pageWidth,
+          text: seg.text,
+        });
+      }
+    }
+    return out;
   }
 
   /** Az anonimizált szöveg (előnézethez és a szöveges kimenethez). */
