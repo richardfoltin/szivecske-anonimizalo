@@ -38,7 +38,7 @@ const parties: PartyInput[] = [
 /** Az az adat, amit a kimenetben MEGTALÁLNI hiba. */
 const TILTOTT: [string, string][] = [
   ['e-mail cím', 'kovacs.janos58@freemail.hu'],
-  ['TAJ-szám', '041 273 856'],
+  ['TAJ-szám', '111 111 110'],
   ['adóazonosító jel', '8442130976'],
   ['bankszámlaszám', '10402142-49575354-56561008'],
   ['lakcím', 'Bükkös part 14.'],

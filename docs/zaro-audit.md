@@ -110,7 +110,7 @@ A) UI-út (csak parties): 29 találat, ebből azonosító-csere: 0
 B) identifiers is átadva: 49 találat, ebből azonosító-csere: 20
 ```
 
-és a UI-úton lementett kimenetben: `written=true ok=true leaks=0`, miközben `8442130976`, `041 273 856`, `HU42…`, `2000 Szentendre, Bükkös part 14.` mind BENT MARADT. A jegyzőkönyv erre azt írja, hogy „a KÉSZ FÁJL visszaolvasva tiszta". A 14. pont hálója elkapja őket (`residual=39`), de csak átnézési javaslatként — nem blokkol.
+és a UI-úton lementett kimenetben: `written=true ok=true leaks=0`, miközben `8442130976`, `111 111 110`, `HU42…`, `2000 Szentendre, Bükkös part 14.` mind BENT MARADT. A jegyzőkönyv erre azt írja, hogy „a KÉSZ FÁJL visszaolvasva tiszta". A 14. pont hálója elkapja őket (`residual=39`), de csak átnézési javaslatként — nem blokkol.
 
 **13. Az adatmodell nem ismer „azonosító" adatfajtát — KÉSZ (egy kozmetikai maradvánnyal)**
 `src/app/types.ts:20` `EntityKind = 'person' | 'org' | 'place' | 'identifier'`; `src/ai/types.ts:20` `EntityLabel` is öt értékű; `src/pseudonym.ts:561-575` `TYPE_LABEL` és `NUMBERED_LABEL` négy bejegyzéses; `PartyInput.identifierKind` megvan (`types.ts:39`), és a `pseudonym.ts:578+` `AZONOSITO_CIMKE` külön táblát ad az OBH-szóhasználatnak. A `[lakcím]` címke ténylegesen előáll — a fenti futtatás B) ága: `"2000 Szentendre, Bükkös part 14." → "[lakcím]"`. Maradvány: `ui/src/panels.tsx:276` `row.kind === 'person' ? 'személy' : row.kind === 'org' ? 'szervezet' : 'helység'` — egy azonosító-sor a szereplapon „helység"-ként címkéződne.

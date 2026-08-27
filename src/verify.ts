@@ -231,7 +231,7 @@ function notAnAmount(_surface: string, ctx: NumericContext): boolean {
  */
 export const BUILTIN_NUMERIC_PATTERNS: NumericPattern[] = [
   { label: 'adóazonosító jel', pattern: /\d{10}/g, accept: notAnAmount },
-  // A TAJ-szám tagolva is szokásos: „041 273 856".
+  // A TAJ-szám tagolva is szokásos: „111 111 110".
   { label: 'TAJ-szám', pattern: /\d{9}|\d{3}[ .]\d{3}[ .]\d{3}/g, accept: notAnAmount },
   // A pénzforgalmi jelzőszám 8-8 vagy 8-8-8 tagolású; a hosszabb alak nyer.
   { label: 'bankszámlaszám', pattern: /\d{8}-\d{8}(?:-\d{8})?/g },

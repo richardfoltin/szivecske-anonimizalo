@@ -1798,7 +1798,7 @@ function escapeRegExp(s: string): string {
  *
  * AZ AZONOSÍTÓ SORSZÁMOZOTT belső azonosítót kap, nem a saját értékéből
  * képzettet. Az `entityId` végigmegy a felületig, a naplókig és a
- * találatsorokig; egy „#az:taj:041273856" alakú kulcs pontosan azt a számsort
+ * találatsorokig; egy „#az:taj:111111110" alakú kulcs pontosan azt a számsort
  * hordozná mindenhová, amit ki akarunk takarni.
  */
 function foundIdentifierParties(

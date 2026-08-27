@@ -254,45 +254,50 @@ teljes személyi adatsorral: névvel, lakcímmel, adóazonosítóval, TAJ-számm
 telefonnal, e-mail címmel, bankszámlaszámmal. Mivel ezek felkerülnek a tárba, nem
 elég feltételezni, hogy kitaláltak — meg is néztem.
 
-**Az azonosítók többsége már az ellenőrzőszámán elbukik, tehát nem tartozhat élő
-nyilvántartási tételhez.** A táblázat MINDEN mintaazonosítót felsorol, a
-kivételeket is — az alábbi eredményeket a program saját ellenőrzője adta
-(`adoazonositoOk`, `tajOk`, `src/hu/azonositok.ts`), nem kézi számolás:
+**Az azonosítók ellenőrzőszáma — mind a hat, kivétel nélkül.** Az alábbi
+eredményeket a program SAJÁT ellenőrzője adta (`adoazonositoOk`, `tajOk`,
+`src/hu/azonositok.ts`), nem kézi számolás:
 
 | Adat | Minta | Eredmény |
 |---|---|---|
 | adóazonosító jel | `8442130976` (felperes) | ellenőrzőszám **érvénytelen** |
 | adóazonosító jel | `8391764205` (I. r. alperes) | ellenőrzőszám **érvénytelen** |
-| adóazonosító jel | `8517029364` (II. r. alperes) | ellenőrzőszám **érvényes** — lásd alább |
-| TAJ-szám | `041 273 856` | ellenőrzőszám **érvényes** — lásd alább |
+| adóazonosító jel | `8000000008` (II. r. alperes) | ellenőrzőszám **érvényes** — lásd alább |
+| TAJ-szám | `111 111 110` | ellenőrzőszám **érvényes** — lásd alább |
 | bankszámlaszám | `10402142-49575354-56561008` | a három blokkból csak az első ad érvényes GIRO-ellenőrzőszámot |
 | IBAN | `HU42 1040 2142 4957 5354 5656 1008` | mod-97 maradék 64 az előírt 1 helyett — **érvénytelen** |
 
 Ezt a projekt saját auditja is rögzíti (`docs/hatralevo-reszletek.json`), ott
 kifejezetten „fiktív irat”-ként hivatkozva rájuk.
 
-**A KÉT ÉRVÉNYES ELLENŐRZŐSZÁMRÓL — mert a szakasz állítása enélkül hamis volna.**
+**A KÉT ÉRVÉNYES ELLENŐRZŐSZÁMÚ SZÁM ÁTLÁTSZÓAN KITALÁLT — és ez szándékos.**
 
-Ez a bekezdés egy korábbi hiba javítása: a táblázat eredetileg csak a két
-érvénytelen adóazonosítót sorolta fel, a fölötte álló mondat viszont ÁLTALÁNOS
-állítást tett („az azonosítók ellenőrzőszáma nem stimmel”). A II. r. alperes
-adóazonosítójára ez nem igaz, és ezt egy külső átnézés vette észre — pont abban
-a dokumentumban, aminek az a dolga, hogy a minták közzétételét megindokolja.
+Ez a bekezdés egy korábbi hiba javításának a nyoma. A táblázat eredetileg csak
+a két érvénytelen adóazonosítót sorolta fel, a fölötte álló mondat viszont
+ÁLTALÁNOS állítást tett („az azonosítók ellenőrzőszáma nem stimmel”) — a
+II. r. alperes adóazonosítójára (`8517029364`) és a TAJ-számra (`041 273 856`)
+ez nem volt igaz. Egy külső átnézés vette észre, pont abban a dokumentumban,
+aminek a minták közzétételét kellene megindokolnia.
 
-Amit az érvényes ellenőrzőszám JELENT: hogy a szám alaki próbán átmegy. Amit NEM
-jelent: hogy kiadták valakinek. Az adóazonosító jel tíz számjegy egy
-ellenőrzőszámmal — véletlenszerű számsor tizenegyből egyszer átmegy a próbán —, a
-TAJ kilenc számjegy, ott tízből egyszer. Két találat hat azonosító között tehát
-pontosan az, amit a véletlentől várni lehet, és nem utal arra, hogy a számokat
-valódi nyilvántartásból másolták volna.
+A javítás nem az volt, hogy elrontottuk az ellenőrzőszámukat. Két rossz
+irányba lehetett volna elmenni:
 
-Ami az érvényességnél többet mond: a minták körül MINDEN MÁS kitalált — a nevek,
-a lakcímek, a cégnevek, az ügyszám, a bíróság —, és a bankszámlaszám meg az IBAN
-elbukik a saját próbáján. Egy valódi iratból átvett adatsor nem viselkedne így.
+- **Érvénytelenre írni** őket: ettől a mintakorpuszban EGYETLEN olyan azonosító
+  sem maradt volna, ami a magas magabiztosságú ágat járja be — pedig a program
+  az ellenőrzőszámot magabiztosságként használja, nem szűrőként, és épp ezt az
+  ágat kell mérni.
+- **Meghagyni** őket: akkor a mintairat továbbra is olyan számot hordozna, ami
+  alaki próbán átmegy, tehát elvben lehetne valakié.
 
-Ha valaki mégis kényelmetlennek találja: a `samples/*.json` és a belőlük gyártott
-minták cseréje egyetlen szerkesztés, és a két számot ellenőrzőszám-hibásra
-állítva a táblázat minden sora „érvénytelen” lesz.
+Ezért a harmadik út: a két szám ÁTLÁTSZÓAN KITALÁLT alakot kapott —
+`8000000008` (nyolc nulla) és `111 111 110` (nyolc egyes) —, aminek az
+ellenőrzőszáma továbbra is ÉRVÉNYES. Egy ilyen számsort nyilvántartás nem oszt
+ki, de a program pontosan úgy dolgozza fel, mint eddig: a felismerés
+magabiztossága mindkettőre 1,0 maradt, és egyetlen teszt-elvárás sem változott
+tőle.
+
+Amit az érvényes ellenőrzőszám JELENT: hogy a szám alaki próbán átmegy. Amit
+NEM jelent: hogy kiadták valakinek.
 
 **Egy megjegyzés az e-mail címről:**
 

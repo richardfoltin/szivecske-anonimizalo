@@ -110,7 +110,7 @@ const kimenet = readback.fullText();
 const EREDETI: { mit: string; alak: string; cimke: string }[] = [
   { mit: 'e-mail cím', alak: 'kovacs.janos58@freemail.hu', cimke: '[e-mail cím]' },
   { mit: 'lakcím', alak: '2000 Szentendre, Bükkös part 14.', cimke: '[lakcím]' },
-  { mit: 'TAJ-szám', alak: '041 273 856', cimke: '[TAJ-szám]' },
+  { mit: 'TAJ-szám', alak: '111 111 110', cimke: '[TAJ-szám]' },
   { mit: 'adóazonosító jel', alak: '8442130976', cimke: '[adóazonosító jel]' },
   { mit: 'bankszámlaszám', alak: '10402142-49575354-56561008', cimke: '[bankszámlaszám]' },
 ];
@@ -231,8 +231,8 @@ console.log('');
   SAJÁT ÓVATOSSÁGUNK venné el a kész iratot.
 */
 const csapda =
-  'Az alperes adóazonosító jele: 8517029364.\n' +
-  'A könyvelés a 18517029364 tételszám alatt tartja nyilván.\n' +
+  'Az alperes adóazonosító jele: 8000000008.\n' +
+  'A könyvelés a 18000000008 tételszám alatt tartja nyilván.\n' +
   'Kovács János felperes keresetet nyújtott be.\n';
 const csapdaOut = join(ROOT, 'spike/out/lanc-hatar.txt');
 rmSync(csapdaOut, { force: true });
@@ -264,8 +264,8 @@ check(
   csapdaMentes.report.ok,
   csapdaMentes.report.leaks.map((l) => `${l.surface}: ${l.detail}`).join(' | '),
 );
-check('az adóazonosító viszont eltűnt', !csapdaSzoveg.includes('8517029364.'), csapdaSzoveg);
-check('a tételszám a helyén maradt', csapdaSzoveg.includes('18517029364'));
+check('az adóazonosító viszont eltűnt', !csapdaSzoveg.includes('8000000008.'), csapdaSzoveg);
+check('a tételszám a helyén maradt', csapdaSzoveg.includes('18000000008'));
 console.log(`  kimenet: ${csapdaSzoveg.split('\n')[1]}`);
 
 rmSync(csapdaOut, { force: true });

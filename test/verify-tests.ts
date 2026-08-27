@@ -68,8 +68,8 @@ console.log('');
 }
 
 {
-  const r = sweep('TAJ szám: 041 273 856; a szolgáltató nyilvántartása szerint.');
-  check('tagolt TAJ-szám megvan', surfaces(r.residual).includes('041 273 856'), surfaces(r.residual).join('|'));
+  const r = sweep('TAJ szám: 111 111 110; a szolgáltató nyilvántartása szerint.');
+  check('tagolt TAJ-szám megvan', surfaces(r.residual).includes('111 111 110'), surfaces(r.residual).join('|'));
 }
 
 {

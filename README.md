@@ -4,7 +4,23 @@ Magyar jogi iratok álnevesítése a saját gépen. Windows-os asztali program, 
 Word iratokhoz. **Semmi nem megy fel az internetre** — nincs felhő, nincs API-hívás,
 a felületnek nincs hálózati hozzáférése.
 
-## Indítás
+[![Ellenőrzés](https://github.com/richardfoltin/szivecske-anonimizalo/actions/workflows/ellenorzes.yml/badge.svg)](https://github.com/richardfoltin/szivecske-anonimizalo/actions/workflows/ellenorzes.yml)
+
+## Letöltés
+
+A kész Windows-telepítő a **[Releases](https://github.com/richardfoltin/szivecske-anonimizalo/releases)**
+oldalon. Töltsd le az `.exe` fájlt, és futtasd.
+
+Két dolgot érdemes tudni róla:
+
+- **A nyelvi modell nincs benne.** 809 MB, külön licenc alatt áll, és a program az
+  első indítás után egy gombbal letölti a Hugging Face-ről. Addig is működik, csak
+  kevesebb nevet talál meg: azokat, amiket az irat rovatai kifejezetten megneveznek
+  („Felperes:", „anyja neve:", cégforma).
+- **Nincs kódaláírás.** A Windows SmartScreen az első indításnál figyelmeztet; a
+  „További információ → Futtatás mindenképp" úton indítható.
+
+## Indítás forrásból
 
 ```bash
 npm install
