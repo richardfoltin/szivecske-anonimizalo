@@ -2753,11 +2753,15 @@ export function NewCaseDialog({ onConfirm, onClose }: { onConfirm: () => void; o
 export function OpenOtherDialog({
   fileName,
   onConfirm,
+  onUjUgy,
   onClose,
 }: {
   /** A most nyitva lévő irat neve — ez az, ami elveszik. */
   fileName: string;
+  /** Megnyitás UGYANEHHEZ az ügyhöz: az álnév-kiosztás megmarad. */
   onConfirm: () => void;
+  /** Megnyitás ÚJ ügyként: friss álnév-kiosztással. */
+  onUjUgy: () => void;
   onClose: () => void;
 }) {
   return (
@@ -2771,12 +2775,26 @@ export function OpenOtherDialog({
           </p>
         </div>
         <div className="dialog-body">
+          {/*
+            AZ ÜGY KÉRDÉSE ITT DŐL EL, NEM EGY FEJLÉC-IKONON.
+
+            Az „Új ügy" korábban külön gomb volt a fejlécben, és a felhasználó
+            joggal kérdezte meg, mire való — hiszen ugyanúgy iratot nyit, mint
+            a megnyitás. A KÜLÖNBSÉG egyetlen dolog: mi lesz az álnév-
+            kiosztással. Ez pedig pontosan itt merül fel: a KÖVETKEZŐ irat
+            megnyitásakor. Ezért két gomb, egymás mellett, kimondva, mit
+            jelentenek — nem egy ikon, aminek a jelentését ki kell találni.
+          */}
           <div className="note">
-            Ez <b>ugyanaz az ügy</b> marad: az álnév-kiosztás nem változik, tehát a következő
-            iratban ugyanaz a valódi név ugyanazt a fedőnevet kapja. Ha új ügyhöz kezdenél, az{' '}
-            <b>Új ügy</b> gombot válaszd.
+            <b>Ugyanaz az ügy:</b> az álnév-kiosztás megmarad, tehát a következő iratban ugyanaz a
+            valódi név ugyanazt a fedőnevet kapja. Egy per több iratánál ez a helyes: a kimenetek
+            együtt olvashatók maradnak.
           </div>
-          <div className="note" style={{ marginTop: 14 }}>
+          <div className="note" style={{ marginTop: 12 }}>
+            <b>Új ügy:</b> friss álnév-kiosztás. Ugyanaz a valódi név más fedőnevet kap, tehát a
+            két ügy kimenete nem köthető össze. Egy másik ügyfél iratához ez a helyes.
+          </div>
+          <div className="note" style={{ marginTop: 12 }}>
             Ha a jelenlegi iratot még nem mentetted el, előbb zárd be ezt az ablakot, és futtasd le
             a <b>Mentés másként…</b> lépést.
           </div>
@@ -2785,8 +2803,11 @@ export function OpenOtherDialog({
           <button className="btn ghost" onClick={onClose}>
             Mégse
           </button>
+          <button className="btn" onClick={onUjUgy}>
+            Új ügyként nyitom
+          </button>
           <button className="btn primary" onClick={onConfirm}>
-            Eldobom, és megnyitok másikat
+            Ugyanehhez az ügyhöz
           </button>
         </div>
       </div>

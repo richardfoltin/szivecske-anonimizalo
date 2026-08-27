@@ -243,6 +243,9 @@ textarea {
   szerepelt volna (a panel fejléce és a vizsgálat képernyője mellett) —
   ráadásul pont abból a sávból vett el helyet, ahol a műveleti gombok állnak.
 */
+/* A `.docname` a megszűnt munkalap fejlécéé volt; a beállító lapon a fájlnév
+   a `.setupdoc-head` első eleme. A szabály maradhat: a párbeszédek is
+   használják ugyanezt az alakot. */
 .docname {
   display: flex;
   align-items: baseline;
@@ -440,11 +443,14 @@ textarea {
 
 /* ─────────────────────────── munkaterület ─────────────────────────── */
 
-.workspace {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-}
+/*
+  A `.workspace` ÉS A `.docarea` KIKERÜLT.
+
+  A munkalap külön képernyő volt (balra az irat, jobbra egy panel) — pontosan
+  úgy nézett ki, mint a beállító lap, ezért a köztük való váltás nem látszott
+  váltásnak. Ma az az állomás a beállító lap harmadik füle, a lap elrendezését
+  pedig a `.setuppage` adja.
+*/
 
 .viewport {
   flex: 1;
@@ -1871,13 +1877,16 @@ textarea:focus {
   border-bottom: 1px solid var(--line-soft);
   font-size: 13px;
 }
-/* Az összegző panel sorai: a fő sorok vastagon, a fajtánkénti bontás
-   behúzva, a kiemelés színeivel jelölt pöttyel. */
-.panel-body.osszegzo {
-  padding: 14px;
+/* Az összegző FÜL sorai: a fő sorok vastagon, a fajtánkénti bontás behúzva,
+   a kiemelés színeivel jelölt pöttyel. */
+.osszegzo {
+  margin-top: 4px;
 }
-.panel-body.osszegzo .note {
-  margin: 10px 0;
+.osszegzo .note {
+  margin: 12px 0;
+}
+.osszegzo .resultrow:first-of-type {
+  border-top: 1px solid var(--line-soft);
 }
 .resultrow.fo {
   font-weight: 600;
@@ -1905,16 +1914,11 @@ textarea:focus {
 .resultrow.al .dot.k-hivatalos {
   background: #7a4fa8;
 }
-/* A panel lábléce: ugyanaz a szerkezet, mint a párbeszédeké — balra a
-   visszaút, jobbra a fő művelet. */
-.panel-foot {
-  padding: 12px 14px;
-  border-top: 1px solid var(--line-soft);
-  display: flex;
-  gap: 9px;
-  justify-content: flex-end;
-  background: #fdfbfc;
-}
+/*
+  A `.panel-foot` KIKERÜLT: a mentés gombja a beállító lap KÖZÖS láblécébe
+  költözött, a másik két fül továbblépő gombjának helyére. Így a folyamat
+  mindhárom állomásán ugyanott van a következő lépés — nem kell keresni.
+*/
 .resultrow:last-child {
   border-bottom: 0;
 }
@@ -2156,21 +2160,28 @@ textarea:focus {
 
 /* ─────────────────────────── nézetváltó ─────────────────────────── */
 
-.docarea {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
+/*
+  A NÉZETVÁLTÓ A BAL PANEL FEJLÉCE ALATT ÁLL.
 
+  Az előnézet korábban csak a megszűnt munkalapon volt elérhető, vagyis
+  azután, hogy a felhasználó végigment a beállításokon — pedig épp közben a
+  leghasznosabb: egy kattintással megnézhető, mi lesz a kimenet, aztán vissza
+  a jelölt eredetihez.
+*/
 .viewtabs {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 14px;
+  padding: 7px 14px;
   background: var(--surface);
   border-bottom: 1px solid var(--line);
   flex: 0 0 auto;
+}
+/* Az irat fajtája és terjedelme — a fájlnév a fölötte lévő sorban áll. */
+.viewtabs .docmeta {
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
 }
 .seg {
   display: flex;
@@ -3810,12 +3821,21 @@ textarea:focus {
   .busy,
   .overlay,
   .welcome,
-  /* A beállító lap VALÓDI NEVEKET sorol fel az álnevük mellett: papírra
-     kinyomtatva pontosan az a visszafejtő kulcs volna, amit a kulcsfájlnál
-     olyan gondosan külön kezelünk. A `.setuppage` a lap egésze — a bal
-     panelben ott az EREDETI irat is, tehát nem elég a kártyát elrejteni. */
-  .setuppage,
+  /*
+    A DÖNTÉSI KÁRTYA (a jobb panel) NEM MEHET PAPÍRRA: valódi neveket sorol
+    fel az álnevük mellett, vagyis kinyomtatva pontosan az a visszafejtő
+    kulcs volna, amit a kulcsfájlnál olyan gondosan külön kezelünk.
+
+    A `.setuppage` KIKERÜLT EBBŐL A LISTÁBÓL, és ez nem lazítás. Amíg a
+    nyomtatható előnézet a külön munkalapon élt, a beállító lap egészét el
+    lehetett rejteni. Ma az előnézet is ezen a lapon van (a bal panelben),
+    tehát a lap elrejtésével a nyomtatás ÜRES PAPÍRT adna. Amit védeni kell,
+    azt továbbra is védjük, csak pontosabban: a kártyát (`.docsetup`) és az
+    eredeti, valódi neveket mutató nézetet (`.viewport.source`) — az utóbbit
+    feltétel nélkül, hogy egy versenyhelyzet se fordíthassa vissza.
+  */
   .docsetup,
+  .setupdoc-head,
   .viewport.source {
     display: none !important;
   }
@@ -3827,8 +3847,8 @@ textarea:focus {
     overflow: visible;
     background: #fff;
   }
-  .workspace,
-  .docarea {
+  .setuppage,
+  .setupdoc {
     display: block;
   }
   .viewport {

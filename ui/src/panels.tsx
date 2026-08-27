@@ -462,19 +462,23 @@ function escapeRe(s: string): string {
 */
 
 /**
- * A MUNKALAP JOBB PANELE: mi történt, és mehet-e a fájlba.
+ * A BEÁLLÍTÓ LAP HARMADIK FÜLE: mi történt, és mehet-e a fájlba.
  *
- * Nem döntésfelület — a döntések a beállító lapon születnek. Itt az áll,
+ * Nem döntésfelület — a döntések az előző két fülön születnek. Itt az áll,
  * amit a mentés előtt tudni kell: hány találat cserélődik (fajtánként, a
  * bal oldali kiemelés színeivel), hány marad bent, döntött-e a program
  * ember helyett, és van-e akadálya a mentésnek.
+ *
+ * KORÁBBAN KÜLÖN KÉPERNYŐ volt (a „munkalap" jobb panele), és egy fejléc-ikon
+ * vitt oda-vissza. A mentés gombja a lap közös láblécébe került, a többi fül
+ * továbblépő gombjának helyére — így a folyamat mindhárom állomásán ugyanott
+ * van a következő lépés.
  */
-export function OsszegzoPanel({
+export function OsszegzoLap({
   analysis,
   fajtak,
   autoDecidedCount,
   mentesAkadaly,
-  onMentes,
   onVissza,
   onAutoReport,
 }: {
@@ -482,9 +486,9 @@ export function OsszegzoPanel({
   /** A jelmagyarázat sorai (fajta + darab) — UGYANABBÓL a számításból, mint a bal oldali sáv. */
   fajtak: { kulcs: string; osztaly: string; cimke: string; db: number }[];
   autoDecidedCount: number;
-  /** Miért nem lehet menteni; `null`, ha mehet. */
+  /** Miért nem lehet menteni; `null`, ha mehet. A gomb a lap láblécében áll. */
   mentesAkadaly: string | null;
-  onMentes: () => void;
+  /** Vissza a „Mit cserélünk?" fülre — ott lehet dönteni a bizonytalanokról. */
   onVissza: () => void;
   onAutoReport: () => void;
 }) {
@@ -493,16 +497,16 @@ export function OsszegzoPanel({
   const bizonytalan = analysis.outcomes?.bizonytalan ?? analysis.counts.review;
 
   return (
-    <aside className="panel">
-      <div className="panel-head">
-        <h2>Ellenőrzés és mentés</h2>
+    <>
+      <div className="ds-szakasz">
+        <h3>Mi lesz az irattal?</h3>
         <p>
-          A csere kész. Nézd meg az előnézeten, aztán mentsd új fájlba — az eredeti irat érintetlen
-          marad.
+          A csere lefutott. Nézd meg a bal oldali <b>Előnézet</b> nézeten, aztán mentsd új fájlba —
+          az eredeti irat érintetlen marad.
         </p>
       </div>
 
-      <div className="panel-body osszegzo">
+      <div className="osszegzo">
         {analysis.warnings.map((w, i) => (
           <div key={i} className="note">
             {w}
@@ -560,25 +564,9 @@ export function OsszegzoPanel({
           </div>
         )}
 
-        {mentesAkadaly !== null && (
-          <div className="note bad">{mentesAkadaly}</div>
-        )}
+        {mentesAkadaly !== null && <div className="note bad">{mentesAkadaly}</div>}
       </div>
-
-      <div className="panel-foot">
-        <button className="btn ghost" onClick={onVissza}>
-          Vissza a beállításokhoz
-        </button>
-        <button
-          className="btn primary"
-          disabled={mentesAkadaly !== null}
-          title={mentesAkadaly ?? 'Mentés új fájlba (Ctrl+S)'}
-          onClick={onMentes}
-        >
-          Mentés másként…
-        </button>
-      </div>
-    </aside>
+    </>
   );
 }
 

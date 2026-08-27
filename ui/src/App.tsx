@@ -20,10 +20,11 @@ import {
   type ReplacementMode,
   type ThemeSummaryUi,
 } from './api';
-import { DocumentView, FAJTA_CIMKE, KIMENET_CIMKE, OsszegzoPanel, PreviewView } from './panels';
+import { DocumentView, FAJTA_CIMKE, KIMENET_CIMKE, OsszegzoLap, PreviewView } from './panels';
 import {
   DocumentSetup,
   MODE_LABEL,
+  type Ful,
   type DokumentumBeallitasok,
   type LepesAllas,
   type TalaltTetel,
@@ -135,13 +136,18 @@ type View = 'source' | 'preview';
 /**
  * A FŐ KÉPERNYŐ ÁLLOMÁSAI — megnyitás után.
  *
- * A folyamat egyirányú: vizsgálat → beállítás → munka. Azért állapot és nem
- * levezetett érték (pl. „van-e elemzés"), mert a három állomás közül kettőn is
- * lehet kész elemzés: a beállító lap már számol, hogy a „Mit cserélünk?" fülnek
- * legyen mit mutatnia. Levezetve a felhasználó a beállító lapról az első
- * újraszámolás pillanatában átugrana a munkalapra.
+ * KETTŐ VAN, nem három. A régi harmadik („munka") külön képernyő volt, ahova
+ * egy fejléc-ikon vitt oda-vissza — pedig ugyanúgy nézett ki, mint a beállító
+ * lap (balra az irat, jobbra egy panel), és a folyamat harmadik állomása volt.
+ * Ma az a lap HARMADIK FÜL a beállító lapon („Ellenőrzés és mentés"), a másik
+ * kettő mellett: egy fülsor, három lépés, olvasható sorrendben.
+ *
+ * Azért állapot és nem levezetett érték (pl. „van-e elemzés"), mert a beállító
+ * lap már a vizsgálat alatt is számol, hogy a „Mit cserélünk?" fülnek legyen
+ * mit mutatnia — levezetve a felhasználó az első újraszámolás pillanatában
+ * átugrana.
  */
-type Fazis = 'vizsgalat' | 'beallitas' | 'munka';
+type Fazis = 'vizsgalat' | 'beallitas';
 
 /**
  * A vizsgálat képernyőjének három állása.
@@ -420,7 +426,15 @@ export default function App() {
    * elemzéssel indít: ha 'vizsgalat'-ról indulnánk, a felület átnézése előtt
    * végig kellene nézni egy vizsgálatot, ami el sem indult.
    */
-  const [fazis, setFazis] = useState<Fazis>('munka');
+  const [fazis, setFazis] = useState<Fazis>('beallitas');
+  /**
+   * A beállító lap nyitott füle — a folyamat három állomása.
+   *
+   * Azért itt lakik, és nem a lapon belül, mert a lépéseket a folyamat
+   * mozgatja: a „Mehet a csere" a harmadikra visz, a mentés utáni „nézzük át"
+   * út a másodikra hoz vissza, új irat pedig az elsőn indul.
+   */
+  const [setupFul, setSetupFul] = useState<Ful>('mire');
   const [vizsgalatKep, setVizsgalatKep] = useState<VizsgalatKep>('var');
   /**
    * A MEGNYITÁS ALATT ÁLLÓ FÁJL NEVE — amíg a motor még nem adta vissza az iratot.
@@ -1011,6 +1025,8 @@ export default function App() {
         // az egy iratra kapcsol vissza átnézősre — azt a következő megnyitás
         // nem örökölheti, különben a felhasználó beállítása csendben elveszne.
         setAutoModeForDoc(autoMode);
+        // Új irat: a folyamat elejéről indul, nem ott, ahol az előzőt hagytuk.
+        setSetupFul('mire');
         /*
           A BETÖLTŐKÉPERNYŐ NEM SZAKAD MEG A MEGNYITÁS UTÁN.
 
@@ -1396,9 +1412,9 @@ export default function App() {
       lap alatt a nyomtatás a beállítások képét adná ki — a felhasználó pedig
       abban a hitben venné el a papírt, hogy az iratot nyomtatta ki.
     */
-    if (!analysis || fazis !== 'munka') {
+    if (!analysis || fazis !== 'beallitas') {
       setError(
-        'Nincs mit nyomtatni: előbb menj végig a beállító lapon, hogy elkészüljön az álnevesített szöveg.',
+        'Nincs mit nyomtatni: előbb végig kell futnia a vizsgálatnak, hogy elkészüljön az álnevesített szöveg.',
       );
       return;
     }
@@ -1508,6 +1524,9 @@ export default function App() {
       emberi döntésre — azok borostyán pöttyel és kiemeléssel jelennek meg.
     */
     setFazis('beallitas');
+    // A MÁSODIK FÜLRE, mert ott van a döntés: a lista a kapcsolókkal és a
+    // lépegetéssel. Az ellenőrzés füle csak összegzést mutat.
+    setSetupFul('csere');
     setView('source');
     // A mentés után a jelzést töröltük; ha innen visszalép, megint van
     // elveszíthető munka, és a bezárásnak megint kérdeznie kell.
@@ -1533,8 +1552,14 @@ export default function App() {
             beállítás ELŐTTI irat kerül fájlba. Ezért ugyanaz fut le, mint a
             „Mehet a csere" gombra, és a mentés ablaka utána nyílik ki.
           */
-          if (fazis === 'beallitas') void setupTovabb(true);
-          else requestExport();
+          /*
+            A HARMADIK FÜLÖN A CSERE MÁR LEFUTOTT, tehát a mentés mehet
+            egyenesen. Az első kettőn viszont a lapon állított beállítások
+            még nincsenek lemezen, és a csere sem futott le velük biztosan —
+            ott a parancs TOVÁBBLÉPÉST jelent, és a mentés utána nyílik.
+          */
+          if (setupFul === 'kesz') requestExport();
+          else void setupTovabb(true);
           break;
         case 'print':
           void doPrint();
@@ -1564,7 +1589,7 @@ export default function App() {
     // alábbi referencián keresztül éri el — épp azért, hogy a feliratkozás
     // egyetlen egyszer történjen meg.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [doPrint, fazis, openSettings, requestExport, requestNewCase, requestOpen],
+    [doPrint, setupFul, openSettings, requestExport, requestNewCase, requestOpen],
   );
 
   // A menü feliratkozása egyszer történik; a mindenkori kezelőt referencián át
@@ -2519,7 +2544,8 @@ export default function App() {
     // A továbblépés maga is döntés: innentől a másik irat megnyitása
     // elveszíthető munkát dob el, tehát kérdeznie kell.
     setSajatDontes(true);
-    setFazis('munka');
+    // A folyamat harmadik állomása: az ellenőrzés és a mentés füle.
+    setSetupFul('kesz');
 
     const kesz = await runAnalysis(
       parties,
@@ -2545,8 +2571,8 @@ export default function App() {
       csinált. A gomb felirata („Mehet a csere") azt ígéri, hogy a csere
       következik, nem a mentés.
 
-      Innentől a csere után a MUNKALAP jön: ott áll az irat a kiemelésekkel, az
-      előnézet, a találatlista és a mentés gombja. Menteni egy kattintás — de a
+      Innentől a csere után az ELLENŐRZÉS FÜLE jön: ott áll az összegzés arról,
+      mi cserélődött, és ott a mentés gombja. Menteni egy kattintás — de a
       felhasználó dönti el, mikor.
 
       A `mentesre` továbbra is átvisz: azt a Ctrl+S és a menü „Mentés
@@ -2643,39 +2669,25 @@ export default function App() {
               <FejlecIkon nev="mentes" />
             </button>
 
-            <div className="titlesep" />
-
             {/*
-              A MEGSZŰNT LÉPÉSSÁV KÉT MŰVELETE.
+              A „BEÁLLÍTÁSOK ÉS TALÁLATOK" IKON INNEN KIKERÜLT.
 
-              Mindkettő CSAK ott volt elérhető, és mindkettő a munkalapon
-              kellett — a beállító lapon viszont nem is látszott. A fejléc
-              mindhárom állomáson ott van, tehát innentől mindenhonnan
-              elérhetők.
+              A folyamat harmadik állomása (az ellenőrzés) külön képernyő volt,
+              és ez az ikon vitt oda-vissza közte és a beállító lap közt. Ma az
+              az állomás a beállító lap HARMADIK FÜLE, a másik kettő mellett —
+              a fülsor pedig kimondja a sorrendet is, amit ez az ikon nem
+              tudott.
 
-              A találatok lapja csak a munkalapról értelmes: ott VISSZAvisz.
-              A beállító lapon állva ugyanaz a gomb önmagára mutatna.
+              AZ „ÚJ ÜGY" IKON IS KIKERÜLT.
+
+              Nem volt kitalálható, mit csinál: a felhasználó szerint ugyanaz,
+              mint a megnyitás. Majdnem: a különbség egyedül az álnév-kiosztás
+              sorsa — új ügyben ugyanaz a valódi név MÁS fedőnevet kap, tehát a
+              két ügy kimenete nem köthető össze. Ez a kérdés viszont pontosan
+              akkor merül fel, amikor a KÖVETKEZŐ iratot nyitjuk meg — ott is
+              kérdezzük meg (`OpenOtherDialog`), ahol a felhasználó a
+              következményét is érti. A Fájl menüben megmarad külön parancsként.
             */}
-            {fazis === 'munka' && (
-              <button
-                className="btn ghost icon"
-                onClick={() => setFazis('beallitas')}
-                title={`A csere beállításai és a találatok — ${MODE_LABEL[mode]}${
-                  mode === 'theme' ? ` · ${themes.find((t) => t.id === themeId)?.name ?? '—'}` : ''
-                } · ${tetelek.length} tétel`}
-                aria-label="A csere beállításai és a találatok"
-              >
-                <FejlecIkon nev="iratbeallitas" />
-              </button>
-            )}
-            <button
-              className="btn ghost icon"
-              onClick={requestNewCase}
-              title="Új ügy: új álnév-kiosztással indul (a Fájl menüben is)"
-              aria-label="Új ügy"
-            >
-              <FejlecIkon nev="ujugy" />
-            </button>
           </div>
         )}
 
@@ -2869,7 +2881,57 @@ export default function App() {
                 </>
               ) : null}
             </div>
-            {analysis ? (
+
+            {/*
+              A NÉZETVÁLTÓ MOST MÁR ITT ÁLL, nem egy külön képernyőn.
+
+              Az előnézet a megszűnt munkalapon volt elérhető, vagyis csak
+              azután, hogy a felhasználó végigment a beállításokon — pedig épp
+              a beállítás közben a leghasznosabb: egyetlen kattintással
+              megnézhető, mi lesz a kimenet, aztán vissza a jelölt eredetihez.
+            */}
+            {analysis && (
+              <div className="viewtabs">
+                <div className="seg">
+                  <button
+                    className={`segbtn${view === 'source' ? ' active' : ''}`}
+                    onClick={() => setView('source')}
+                  >
+                    Eredeti — kiemelve
+                  </button>
+                  <button
+                    className={`segbtn${view === 'preview' ? ' active' : ''}`}
+                    onClick={() => setView('preview')}
+                  >
+                    Előnézet — ez kerül a fájlba
+                  </button>
+                </div>
+                <div className="spacer" />
+                <span className="docmeta" title={doc.path}>
+                  {doc.format.toUpperCase()} · {doc.pageCount}{' '}
+                  {doc.format === 'docx' ? 'dokumentumrész' : 'oldal'}
+                </span>
+                <button className="btn ghost sm" onClick={() => void doPrint()} title="Ctrl+P">
+                  Nyomtatás…
+                </button>
+              </div>
+            )}
+            {/* Külön sorban, teljes szélességben: a nézetváltó mellé zsúfolva
+                keskeny ablakon négy sorba tört, és feltolta a fejlécet. */}
+            {view === 'preview' && analysis && analysis.doc.format === 'pdf' && (
+              <div className="viewbanner">
+                A PDF tördelését az előnézet nem mutatja, csak a szöveget — a mentett fájl az
+                eredeti tördelést megtartja.
+              </div>
+            )}
+            {analysis && view === 'preview' ? (
+              <PreviewView
+                analysis={analysis}
+                text={preview}
+                error={previewError}
+                hivatalosIdk={hivatalosIdk}
+              />
+            ) : analysis ? (
               /*
                 AZ IRAT ITT NEM NÉZET, HANEM VEZÉRLŐ.
 
@@ -2928,124 +2990,58 @@ export default function App() {
             onKeziFelvitel={keziFelvitel}
             onUjKeszlet={() => setDialog('sajatKeszlet')}
             onKeszletTorles={(id) => void removeCustomTheme(id)}
+            ful={setupFul}
+            onFul={setSetupFul}
+            mentesAkadaly={mentesAkadaly}
+            onMentes={requestExport}
+            keszLap={
+              analysis ? (
+                <OsszegzoLap
+                  analysis={analysis}
+                  fajtak={jelmagyarazat}
+                  autoDecidedCount={autoDecidedCount}
+                  mentesAkadaly={mentesAkadaly}
+                  onVissza={() => setSetupFul('csere')}
+                  onAutoReport={() => setDialog('autoReport')}
+                />
+              ) : (
+                /*
+                  ELEMZÉS NÉLKÜL NINCS MIT ELLENŐRIZNI — és ezt ki kell mondani.
+
+                  Ide akkor jutunk, ha a vizsgálat nem talált semmit, meg lett
+                  szakítva, vagy ki volt kapcsolva. Korábban ez egy külön,
+                  teljes képernyős lap volt („Nincs mit lecserélni"); ma a
+                  harmadik fül tartalma, mert pontosan ugyanarra a kérdésre
+                  válaszol: mi lesz az irattal, ha most mentek.
+                */
+                <div className="empty">
+                  <div className="big">◌</div>
+                  <p>
+                    Ebben az iratban <b>egyetlen nevet sem jelöltünk cserére</b>, tehát a mentés a
+                    szöveget változatlanul vinné tovább. Vedd fel a neveket kézzel, vagy indítsd
+                    újra a vizsgálatot a „Mit cserélünk?" fülön.
+                  </p>
+                </div>
+              )
+            }
             onTovabb={() => void setupTovabb()}
           />
         </div>
       )}
 
-      {doc && fazis === 'munka' && analysis && (
-        <div className="workspace">
-          <div className="docarea">
-            {/*
-              Előnézet: eddig a szövegnézet az EREDETIT mutatta kiemelésekkel, és
-              a felhasználó a mentés pillanatáig nem látta, mi lesz a kimenet.
-            */}
-            <div className="viewtabs">
-              {/* A FÁJLNÉV ITT ÁLL, nem a programfejlécben: az irat neve oda
-                  tartozik, ahol maga az irat van. A beállító lap bal panelének
-                  fejlécén ugyanígy szerepel. */}
-              <div className="docname" title={doc.path}>
-                <b>{doc.fileName}</b>
-                <span>
-                  {doc.format.toUpperCase()} · {doc.pageCount}{' '}
-                  {doc.format === 'docx' ? 'dokumentumrész' : 'oldal'}
-                </span>
-              </div>
-              <div className="seg">
-                <button
-                  className={`segbtn${view === 'source' ? ' active' : ''}`}
-                  onClick={() => setView('source')}
-                >
-                  Eredeti — kiemelve
-                </button>
-                <button
-                  className={`segbtn${view === 'preview' ? ' active' : ''}`}
-                  onClick={() => setView('preview')}
-                >
-                  Előnézet — ez kerül a fájlba
-                </button>
-              </div>
-              <div className="spacer" />
-              <button className="btn ghost sm" onClick={() => void doPrint()} title="Ctrl+P">
-                Nyomtatás…
-              </button>
-            </div>
-            {/* Külön sorban, teljes szélességben: a nézetváltó mellé zsúfolva
-                keskeny ablakon négy sorba tört, és feltolta a fejlécet. */}
-            {view === 'preview' && analysis.doc.format === 'pdf' && (
-              <div className="viewbanner">
-                A PDF tördelését az előnézet nem mutatja, csak a szöveget — a mentett fájl az
-                eredeti tördelést megtartja.
-              </div>
-            )}
-            {view === 'source' ? (
-              <DocumentView
-                analysis={analysis}
-                selected={selected}
-                hivatalosIdk={hivatalosIdk}
-                dontesek={decisions}
-                onSelect={setSelected}
-              />
-            ) : (
-              <PreviewView
-                analysis={analysis}
-                text={preview}
-                error={previewError}
-                hivatalosIdk={hivatalosIdk}
-              />
-            )}
-          </div>
-          {/*
-            A TALÁLATLISTA INNEN KIKERÜLT. A felhasználó kimondta, hogy furcsa
-            egy döntéslista, ami csak a mentés előtti pillanatban jelenik meg —
-            és igaza volt: ugyanazok a döntések a beállító lapon is ott álltak,
-            más vezérlőkkel. A döntés helye a beállító lap; ez az állomás az
-            ELLENŐRZÉSÉ ÉS A MENTÉSÉ: mit csináltunk, mennyit, és mehet-e a
-            fájlba.
-          */}
-          <OsszegzoPanel
-            analysis={analysis}
-            fajtak={jelmagyarazat}
-            autoDecidedCount={autoDecidedCount}
-            mentesAkadaly={mentesAkadaly}
-            onMentes={requestExport}
-            onVissza={() => setFazis('beallitas')}
-            onAutoReport={() => setDialog('autoReport')}
-          />
-        </div>
-      )}
-
       {/*
-        ELEMZÉS NÉLKÜL NINCS CSERE — és ezt ki kell mondani.
+        A MUNKALAP ÉS A „NINCS MIT LECSERÉLNI" LAP INNEN KIKERÜLT.
 
-        Ide akkor jutunk, ha a beállító lapról egyetlen név nélkül léptek
-        tovább: a vizsgálat nem talált semmit, meg lett szakítva, vagy ki volt
-        kapcsolva. A régi képernyő ilyenkor csak annyit kérdezett, hogy „ki
-        szerepel az iratban?" — abból nem derült ki, hogy a mentés EBBEN A
-        PILLANATBAN az érintetlen iratot vinné fájlba.
+        Mindkettő a beállító lap harmadik fülébe költözött („Ellenőrzés és
+        mentés"). A munkalap ugyanúgy nézett ki, mint a beállító lap — balra
+        az irat, jobbra egy panel —, tehát a köztük való váltás nem látszott
+        váltásnak; a hozzá tartozó fejléc-ikon pedig a folyamat harmadik
+        állomását rejtette el, miközben az első kettő fülként állt egymás
+        mellett. A nézetváltó (Eredeti / Előnézet) és a nyomtatás a bal panel
+        fejlécébe került, ahol az irat maga is van.
       */}
-      {doc && fazis === 'munka' && !analysis && (
-        <div className="welcome">
-          <div className="welcome-card">
-            <h1>Nincs mit lecserélni</h1>
-            <p className="lead">
-              Ebben az iratban egyetlen nevet sem jelöltünk cserére, tehát a mentés a szöveget
-              változatlanul vinné tovább. Vagy vedd fel a neveket kézzel, vagy nézd át újra a
-              beállításokat.
-            </p>
-            <div className="ds-acts" style={{ justifyContent: 'center' }}>
-              <button className="btn ghost" onClick={() => setFazis('beallitas')}>
-                Vissza a beállításokhoz
-              </button>
-              <button className="btn primary" onClick={keziFelvitel}>
-                Nevet veszek fel kézzel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {doc && fazis === 'munka' && analysis && (
+      {doc && fazis === 'beallitas' && analysis && (
         <footer className="statusbar">
           {/* A KIMENET SZÁMAI, nem a felismerés fokozatai: az állapotsor arra a
               kérdésre válaszol, hogy mi lesz az irattal. Régebbi motor
@@ -3178,6 +3174,25 @@ export default function App() {
             const p = pendingOpen?.path ?? null;
             setPendingOpen(null);
             setDialog(null);
+            if (p) void openPath(p);
+            else void openDocument();
+          }}
+          onUjUgy={() => {
+            const p = pendingOpen?.path ?? null;
+            setPendingOpen(null);
+            setDialog(null);
+            /*
+              ÚJ ÜGY: EGYETLEN DOLOG VÁLTOZIK, az álnév-kiosztás alapja.
+
+              A többit a megnyitás úgyis eldobja (felek, döntések, elemzés),
+              ezért itt nem a teljes `startNewCase` fut le — az a nyitóképernyőre
+              vinne vissza, és a felhasználónak MÉGEGYSZER meg kellene nyitnia
+              ugyanazt az iratot. A kulcsfájl útvonala viszont az előző ügyé
+              volt: azt elengedjük, különben a mentés után a RÉGI kulcsot
+              ajánlanánk az újhoz.
+            */
+            setCaseSecret(newCaseSecret());
+            setKeyFilePath(null);
             if (p) void openPath(p);
             else void openDocument();
           }}

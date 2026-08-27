@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react';
+import { useId, useRef } from 'react';
 import type { PartyInput, ReplacementMode, ThemeSummaryUi } from './api';
 import { FelismeroSav, NevkeszletRacs } from './dialogs';
 import { Kapcsolo } from './kapcsolo';
@@ -256,6 +256,24 @@ export interface DocumentSetupProps {
    */
   onUjKeszlet: () => void;
   onKeszletTorles: (id: string) => void;
+  /**
+   * A NYITOTT FÜL — kívülről vezérelve.
+   *
+   * Korábban a lap SAJÁT állapota volt, épp azért, hogy egy tetszőleges
+   * újraszámolás ne ugrasszon vissza az első fülre. A harmadik fül viszont a
+   * folyamat állomása: a „Mehet a csere" ide lép tovább, a mentés utáni
+   * „nézzük át" út pedig visszahoz a másodikra. Ezt csak a hívó tudja
+   * elvégezni — a stabilitást pedig az adja, hogy CSAK ő írja, és csak
+   * kimondott lépésnél.
+   */
+  ful: Ful;
+  onFul: (ful: Ful) => void;
+  /** Az „Ellenőrzés és mentés" fül tartalma — a hívó rakja össze. */
+  keszLap: React.ReactNode;
+  /** A lap láblécének fő gombja a harmadik fülön: a mentés. */
+  onMentes: () => void;
+  /** Miért nem lehet menteni; `null`, ha mehet. */
+  mentesAkadaly: string | null;
   onTovabb: () => void;
   /*
     AZ `onMegse` INNEN ELTŰNT.
@@ -528,11 +546,26 @@ function Sor({
   Fordított sorrendben a felhasználó előbb nézné át a listát, aztán a mód
   átállításával az egészet újraírná maga alatt.
 */
-type Ful = 'mire' | 'csere';
+export type Ful = 'mire' | 'csere' | 'kesz';
 
+/*
+  A HARMADIK FÜL A MUNKALAP HELYE.
+
+  Az „Ellenőrzés és mentés" korábban KÜLÖN KÉPERNYŐ volt (`fazis === 'munka'`),
+  és a fejlécben állt egy ikon, amivel oda-vissza lehetett járni közte és a
+  beállító lap közt. Két baj volt vele. Az egyik, hogy a két képernyő
+  ugyanúgy nézett ki — bal oldalt az irat, jobbra egy panel —, tehát a
+  felhasználó nem látta, mi változott a váltástól. A másik, hogy a folyamat
+  harmadik állomása egy fejléc-ikon mögé volt rejtve, miközben az első kettő
+  fülként állt egymás mellett.
+
+  Egy fülsor, három állomás: mire cseréljük → mit cserélünk → ellenőrzés és
+  mentés. A lépések sorrendje így magától olvasható.
+*/
 const FULEK: { id: Ful; cim: string }[] = [
   { id: 'mire', cim: 'Mire cseréljük?' },
   { id: 'csere', cim: 'Mit cserélünk?' },
+  { id: 'kesz', cim: 'Ellenőrzés és mentés' },
 ];
 
 export function DocumentSetup({
@@ -556,9 +589,13 @@ export function DocumentSetup({
   onKeziFelvitel,
   onUjKeszlet,
   onKeszletTorles,
+  ful,
+  onFul,
+  keszLap,
+  onMentes,
+  mentesAkadaly,
   onTovabb,
 }: DocumentSetupProps) {
-  const [ful, setFul] = useState<Ful>('mire');
 
   /* Egy lapon több azonosító is van, és a lap elvben kétszer is a képernyőre
      kerülhet (pl. átmenet közben). A rögzített azonosítók ilyenkor összeérnének,
@@ -593,7 +630,7 @@ export function DocumentSetup({
   const dontesreVar = tetelek.filter((t) => t.bizonytalanDb > 0).length;
 
   function fulValt(uj: Ful): void {
-    setFul(uj);
+    onFul(uj);
     fulGombok.current[uj]?.focus();
   }
 
@@ -636,7 +673,7 @@ export function DocumentSetup({
               aria-selected={ful === f.id}
               aria-controls={az(`lap-${f.id}`)}
               tabIndex={ful === f.id ? 0 : -1}
-              onClick={() => setFul(f.id)}
+              onClick={() => onFul(f.id)}
             >
               {f.cim}
               {f.id === 'csere' && tetelek.length > 0 && (
@@ -662,6 +699,8 @@ export function DocumentSetup({
               onKeszletTorles={onKeszletTorles}
             />
           )}
+
+          {ful === 'kesz' && keszLap}
 
           {ful === 'csere' && (
             <CsereLap
@@ -691,7 +730,9 @@ export function DocumentSetup({
           {/* Az összegzés a gomb MELLETT áll, nem egy fül belsejében: a
               felhasználó a továbblépés pillanatában lássa, hány nevet visz
               magával, és hány marad bent szándékosan. */}
-          <div className="ds-sum">
+          {/* A harmadik fülön ugyanez tételesen ott áll a lapon: a lábléc
+              nem ismételné meg egy sorral lejjebb. */}
+          <div className="ds-sum" hidden={ful === 'kesz'}>
             <b>{cserelendo.length}</b> cserélődik
             {kihagyott > 0 && (
               <>
@@ -720,10 +761,30 @@ export function DocumentSetup({
             kérdezteti meg, mi a különbség köztük; itt ráadásul a lap
             legfontosabb gombja mellől vett el figyelmet.
           */}
+          {/*
+            A LÁBLÉC GOMBJA AZT MONDJA, AMI KÖVETKEZIK.
+
+            Az első két fülön a csere futtatása és a továbblépés az
+            ellenőrzésre; a harmadikon már nincs hova továbblépni — ott a
+            mentés a következő lépés. Egy gomb, ami a fülnek megfelelően
+            mást csinál, kevesebb, mint két gomb, amiből mindig csak az egyik
+            értelmes.
+          */}
           <div className="ds-acts">
-            <button className="btn primary" onClick={onTovabb}>
-              Mehet a csere
-            </button>
+            {ful === 'kesz' ? (
+              <button
+                className="btn primary"
+                disabled={mentesAkadaly !== null}
+                title={mentesAkadaly ?? 'Mentés új fájlba (Ctrl+S)'}
+                onClick={onMentes}
+              >
+                Mentés másként…
+              </button>
+            ) : (
+              <button className="btn primary" onClick={onTovabb}>
+                Mehet a csere
+              </button>
+            )}
           </div>
         </div>
       </div>
