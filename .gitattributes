@@ -1,0 +1,34 @@
+# Sorvégek — hogy a tárban egyféle legyen, a munkakönyvtárban meg a rendszeré.
+#
+# Windowson a git alapból CRLF-re vált kicsomagoláskor (`core.autocrlf`), ami
+# önmagában rendben van — az első commit 78 fájlra figyelmeztetett is emiatt.
+# Ha viszont ezt a beállításra bízzuk, akkor a tár TARTALMA attól függ, ki
+# commitolt: egy Linuxon készült commit LF-fel kerül be, egy Windowson készült
+# ugyanabból a fájlból CRLF-fel, és a `git diff` tele lesz olyan sorokkal,
+# amiken senki nem változtatott.
+#
+# A `text=auto eol=lf` ezt egy helyen dönti el: a TÁRBAN mindig LF van, a
+# munkakönyvtárban pedig azt kap a fejlesztő, amit a rendszere kér.
+* text=auto eol=lf
+
+# ── AMI KÖTELEZŐEN LF, A MUNKAKÖNYVTÁRBAN IS ────────────────────────────────
+#
+# A héjszkript nem stílus kérdése: a `#!/usr/bin/env bash` sor végén álló CR-t
+# a Git Bash a program nevének RÉSZÉNEK veszi, és „bad interpreter: no such
+# file or directory” hibával áll meg. Az automata mentés horga (`Stop` hook)
+# pontosan ilyen szkript — CRLF-fel némán nem futna le, és a hiba csak abból
+# derülne ki, hogy nem keletkeznek commitok.
+*.sh text eol=lf
+*.py text eol=lf
+
+# ── BINÁRIS: se sorvég-átalakítás, se szöveges diff ─────────────────────────
+#
+# A mintairatok és az ikonok tartalmában a 0x0D bájt ADAT. Ha a git
+# sorvégnek nézné és átírná, a PDF bájtszinten sérülne — és épp azokon a
+# teszteken bukna el, amik a bájthű átírást mérik.
+*.pdf binary
+*.docx binary
+*.png binary
+*.ico binary
+*.onnx binary
+*.szkulcs binary
