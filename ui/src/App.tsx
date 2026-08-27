@@ -3178,11 +3178,6 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
                 </>
               ) : null}
               <span className="spacer" />
-              {/* Az irat fajtája és terjedelme — a NEVE a fülön áll. */}
-              <span className="docmeta" title={doc.path}>
-                {doc.format.toUpperCase()} · {doc.pageCount}{' '}
-                {doc.format === 'docx' ? 'dokumentumrész' : 'oldal'}
-              </span>
               {/*
                 A NÉZETVÁLTÓ — két szó, magyarázat nélkül.
 
@@ -3409,6 +3404,23 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
               Nem dísz: ez mondja meg, hogy a fenti hármat teljesnek lehet-e
               olvasni, vagy hiányzik belőle valami. */}
           <span>{analysis.matches.length} találat</span>
+          <span className="sep" />
+          {/*
+            AZ IRAT FAJTÁJA ÉS TERJEDELME — a dokumentumpanel fejlécéből ide.
+
+            Ott a jelmagyarázat és a nézetváltó közé ékelődött, pedig egyik
+            kérdésre sem válaszol: nem azt mondja meg, mi lesz az irattal, és
+            nem is vezérlő. Adat az iratról — ugyanaz a fajta, mint a
+            karakterszám mellette.
+
+            A MEGJELENÍTETT iratról szól, nem az összesről; több irat mellett
+            a füleken látszik, melyiken állunk, a buboréksúgó pedig kiírja a
+            nevét is.
+          */}
+          <span title={docs.length > 1 ? doc.fileName : doc.path}>
+            {doc.format.toUpperCase()} · {doc.pageCount}{' '}
+            {doc.format === 'docx' ? 'dokumentumrész' : 'oldal'}
+          </span>
           <span className="sep" />
           <span>
             {/* MINDEN betöltött irat együtt: a jobb oldali lista is az egészre

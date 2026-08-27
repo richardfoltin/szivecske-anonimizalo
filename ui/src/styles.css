@@ -2747,9 +2747,11 @@ textarea:focus {
 */
 .iratsav {
   display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 7px 12px;
+  /* A fülek a sáv ALJÁRA ülnek, nem a közepére: a fül alja az, ami az alatta
+     lévő laphoz csatlakozik. */
+  align-items: flex-end;
+  gap: 0;
+  padding: 7px 10px 0;
   border-bottom: 1px solid var(--line);
   background: var(--surface-2);
   flex: 0 0 auto;
@@ -2763,28 +2765,59 @@ textarea:focus {
   ezért a fül egy sáv, benne két igazi gomb. A keret és a háttér a SÁVON van,
   hogy a kettő egyetlen fülnek látsszon.
 */
+/*
+  A FÜL ALAKJA MONDJA MEG, MELYIK IRAT VAN NYITVA.
+
+  Nem lekerekített pirula a sávban, hanem igazi fül: felül lekerekített,
+  ALUL NYITOTT, és a saját hátterével RÁÜL a sáv alsó vonalára (`margin-bottom:
+  -1px`). Ettől az aktív fül összeér az alatta lévő lappal — ugyanaz a fehér
+  folytatódik —, a többi pedig mögötte marad. Ez az egyetlen jel, ami a fül
+  formájából adódik, és nem kell hozzá se szín, se vastagítás; azok csak
+  megerősítik.
+
+  A vízszintes elválasztó a szomszédos, NEM aktív fülek közé kerül. Az aktív
+  fül két oldalán nincs rá szükség: ott a saját kerete rajzolja ki a határt,
+  és két vonal egymás mellett piszkos.
+*/
 .iratful {
+  position: relative;
   display: flex;
   align-items: center;
   border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 7px 7px 0 0;
+  margin-bottom: -1px;
+  padding-bottom: 1px;
   background: transparent;
-  border-radius: var(--radius-sm);
-  max-width: 210px;
+  max-width: 230px;
+  min-width: 0;
   flex: 0 1 auto;
   transition: background 0.14s, border-color 0.14s;
 }
+.iratful + .iratful::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 9px;
+  bottom: 9px;
+  width: 1px;
+  background: var(--line);
+}
+.iratful.active::before,
+.iratful.active + .iratful::before {
+  opacity: 0;
+}
 .iratful:hover:not(.active) {
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.6);
 }
 .iratful.active {
   background: var(--surface);
   border-color: var(--line);
-  box-shadow: var(--shadow-sm);
 }
 .iratful .ful-nev {
   border: 0;
   background: transparent;
-  padding: 5px 4px 5px 10px;
+  padding: 7px 4px 7px 12px;
   font-size: 12px;
   color: var(--ink-soft);
   min-width: 0;
@@ -2795,6 +2828,10 @@ textarea:focus {
 .iratful.active .ful-nev {
   color: var(--ink);
   font-weight: 600;
+}
+/* Egyetlen fülnél nincs × — a név ilyenkor ne lógjon ki jobbra a semmibe. */
+.iratful .ful-nev:only-child {
+  padding-right: 12px;
 }
 /*
   A × HALVÁNY, AMÍG NEM KELL.
@@ -2808,11 +2845,11 @@ textarea:focus {
   border: 0;
   background: transparent;
   color: var(--muted);
-  opacity: 0.45;
+  opacity: 0.4;
   font-size: 15px;
   line-height: 1;
-  padding: 3px 7px 4px;
-  margin-right: 2px;
+  padding: 3px 6px 4px;
+  margin-right: 5px;
   border-radius: 4px;
   flex: 0 0 auto;
   transition: opacity 0.14s, background 0.14s, color 0.14s;
@@ -2827,20 +2864,27 @@ textarea:focus {
 .iratful .ful-x:focus-visible {
   opacity: 1;
 }
-/* A hozzáadás fül alakú, de üres fül: jel, nem felirat. */
+/*
+  A HOZZÁADÁS A FÜLEK UTÁN ÁLL, de nem fül: nincs alatta irat.
+
+  Ezért nem is fül alakú — kis négyzet, a sáv alján, az utolsó fül mellett.
+  Fülként rajzolva azt ígérné, hogy rá lehet kattintani és „megnyílik", holott
+  előbb tallózni kell.
+*/
 .iratplusz {
-  border: 1px solid transparent;
+  border: 0;
   background: transparent;
-  border-radius: var(--radius-sm);
+  border-radius: 5px;
   color: var(--muted);
-  font-size: 17px;
+  font-size: 16px;
   line-height: 1;
-  padding: 4px 11px 6px;
+  padding: 5px 9px 6px;
+  margin: 0 0 4px 6px;
   flex: 0 0 auto;
   transition: background 0.14s, color 0.14s;
 }
 .iratplusz:hover {
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.75);
   color: var(--ink);
 }
 .iratsav .spacer {
@@ -2887,12 +2931,8 @@ textarea:focus {
   alján — mindkettő ugyanaz az adat volt másodszor, és a jelmagyarázat elől
   vették el a helyet.
 */
-.setupdoc-head .docmeta {
-  font-size: 11.5px;
-  color: var(--muted);
-  white-space: nowrap;
-  flex: 0 0 auto;
-}
+/* A `.docmeta` szabálya is elment: az irat fajtája és terjedelme az
+   állapotsorba került, a karakterszám mellé — ott van a többi ilyen adat. */
 /* A nézetváltó a sáv jobb szélén; nem zsugorodhat össze a jelmagyarázat
    mellett, mert két szónál rövidebben nem mondható el. */
 .setupdoc-head .nezetvalto {
