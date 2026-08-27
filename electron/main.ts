@@ -290,24 +290,78 @@ const piszkos = new Map<number, boolean>();
 const zarhato = new Set<number>();
 
 /**
- * A FOLYAMATBAN LÉVŐ BEZÁRÁSI KÉRDÉS tartalék-időzítője, ablakonként.
+ * A FOLYAMATBAN LÉVŐ BEZÁRÁSI KÉRDÉS, ablakonként.
  *
- * A kérdést a felület rajzolja ki a saját ablakában, tehát a bezárás sorsa egy
- * IPC-válaszon múlik. Ha a felület nem felel — összeomlott, kifagyott, épp
- * újratöltődik —, az ablak bezárhatatlanná válna. Ezért minden kérdés mellé
- * időzítő kerül: a határidő letelte után a rendszerpárbeszéd veszi át, amit
- * a felhasználó biztosan meg tud nyomni.
+ * Az érték a tartalék-időzítő — vagy `null`, ha a felület már VISSZASZÓLT,
+ * hogy megkapta és kirajzolta a kérdést.
+ *
+ * MIÉRT KELL A KÉT ÁLLAPOT. A kérdést a felület rajzolja ki a saját
+ * ablakában, tehát a bezárás sorsa egy IPC-váltáson múlik. Ha a felület nem
+ * felel — összeomlott, kifagyott, épp újratöltődik —, az ablak
+ * bezárhatatlanná válna; ezért van tartalék.
+ *
+ * A tartalék viszont eddig ROSSZ KÉRDÉST MÉRT. Azt nézte, döntött-e a
+ * FELHASZNÁLÓ négy másodpercen belül — márpedig ő olvas, mérlegel, és joga
+ * van tovább gondolkodni. Négy másodperc után a rendszerpárbeszéd ráült a
+ * saját kérdésünk tetejére, és ugyanazt kérdezte meg másodszor: két ablak,
+ * két gombsor, ugyanarról. A felhasználó pontosan ezt látta.
+ *
+ * Amit mérni KELL: megkapta-e a felület a kérdést, és ki tudta-e rajzolni.
+ * Erre a felület nyugtája felel (`app:closeAsked`); az érkezése után az
+ * időzítőnek nincs több dolga, és az érték `null`-ra vált. Innentől a
+ * felhasználó annyi ideig gondolkodik, amennyi neki kell.
+ *
+ * A kifagyás sem marad kezeletlen: arra a `webContents` `unresponsive`
+ * jelzése való — lásd a `close` esemény mellett.
  */
-const zarasKerdes = new Map<number, NodeJS.Timeout>();
+const zarasKerdes = new Map<number, NodeJS.Timeout | null>();
 
-/** Ennyit várunk a felület válaszára, mielőtt a rendszerpárbeszéd átveszi. */
-const VALASZ_HATARIDO = 4000;
+/**
+ * Ennyit várunk a felület NYUGTÁJÁRA — nem a felhasználó válaszára.
+ *
+ * Egy élő felület ezt ezredmásodpercek alatt megküldi: a `close` eseményből
+ * egy IPC-üzenet megy oda, és a React következő képkockájában már jön is
+ * vissza. Ha ennyi idő alatt sincs nyugta, akkor a lap nem lassú, hanem NEM
+ * ÉL — és pont ilyenkor kell a rendszerpárbeszéd, hogy a programból ki
+ * lehessen lépni.
+ */
+const VALASZ_HATARIDO = 1200;
 
 /** A mentés nélküli kilépés végrehajtása — a kérdés mindkét útjáról ide fut be. */
 function zarasEngedve(win: BrowserWindow, id: number): void {
   zarhato.add(id);
   piszkos.set(id, false);
   if (!win.isDestroyed()) win.close();
+}
+
+/**
+ * A RENDSZERPÁRBESZÉD — csak akkor, ha a felület NEM ÉL.
+ *
+ * Ez a tartalék, nem az alapút: a kérdést a program saját ablaka teszi fel.
+ * Ide két úton jutunk el, és mindkettő ugyanazt jelenti — a lap nem tud
+ * válaszolni: vagy meg sem érkezett hozzá a kérdés (`VALASZ_HATARIDO` letelt
+ * nyugta nélkül), vagy a kirajzolás után fagyott ki (`unresponsive`).
+ *
+ * Amíg a felület él, ez a párbeszéd NEM jelenhet meg. Két kérdés ugyanarról,
+ * egymás tetején, nem biztonsági háló, hanem hiba.
+ */
+function rendszerKerdes(win: BrowserWindow, id: number): void {
+  zarasKerdes.delete(id);
+  if (win.isDestroyed()) return;
+  const valasz = dialog.showMessageBoxSync(win, {
+    type: 'warning',
+    noLink: true,
+    title: 'Szivecske Anonimizáló',
+    message: 'Van el nem mentett munka.',
+    detail:
+      'A megnyitott irat, a felvitt felek és az egyenkénti döntések elvesznek, ha most ' +
+      'bezárod a programot.',
+    buttons: ['Mentés másként', 'Kilépés mentés nélkül', 'Mégse'],
+    defaultId: 0,
+    cancelId: 2,
+  });
+  if (valasz === 0) sendMenu('save', win);
+  else if (valasz === 1) zarasEngedve(win, id);
 }
 
 /**
@@ -835,17 +889,25 @@ const KERET_FATYOL: Record<FeluletTema, { szin: string; fedes: number }> = {
   sotet: { szin: '#120C14', fedes: 0.46 },
 };
 
-/**
- * A visszaállítás TÜRELMI IDEJE.
- *
- * Két párbeszéd között a felület egy pillanatra „nincs nyitva párbeszéd”
- * állapotba kerül: az egyiket bezárja, a másikat a következő képkockán nyitja.
- * Azonnali visszaállítással a három gomb ilyenkor felvillan a jobb felső
- * sarokban. Ennyi várakozás alatt a következő halványítás törli az időzítőt,
- * tehát a villanás elmarad — egy valódi bezárásnál pedig ennyi késés nem
- * látszik.
- */
-const KERET_TURELEM_MS = 140;
+/*
+  A TÜRELMI IDŐ INNEN KIKERÜLT — 140 ezredmásodperc állt itt.
+
+  A szándéka jó volt: két egymás után nyíló párbeszéd között a gombok ne
+  villanjanak fel. Csakhogy a felület EGYETLEN `dialog` állapotban tartja,
+  melyik párbeszéd áll nyitva (ui/src/App.tsx) — átváltáskor tehát nincs
+  közbülső „nincs párbeszéd” képkocka, amit el kellene nyelni. Ahol mégis van
+  ilyen szünet (a fejlesztői `?dev=` útvonal késleltetett nyitása), az 400 ms,
+  vagyis ez a türelmi idő ott sem fogta volna át.
+
+  Amit viszont OKOZOTT, azt látni lehetett: a párbeszéd bezárásakor a lap
+  azonnal visszavilágosodott, a jobb felső sarokban álló három gomb pedig még
+  nyolc-tíz képkockán át sötét maradt. A halványodás nem egyszerre ment vissza,
+  hanem két lépésben — előbb a lap, aztán a sarok.
+
+  Ezért a visszaállítás mostantól ugyanúgy azonnal megy, mint a halványítás:
+  egy állapot, egy pillanat. A fölös átfestéseket továbbra is a `keretAllapot`
+  kulcsa szűri, tehát ettől nem lett több hívás.
+*/
 
 /**
  * Ablakonként: milyen színnel és milyen állapotban áll ÉPPEN a gombsáv.
@@ -860,9 +922,6 @@ const KERET_TURELEM_MS = 140;
  * felső sarokban.
  */
 const keretAllapot = new Map<number, { kulcs: string; halvany: boolean }>();
-
-/** Ablakonként: a visszaállításra váró időzítő — lásd `KERET_TURELEM_MS`. */
-const keretIdozito = new Map<number, NodeJS.Timeout>();
 
 /** Egy „#rrggbb” alak három összetevője. */
 function szinBont(szin: string): [number, number, number] {
@@ -928,32 +987,14 @@ function keretetFest(win: BrowserWindow, tema: FeluletTema, halvanyitva: boolean
 /**
  * A felület jelezte, hogy párbeszéd nyílt vagy zárult.
  *
- * A halványítás AZONNAL megy — azt a felhasználó a párbeszéddel együtt látja
- * megjelenni —, a visszaállítás viszont türelmi idővel, hogy az egymás után
- * nyíló párbeszédek között ne villanjanak fel a gombok.
+ * MINDKÉT IRÁNY AZONNAL MEGY. A halványítást a felhasználó a párbeszéddel
+ * együtt látja megjelenni, a visszaállítást a párbeszéddel együtt eltűnni —
+ * bármelyiket késleltetve a lap és a sarok két külön pillanatban mozdulna.
+ * Hogy miért állt itt korábban türelmi idő, és mi lett belőle, azt a
+ * `keretAllapot` fölötti bekezdés mondja el.
  */
 function keretetIgazit(win: BrowserWindow, tema: FeluletTema, halvanyitva: boolean): void {
-  const id = win.id;
-  const varakozo = keretIdozito.get(id);
-  if (varakozo) {
-    clearTimeout(varakozo);
-    keretIdozito.delete(id);
-  }
-
-  // Türelmi idő CSAK a visszaállításnak jár. A halványítás azonnal megy, és a
-  // téma váltása is: ha a sáv eddig sem volt halványítva, nincs mit elnyelni.
-  if (halvanyitva || keretAllapot.get(id)?.halvany !== true) {
-    keretetFest(win, tema, halvanyitva);
-    return;
-  }
-
-  keretIdozito.set(
-    id,
-    setTimeout(() => {
-      keretIdozito.delete(id);
-      keretetFest(win, tema, false);
-    }, KERET_TURELEM_MS),
-  );
+  keretetFest(win, tema, halvanyitva);
 }
 
 function createWindow(): void {
@@ -1031,37 +1072,49 @@ function createWindow(): void {
     és hogy pontosan mi vész el.
 
     A CSERE ÁRA egy kockázat, amit kezelni kell: ha a felület nem válaszol
-    (összeomlott, kifagyott), az ablak bezárhatatlanná válna. Ezért az
-    időzítő: `VALASZ_HATARIDO` után visszaesünk a rendszerpárbeszédre. Egy
-    szép kérdés nem érhet annyit, hogy a programból ne lehessen kilépni.
+    (összeomlott, kifagyott), az ablak bezárhatatlanná válna. Ezért a
+    tartalék — de az a lap ÉLETÉT méri, nem a felhasználó gondolkodási idejét:
+    a nyugta megérkezése után a rendszerpárbeszéd már nem szólal meg. Lásd
+    `zarasKerdes`.
   */
   win.on('close', (e) => {
     if (zarhato.has(id) || !piszkos.get(id)) return;
     e.preventDefault();
-    // Már fut egy kérdés: a második bezárási kísérlet ne nyisson másodikat.
-    if (zarasKerdes.has(id)) return;
+    /*
+      MÁR FUT EGY KÉRDÉS: a második bezárási kísérlet ne nyisson másodikat.
 
-    const tartalek = setTimeout(() => {
-      zarasKerdes.delete(id);
-      if (win.isDestroyed()) return;
-      const valasz = dialog.showMessageBoxSync(win, {
-        type: 'warning',
-        noLink: true,
-        title: 'Szivecske Anonimizáló',
-        message: 'Van el nem mentett munka.',
-        detail:
-          'A megnyitott irat, a felvitt felek és az egyenkénti döntések elvesznek, ha most ' +
-          'bezárod a programot.',
-        buttons: ['Mentés másként', 'Kilépés mentés nélkül', 'Mégse'],
-        defaultId: 0,
-        cancelId: 2,
-      });
-      if (valasz === 0) sendMenu('save', win);
-      else if (valasz === 1) zarasEngedve(win, id);
-    }, VALASZ_HATARIDO);
+      Ilyenkor a felhasználó a saját ablakunkban álló kérdést látja — csak épp
+      a bezárógombra kattint mellette. A helyes válasz nem egy MÁSODIK kérdés,
+      hanem az, hogy előhozzuk azt, amelyik már ott áll.
+    */
+    if (zarasKerdes.has(id)) {
+      if (!win.isDestroyed()) win.focus();
+      return;
+    }
 
-    zarasKerdes.set(id, tartalek);
+    zarasKerdes.set(
+      id,
+      setTimeout(() => rendszerKerdes(win, id), VALASZ_HATARIDO),
+    );
     win.webContents.send('app:confirmClose');
+  });
+
+  /*
+    A FELÜLET A KÉRDÉS KÖZBEN FAGYOTT KI.
+
+    A nyugta után a tartalék-időzítőt leállítjuk, mert a felhasználónak joga
+    van gondolkodni. Ha viszont a lap EZUTÁN áll meg, az ablakban ott marad egy
+    kérdés, amire nem lehet válaszolni — és a bezárógomb sem segít, hiszen a
+    `close` esemény látja, hogy már fut kérdés.
+
+    Erre való ez a jelzés: az Electron maga szól, ha a lap nem dolgozza fel az
+    eseményeit. Ilyenkor — és CSAK ilyenkor — veszi át a rendszerpárbeszéd.
+  */
+  win.webContents.on('unresponsive', () => {
+    if (!zarasKerdes.has(id)) return;
+    const varakozo = zarasKerdes.get(id);
+    if (varakozo) clearTimeout(varakozo);
+    rendszerKerdes(win, id);
   });
 
   win.on('closed', () => {
@@ -1071,10 +1124,6 @@ function createWindow(): void {
     const kerdes = zarasKerdes.get(id);
     if (kerdes) clearTimeout(kerdes);
     zarasKerdes.delete(id);
-    // A visszaállításra váró időzítő már megsemmisült ablakot festene át.
-    const varakozo = keretIdozito.get(id);
-    if (varakozo) clearTimeout(varakozo);
-    keretIdozito.delete(id);
     keretAllapot.delete(id);
   });
 
@@ -1821,11 +1870,31 @@ function registerHandlers(): void {
    * és formátuma — ezért abból az ágból csak a menüparancs megy vissza neki,
    * és az ablak nyitva marad.
    */
+  /**
+   * A FELÜLET NYUGTÁJA: megkaptam a bezárási kérdést, ki is rajzoltam.
+   *
+   * Ettől a ponttól a felhasználó annyit gondolkodik, amennyit akar — a
+   * tartalék-időzítő leáll. A bejegyzés viszont MEGMARAD (`null` értékkel),
+   * mert a kérdés ettől még fut: a második bezárási kísérlet ne nyisson
+   * másodikat, és a kifagyás-jelzés is ebből tudja, hogy van mit átvennie.
+   *
+   * Ismeretlen ablak vagy már lezárult kérdés esetén nincs teendő: egy késve
+   * érkező nyugta nem támaszthat fel egy befejezett bezárást.
+   */
+  handle('app:closeAsked', (e) => {
+    const win = BrowserWindow.fromWebContents(e.sender);
+    if (!win || !zarasKerdes.has(win.id)) return;
+    const varakozo = zarasKerdes.get(win.id);
+    if (varakozo) clearTimeout(varakozo);
+    zarasKerdes.set(win.id, null);
+  });
+
   handle('app:closeDecision', (e, valasz: 'save' | 'discard' | 'cancel') => {
     const win = BrowserWindow.fromWebContents(e.sender);
     if (!win) return;
     // A tartalék-időzítőt MINDHÁROM ágon leállítjuk: válasz után a
     // rendszerpárbeszéd fölöslegesen, másodszor kérdezné meg ugyanazt.
+    // (Nyugta után `null` áll itt — akkor nincs mit leállítani, csak törölni.)
     const kerdes = zarasKerdes.get(win.id);
     if (kerdes) clearTimeout(kerdes);
     zarasKerdes.delete(win.id);

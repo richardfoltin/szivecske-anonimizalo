@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   api,
   // Ugyanazok a függvények, amikkel a motor a `outcomes` számhármast számolja
@@ -145,7 +145,8 @@ type Fazis = 'vizsgalat' | 'beallitas' | 'munka';
  *           lát a megnyitás után. Régen a helyén egy teljes képernyős „elfoglalt"
  *           réteg állt, majd eltűnt, és a helyére ez a képernyő lépett a saját
  *           folyamatjelzőjével: a felhasználó két külön betöltést látott egymás
- *           után ugyanarra az egy műveletre. Egy képernyő, két szakasszal.
+ *           után ugyanarra az egy műveletre. Egy képernyő, két szakasszal —
+ *           és a két szakasz EGYSZERRE látszik rajta, nem egymást váltva.
  *  - 'var'  még nem indult el: blokkoló kérdés (változáskövetés, szkennelt
  *           irat, betöltési figyelmeztetés) áll előtte. Ez a képernyő
  *           kattintható kiutat ad arra az esetre, ha a felhasználó a kérdést
@@ -1527,7 +1528,30 @@ export default function App() {
     pillanatában maradhatna feliratkozó nélkül — az ablak pedig a
     főfolyamat időzítőjéig bezárhatatlannak látszana.
   */
-  useEffect(() => api.onConfirmClose?.(() => setDialog('exit')), []);
+  /*
+    A BEZÁRÁSI KÉRDÉS — ÉS A NYUGTA RÓLA.
+
+    A nyugta nem udvariasság: a főfolyamat ebből tudja meg, hogy a lap él, és
+    a kérdés tényleg ott áll a képernyőn. Enélkül a tartalék-időzítője
+    lejárt, és a rendszerpárbeszéd ráült a saját kérdésünkre — a felhasználó
+    két ablakot kapott ugyanarról, egymás tetején.
+
+    Azért itt megy el, és nem a párbeszéd `useEffect`-jéből: a fázisváltás és
+    a párbeszéd kirajzolása ugyanabban a React-körben történik, tehát ennél
+    hamarabb úgysem lehetne szólni — a késleltetés pedig pont az, amit el
+    akarunk kerülni.
+  */
+  useEffect(
+    () =>
+      api.onConfirmClose?.(() => {
+        setDialog('exit');
+        void api.closeAsked?.()?.catch(() => {
+          // Ha a híd nem ismeri, a főfolyamat időzítője veszi át — a program
+          // ettől még bezárható, csak a kérdés lesz a rendszeré.
+        });
+      }),
+    [],
+  );
 
   // Ebből tudja a főfolyamat, hogy kilépéskor van-e elveszíthető munka.
   useEffect(() => {
@@ -1548,7 +1572,19 @@ export default function App() {
     díszítés miatt nem szabad elhasalnia annak a felületnek, amin az irat
     álnevesítése folyik.
   */
-  useEffect(() => {
+  /*
+    LAYOUT-HATÁS, NEM SIMA HATÁS — egy képkockányi különbség, de az látszik.
+
+    A `useEffect` a KIRAJZOLÁS UTÁN fut le: a lap már fátyol nélkül van a
+    képernyőn, amikor az üzenet elindul a főfolyamat felé. A `useLayoutEffect`
+    a DOM módosítása után, de még a rajzolás előtt fut — az üzenet tehát
+    ugyanabban a pillanatban indul, amikor a fátyol eltűnik.
+
+    A halványodás így egyszerre megy vissza a lapon és a jobb felső sarokban.
+    A hívás maga aszinkron (`invoke`), tehát a rajzolást nem tartja fel: itt
+    csak az elindítása kerül előbbre.
+  */
+  useLayoutEffect(() => {
     /*
       EZ A HÍVÁS EDDIG A SEMMIBE MENT.
 
@@ -3108,6 +3144,73 @@ const SZAKASZOK: { id: DetectProgress['szakasz']; cim: string }[] = [
 ];
 
 /**
+ * A BETÖLTÉS EGY SZAKASZA: megnevezés, állapot, csík.
+ *
+ * MIÉRT NEM VÁLTAKOZIK A KÉT SZAKASZ EGYMÁS UTÁN. Eddig egyetlen felirat és
+ * egyetlen csík állt a képernyőn, és a megnyitásról az átolvasásra váltáskor
+ * mindkettő kicserélődött — a felhasználó tehát két külön betöltőképernyőt
+ * látott egymás után ugyanarra az egy mozdulatra. A második azt üzente, hogy
+ * az első nem sikerült, vagy hogy elölről kezdődik valami.
+ *
+ * Innentől mindkét szakasz VÉGIG a képernyőn áll, a saját csíkjával. Ami
+ * változik, az az állapotuk: a felső elkészül, az alsó elindul. A képernyő nem
+ * cserélődik ki, csak halad — és a felhasználó látja, hány lépésből áll az
+ * egész, már az első pillanatban.
+ *
+ * A HÁROM ÁLLAPOT:
+ *  - 'var'  még nem került rá sor: üres csík, halvány felirat
+ *  - 'fut'  ez megy éppen: mozgó vagy százalékos csík
+ *  - 'kesz' megvolt: tele csík, „kész" felirat
+ */
+function BetoltoLepes({
+  cim,
+  allapot,
+  arany,
+  reszlet,
+}: {
+  cim: string;
+  allapot: 'var' | 'fut' | 'kesz';
+  /**
+   * A szakasz készültsége 0 és 1 között, vagy `null`.
+   *
+   * A `null` NEM nulla százalék. A nulla azt jelentené, hogy most kezdtük, a
+   * `null` viszont azt, hogy ebben a szakaszban nincs mit arányosítani — egy
+   * kitalált százalékból a felhasználó rossz időt becsül. Ilyenkor mozgó csík
+   * jár, ami annyit állít, amennyit tudunk: dolgozunk.
+   */
+  arany: number | null;
+  /** A szakaszon belüli lépés neve, ha van ilyen (»modell betöltése«). */
+  reszlet?: string | null;
+}) {
+  const szazalek = arany === null ? null : Math.round(arany * 100);
+  const jel = allapot === 'kesz' ? 'kész' : allapot === 'var' ? 'vár' : (szazalek === null ? '' : `${szazalek}%`);
+  return (
+    <div className={`blepes ${allapot}`}>
+      <div className="blfej">
+        <span className="blcim">{cim}</span>
+        <span className="bljel">{jel}</span>
+      </div>
+      {allapot === 'fut' && szazalek === null ? (
+        <div className="csik hatarozatlan">
+          <div className="bar" />
+        </div>
+      ) : (
+        <div className="csik">
+          <div
+            className="bar"
+            style={{ width: allapot === 'kesz' ? '100%' : `${szazalek ?? 0}%` }}
+          />
+        </div>
+      )}
+      {/* A részlet CSAK a futó szakasz alatt jelenik meg, és a helye akkor is
+          megmarad, ha épp nincs mit kiírni — enélkül a képernyő ugrálna
+          minden szakaszváltásnál. */}
+      {allapot === 'fut' && <div className="blreszlet">{reszlet ?? ''}</div>}
+    </div>
+  );
+}
+
+/**
  * A MEGNYITÁS UTÁNI VIZSGÁLAT KÉPERNYŐJE.
  *
  * Ez nem párbeszédablak: a folyamat állomása, ugyanabban a kártyában, mint a
@@ -3161,6 +3264,23 @@ function VizsgalatKepernyo({
   const megszakadt = allapot === 'megszakitva';
 
   /*
+    A CSÍK NEM MEGY VISSZA.
+
+    A vizsgálat négy szakaszból áll, és nem mindegyik mérhető: az irat
+    átolvasása százalékot ad, az utolsó szakasz (»összesítés«) nem. Amíg a
+    képernyőn egyszerre csak EGY csík állt, ez nem tűnt fel — most viszont
+    látszott volna, ahogy a nyolcvan százaléknál tartó csík visszaesik egy
+    oda-vissza futó darabra. A felhasználó ebből azt olvassa ki, hogy elölről
+    kezdődik valami.
+
+    Ezért a mért érték MEGMARAD: ha egy szakasz nem tud százalékot mondani, az
+    utolsó ismert állás marad a csíkon. Nem találunk ki új számot — azt a
+    lentebbi `arany === null` ág tiltja —, csak nem dobjuk el azt, amit már
+    tudunk. Új irat megnyitásakor (`'nyit'`) nullázódik.
+  */
+  const utolsoArany = useRef<number | null>(null);
+
+  /*
     AMÍG DOLGOZUNK, EGY CSENDES BETÖLTŐKÉPERNYŐ ÁLL ITT.
 
     Korábban ez is ugyanaz a kártya volt, mint a beállító lap: cím, bevezető
@@ -3176,10 +3296,19 @@ function VizsgalatKepernyo({
     átmenet, nincs villanás, nincs közbeiktatott „készen állunk” lap: a
     felhasználó egyetlen folyamatot lát a fájl megnyitásától a kész
     találatlistáig.
+
+    ÉS MINDKÉT SZAKASZ VÉGIG LÁTSZIK. Korábban a felirat és a csík
+    kicserélődött a megnyitásról az átolvasásra váltáskor: ugyanaz az egy
+    képernyő volt, de két különböző tartalommal, ami két külön betöltésnek
+    látszott. Most a két szakasz egymás alatt áll, a sajátjával — a felső
+    elkészül, az alsó elindul. Lásd `BetoltoLepes`.
   */
   if (kep === 'nyit' || kep === 'fut') {
     const szakasz = SZAKASZOK.find((sz) => sz.id === haladas?.szakasz)?.cim;
-    const arany = kep === 'fut' && haladas && haladas.arany !== null ? haladas.arany : null;
+    const mert = kep === 'fut' && haladas && haladas.arany !== null ? haladas.arany : null;
+    if (kep === 'nyit') utolsoArany.current = null;
+    else if (mert !== null) utolsoArany.current = mert;
+    const arany = mert ?? utolsoArany.current;
     return (
       <div className="loading">
         <div className="loading-in">
@@ -3187,24 +3316,20 @@ function VizsgalatKepernyo({
               és a felhasználó a leghosszabb szakasz közepén lövi ki. */}
           <img className="pulzus" src={markUrl} alt="" />
           <div className="fnev">{fajlNev}</div>
-          <div className="mit">
-            {kep === 'nyit' ? 'Megnyitás…' : (szakasz ?? 'Az irat átolvasása…')}
-          </div>
 
-          {/* HATÁROZOTT CSÍK CSAK MÉRHETŐ SZAKASZRA. A `null` arány nem nulla
-              százalék: a nulla azt jelentené, hogy most kezdtük, a `null`
-              viszont azt, hogy ebben a szakaszban nincs mit arányosítani. Egy
-              kitalált százalékból a felhasználó rossz időt becsül. */}
-          {arany === null ? (
-            <div className="csik hatarozatlan">
-              <div className="bar" />
-            </div>
-          ) : (
-            <div className="progress">
-              <div className="bar" style={{ width: `${Math.round(arany * 100)}%` }} />
-              <span className="ptext">{Math.round(arany * 100)}%</span>
-            </div>
-          )}
+          <div className="blepesek">
+            <BetoltoLepes
+              cim="Az irat megnyitása"
+              allapot={kep === 'nyit' ? 'fut' : 'kesz'}
+              arany={null}
+            />
+            <BetoltoLepes
+              cim="A nevek megkeresése"
+              allapot={kep === 'nyit' ? 'var' : 'fut'}
+              arany={arany}
+              reszlet={kep === 'fut' ? (szakasz ?? 'az irat átolvasása') : null}
+            />
+          </div>
 
           {/* A FELOLDATLAN VÁLTOZÁSKÖVETÉS ITT IS LÁTSZIK: a vizsgálat lefut
               tőle, a MENTÉS viszont nem — és ez az a képernyő, ahova a válasz

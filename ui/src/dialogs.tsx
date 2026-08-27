@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from './api';
+import { Kapcsolo, KapcsoloSor } from './kapcsolo';
 import { splitContext } from './panels';
 import type {
   AutoDecisionRow,
@@ -388,12 +389,29 @@ export function PartiesDialog({
               {idRows.map((r) => {
                 const d = idEvidence.get(r.id);
                 return (
+                  /*
+                    A KAPCSOLÓ A SOR JOBB SZÉLÉN ÁLL, nem az elején.
+
+                    Itt korábban jelölőnégyzet volt, a sor bal szélén. A
+                    kapcsoló szélesebb nála, és a bal szélre téve minden sor
+                    szövege beljebb csúszott volna — a lista pedig épp attól
+                    olvasható, hogy az azonosítók egy vonalban kezdődnek.
+                    Jobbra téve ugyanaz az elrendezés jön ki, mint a beállító
+                    lap csoportfejlécein: szöveg balra, kapcsoló jobbra.
+                  */
                   <label key={r.id} className={`idrow${r.skipped ? ' off' : ''}`}>
-                    <input type="checkbox" checked={!r.skipped} onChange={() => toggleId(r.id)} />
                     <div className="idmain">
                       <span className="val mono">{r.fullName}</span>
                       <span className="pill kind">{r.role}</span>
                       {d && <span className="occ">{d.occurrences}× az iratban</span>}
+                    </div>
+                    <div className="idctl">
+                      <Kapcsolo
+                        id={`idrow-${r.id}`}
+                        cimke={`${r.fullName} cseréje`}
+                        be={!r.skipped}
+                        onValt={() => toggleId(r.id)}
+                      />
                     </div>
                     {d && <div className="ev">{d.evidence}</div>}
                   </label>
@@ -2354,17 +2372,19 @@ export function ExportDialog({
             </div>
           )}
 
-          <label className="checkline">
-            <input type="checkbox" checked={keepKey} onChange={(e) => setKeepKey(e.target.checked)} />
-            <div>
-              <div className="t">Készüljön visszafejtő kulcsfájl</div>
-              <div className="s">
+          <KapcsoloSor
+            id="export-keepkey"
+            cim="Készüljön visszafejtő kulcsfájl"
+            leiras={
+              <>
                 Ezzel később vissza tudod nézni, ki kicsoda volt: <b>Fájl → Kulcsfájl megnyitása</b>.
                 Amíg a kulcs létezik, a kimenet a GDPR szerint továbbra is személyes adat — ez
                 álnevesítés, nem anonimizálás.
-              </div>
-            </div>
-          </label>
+              </>
+            }
+            be={keepKey}
+            onValt={setKeepKey}
+          />
 
           {keepKey && (
             <div className="field">
@@ -2512,9 +2532,18 @@ export function ExitDialog({
             kerül, és a program megkérdezi, hova.
           </div>
         </div>
+{/*
+          A HÁROM GOMB A PROGRAM SAJÁT SORRENDJÉBEN ÁLL: balra a visszalépés,
+          jobbra az, amit ajánlunk. Ez a lábléc ugyanaz, mint a többi
+          párbeszédé — a bezárás kérdése nem kivétel.
+
+          A FELIRATOK RÖVIDEK. „Mégsem lépek ki" állt itt: egy mondat egy
+          gombon. A gombfelirat nem mondat, hanem a művelet neve — a mondat a
+          fejlécben van, ahol el is olvassák.
+        */}
         <div className="dialog-foot">
           <button className="btn ghost" onClick={() => onValaszt('cancel')}>
-            Mégsem lépek ki
+            Mégse
           </button>
           <button className="btn" onClick={() => onValaszt('discard')}>
             Kilépés mentés nélkül
@@ -2565,12 +2594,14 @@ export function ScannedDialog({
             vagy futtasd át előbb egy OCR-programon, és azt nyisd meg itt.
           </div>
         </div>
+        {/* Ugyanaz a sorrend, mint mindenhol máshol: balra a halkabb válasz,
+            jobbra az, amit ajánlunk. Ez a lábléc korábban fordítva állt. */}
         <div className="dialog-foot">
-          <button className="btn primary" onClick={onOpenOther}>
-            Másik irat megnyitása
-          </button>
           <button className="btn ghost" onClick={onContinue}>
             Mégis megnézem
+          </button>
+          <button className="btn primary" onClick={onOpenOther}>
+            Másik irat megnyitása
           </button>
         </div>
       </div>

@@ -8,6 +8,7 @@ import {
   type ModelStatus,
 } from './api';
 import { Overlay } from './dialogs';
+import { KapcsoloSor } from './kapcsolo';
 
 /**
  * A programadatokat a hídtól kérjük, a típust is onnan vesszük át: így nem
@@ -446,20 +447,15 @@ export function SettingsDialog({
               )}
 
               {settings && (
-                <label className="checkline" style={{ marginTop: 14 }}>
-                  <input
-                    type="checkbox"
-                    checked={settings.useModel}
-                    onChange={(e) => void patch({ useModel: e.target.checked })}
+                <div style={{ marginTop: 14 }}>
+                  <KapcsoloSor
+                    id="beall-usemodel"
+                    cim="A nyelvi modell olvassa végig az iratot"
+                    leiras="Ha kikapcsolod, a program csak a szerkezeti jelekre („Felperes:”, cégforma) tud támaszkodni, és a szövegben szabadon említett neveket nem találja meg."
+                    be={settings.useModel}
+                    onValt={(be) => void patch({ useModel: be })}
                   />
-                  <div>
-                    <div className="t">A nyelvi modell olvassa végig az iratot</div>
-                    <div className="s">
-                      Ha kikapcsolod, a program csak a szerkezeti jelekre („Felperes:”, cégforma)
-                      tud támaszkodni, és a szövegben szabadon említett neveket nem találja meg.
-                    </div>
-                  </div>
-                </label>
+                </div>
               )}
             </>
           )}

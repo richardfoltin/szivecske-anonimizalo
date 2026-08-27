@@ -358,15 +358,24 @@ const api = {
    * program saját ablaka. A bezárás viszont a főfolyamaté marad: a felület
    * csak a választ küldi vissza (`closeDecision`), az ablakot nem ő zárja be.
    *
-   * A főfolyamat időzítőt tesz a kérdés mellé: ha a felület nem felel,
-   * visszaesik a rendszerpárbeszédre, hogy a programból ki lehessen lépni
-   * akkor is, ha a lap kifagyott.
+   * A főfolyamat időzítőt tesz a kérdés mellé: ha a felület a NYUGTÁT sem
+   * küldi meg (`closeAsked`), visszaesik a rendszerpárbeszédre, hogy a
+   * programból ki lehessen lépni akkor is, ha a lap kifagyott.
    */
   onConfirmClose: (cb: () => void) => {
     const h = (): void => cb();
     ipcRenderer.on('app:confirmClose', h);
     return () => ipcRenderer.removeListener('app:confirmClose', h);
   },
+  /**
+   * NYUGTA: megkaptam a kérdést, ki is rajzoltam.
+   *
+   * Ez NEM a válasz — az a `closeDecision`. Ez csak annyit mond, hogy a lap
+   * él, és a kérdés ott áll a képernyőn. A főfolyamat ettől állítja le a
+   * tartalék-időzítőt: enélkül a rendszerpárbeszéd pár másodperc múlva
+   * ráült a saját kérdésünkre, és ugyanazt kérdezte meg másodszor.
+   */
+  closeAsked: () => ipcRenderer.invoke('app:closeAsked'),
   closeDecision: (valasz: 'save' | 'discard' | 'cancel') =>
     ipcRenderer.invoke('app:closeDecision', valasz),
 };

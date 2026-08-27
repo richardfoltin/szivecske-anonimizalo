@@ -1056,10 +1056,73 @@ textarea {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.loading-in .mit {
+/*
+  A KÉT SZAKASZ EGYMÁS ALATT, VÉGIG LÁTHATÓAN.
+
+  Korábban egyetlen felirat és egyetlen csík állt itt, és a megnyitásról az
+  átolvasásra váltáskor MINDKETTŐ kicserélődött: ugyanaz az egy képernyő volt,
+  de két különböző tartalommal — a felhasználó pedig két külön betöltésnek
+  látta, egymás után. A második azt üzente, hogy az első nem sikerült.
+
+  Két csík, mindkettő az első pillanattól ott: látszik, hány lépésből áll az
+  egész, és látszik, hogy a felső elkészült, nem eltűnt.
+*/
+.loading-in .blepesek {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  margin-top: 4px;
+}
+.blepes {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: left;
+}
+.blfej {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
   font-size: 12.5px;
+}
+.blcim {
+  color: var(--ink-soft);
+}
+/* A százalék és a „kész" ugyanabban az oszlopban áll: a szem egy vonal mentén
+   olvassa le, hol tart a munka. A táblázatszámok azért kellenek, hogy a
+   felirat ne ugráljon 9%-ról 10%-ra lépve. */
+.bljel {
+  color: var(--muted);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  flex: 0 0 auto;
+}
+/* A RÉSZLET HELYE AKKOR IS MEGVAN, ha épp nincs mit kiírni — enélkül a
+   képernyő ugrana egyet minden szakaszváltásnál. */
+.blreszlet {
+  min-height: 15px;
+  font-size: 11.5px;
   color: var(--muted);
 }
+/* AMI MÉG NEM JÖTT EL: halvány felirat, üres csík. Nem eltüntetve — a
+   felhasználó pont attól tudja, hogy lesz még egy lépés. */
+.blepes.var .blcim,
+.blepes.var .bljel {
+  color: var(--muted);
+  opacity: 0.7;
+}
+/* AMI MEGVOLT: tele csík, de már nem rózsaszínben. A zöld azt mondja, hogy ez
+   a szakasz lezárult; a rózsa a most futóé marad, hogy egy pillantással
+   látszódjon, hol tartunk. */
+.blepes.kesz .csik .bar {
+  background: var(--mint);
+}
+.blepes.kesz .bljel {
+  color: var(--mint);
+}
+
 .loading-in .progress,
 .loading-in .csik {
   width: 100%;
@@ -1082,6 +1145,17 @@ textarea {
   background: var(--surface-2);
   border: 1px solid var(--line);
   overflow: hidden;
+}
+/* HATÁROZOTT CSÍK: a szélessége a készültség. A `width` átmenete azért
+   kell, hogy a szakaszok közti ugrás mozgásnak látsszon, ne villanásnak. */
+.csik .bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 99px;
+  background: var(--rose);
+  transition: width 0.25s ease-out, background 0.25s;
 }
 .csik.hatarozatlan .bar {
   position: absolute;
@@ -1720,24 +1794,45 @@ textarea:focus {
   font-weight: 700;
 }
 
+/*
+  EGY KAPCSOLÓ A SAJÁT SORÁBAN — balra a megnevezés és a magyarázat, jobbra a
+  kapcsoló.
+
+  ITT KORÁBBAN RENDSZER-RAJZOLÁSÚ JELÖLŐNÉGYZET ÁLLT, a sor bal szélén. A
+  programban mindenhol máshol kapcsoló felel ugyanerre a kérdésre: két
+  különböző vezérlő ugyanarra a mozdulatra. A jobb szél azért lett a kapcsoló
+  helye, mert a csoportfejlécekben is ott ül — a szem így egyetlen függőleges
+  vonal mentén olvassa le, mi van bekapcsolva.
+
+  A `.checkline input` méretszabálya INNEN KIKERÜLT (15×15 képpont volt). A
+  kapcsoló is `input[type=checkbox]`, csak más a rajzolata: az a szabály
+  ráfutott volna, és összenyomta volna 42×24-ről.
+*/
 .checkline {
   display: flex;
   align-items: flex-start;
-  gap: 9px;
+  justify-content: space-between;
+  gap: 14px;
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   margin-bottom: 11px;
 }
-.checkline input {
-  margin-top: 2px;
-  accent-color: var(--rose);
-  width: 15px;
-  height: 15px;
+.checkline .clszoveg {
+  flex: 1;
+  min-width: 0;
+}
+.checkline .clctl {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .checkline .t {
+  display: block;
   font-weight: 600;
   font-size: 13px;
+  cursor: pointer;
 }
 .checkline .s {
   font-size: 11.5px;
@@ -2352,10 +2447,17 @@ textarea:focus {
   flex: 0 0 auto;
 }
 
+/*
+  A KAPCSOLÓ A SOR JOBB SZÉLÉN — ugyanott, ahol mindenhol máshol.
+
+  A jelölőnégyzet a sor elején állt, és 15 képpont széles volt. A kapcsoló
+  42 képpont: bal szélre téve minden sor szövege beljebb csúszott volna, pedig
+  a lista épp attól olvasható, hogy az azonosítók egy vonalban kezdődnek.
+*/
 .idrow {
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 3px 9px;
+  grid-template-columns: 1fr auto;
+  gap: 3px 12px;
   align-items: center;
   padding: 8px 12px;
   border-bottom: 1px solid var(--line-soft);
@@ -2367,11 +2469,14 @@ textarea:focus {
 .idrow:hover {
   background: var(--surface-2);
 }
-.idrow input {
-  accent-color: var(--rose);
-  width: 15px;
-  height: 15px;
-  grid-row: 1 / span 2;
+/* A `.idrow input` méretszabálya INNEN IS KIKERÜLT: a kapcsoló szintén
+   `input[type=checkbox]`, és ez a szabály összenyomta volna. */
+.idrow .idctl {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .idmain {
   display: flex;
@@ -2390,7 +2495,7 @@ textarea:focus {
   color: var(--muted);
 }
 .idrow .ev {
-  grid-column: 2;
+  grid-column: 1;
   font-size: 11.5px;
   font-style: italic;
   color: var(--muted);

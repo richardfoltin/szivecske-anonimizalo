@@ -650,6 +650,18 @@ interface SzivecskeApi {
    * bezárhatatlan, csak nem szép.
    */
   onConfirmClose?(cb: () => void): () => void;
+  /**
+   * NYUGTA a bezárási kérdésre: megkaptam, ki is rajzoltam.
+   *
+   * Küldd el, AMINT a kérdés a képernyőre került — a válasz előtt, attól
+   * függetlenül. A főfolyamat ettől állítja le a tartalék-időzítőt, ami
+   * különben a rendszerpárbeszédet nyitná ki a mi kérdésünk tetejére.
+   *
+   * Opcionális, mint a párja: egy régebbi hídon nincs meg. Olyankor a régi
+   * viselkedés marad — a program bezárható, csak a tartalék hamarabb szólal
+   * meg.
+   */
+  closeAsked?(): Promise<void>;
   closeDecision?(valasz: 'save' | 'discard' | 'cancel'): Promise<void>;
   previewText(): Promise<string>;
   suggestOutputPath(mode: string): Promise<string>;

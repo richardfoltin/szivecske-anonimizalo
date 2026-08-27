@@ -1,6 +1,7 @@
 import { useId, useRef, useState } from 'react';
 import type { PartyInput, ReplacementMode, ThemeSummaryUi } from './api';
 import { FelismeroSav, NevkeszletRacs } from './dialogs';
+import { Kapcsolo } from './kapcsolo';
 
 /*
   A MEGNYITÁS UTÁNI BEÁLLÍTÓ OLDAL.
@@ -462,50 +463,14 @@ function Sor({
   );
 }
 
-/**
- * A kapcsoló.
- *
- * VALÓDI `input[type=checkbox]`, csak a megjelenése más — nem `div` és nem
- * kattintáskezelő. Ez nem stílusdöntés: a saját rajzolású kapcsolóból elvész a
- * Szóköz és az Enter, a képernyőolvasó pedig nem mondja meg, hogy be vagy ki
- * van kapcsolva. Egy jogi iratot álnevesítő programban ez azt jelentené, hogy
- * a felhasználó nem tudja ellenőrizni, mit kapcsolt be.
- *
- * A „Be” / „Ki” felirat AZ ÁLLAPOT MÁSODIK JELE. A gomb helyzete és a felirat
- * együtt mondja meg, mi van bekapcsolva; ha csak a szín különböztetné meg őket,
- * a színtévesztő felhasználó és a szürkeárnyalatos nyomat is vakon maradna.
- * A felirat `aria-hidden`, mert az állapotot a jelölőnégyzet maga már közli —
- * kétszer felolvasva csak zaj lenne.
- */
-function Kapcsolo({
-  id,
-  be,
-  tiltva,
-  onValt,
-}: {
-  id: string;
-  be: boolean;
-  tiltva?: boolean;
-  onValt: (be: boolean) => void;
-}) {
-  return (
-    <>
-      <span className="tstate" aria-hidden="true">
-        {be ? 'Be' : 'Ki'}
-      </span>
-      <input
-        id={id}
-        type="checkbox"
-        className="toggle"
-        role="switch"
-        checked={be}
-        disabled={tiltva === true}
-        aria-describedby={`${id}-s`}
-        onChange={(e) => onValt(e.target.checked)}
-      />
-    </>
-  );
-}
+/*
+  A KAPCSOLÓ INNEN KIKERÜLT: `ui/src/kapcsolo.tsx`.
+
+  Nem ennek a lapnak a tartozéka, hanem a felület alapeleme — a Beállítások
+  ablak és a párbeszédek is ezt használják. Amíg itt lakott, azok
+  rendszer-rajzolású jelölőnégyzetet kaptak helyette: ugyanaz a kérdés, két
+  külön vezérlő.
+*/
 
 /* ─────────────────────────── a lap ─────────────────────────── */
 
@@ -1085,6 +1050,7 @@ function CsereLap({
                     fajta === 'amount' || fajta === 'date' ? (
                       <Kapcsolo
                         id={az(fajta)}
+                        cimke={`${FAJTA_CIM[fajta]} cseréje`}
                         be={fajta === 'amount' ? beallitasok.replaceAmounts : beallitasok.shiftDates}
                         onValt={(be) =>
                           onBeallitas(fajta === 'amount' ? { replaceAmounts: be } : { shiftDates: be })
@@ -1093,6 +1059,7 @@ function CsereLap({
                     ) : (
                       <Kapcsolo
                         id={az(fajta)}
+                        cimke={`${FAJTA_CIM[fajta]} cseréje`}
                         be={sorok.some((t) => t.cserelodik > 0)}
                         onValt={(be) => onCsoport(fajta, be)}
                       />
@@ -1179,7 +1146,18 @@ function HivatalosSzakasz({
         fajta="hivatalos"
         darab={be && sorok.length > 0 ? sorok.length : bentMaradok.length}
         be={be}
-        {...(cserelheto ? { kapcsolo: <Kapcsolo id={az('officials')} be={be} onValt={onValt} /> } : {})}
+        {...(cserelheto
+          ? {
+              kapcsolo: (
+                <Kapcsolo
+                  id={az('officials')}
+                  cimke="A hivatalos szereplők cseréje"
+                  be={be}
+                  onValt={onValt}
+                />
+              ),
+            }
+          : {})}
       />
 
       {/*
