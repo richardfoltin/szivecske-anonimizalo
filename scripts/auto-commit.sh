@@ -95,11 +95,28 @@ FAJLOK=$((KOVETETT_DB + UJ_DB))
 
 git add -A 2>/dev/null
 
-git commit -q -m "wip: automata mentés [${AG}] — ${FAJLOK} fájl, ~${OSSZES} sor
+# AZ ÜZENET SZABVÁNYOS BEMENETEN MEGY BE, nem `-m` kapcsolóval.
+#
+# Nem stílus kérdése. A `-m "…"` kettős idézőjeles szövegében a VISSZAPIPA
+# parancsbehelyettesítés. Az első változatban a magyarázó mondat a `wip:`
+# előtagot visszapipák között tartalmazta — a bash ezt parancsként próbálta
+# lefuttatni („wip:: command not found”), és a szó NÉMÁN kiesett a
+# commit-üzenetből. A commit létrejött, csak épp hiányos szöveggel: a hiba a
+# naplóban ott állt, az eredményben nem.
+#
+# Az idézőjeles határolójú `<<'TORZS'` alak semmit nem helyettesít be, tehát a
+# törzs pontosan az lesz, ami ide van írva. A behelyettesítendő értékek az
+# első sorba kerülnek, ahol nincs se visszapipa, se dollár a szövegben.
+git commit -q -F - 2>/dev/null <<EOF
+wip: automata mentés [${AG}] — ${FAJLOK} fájl, ~${OSSZES} sor
 
+$(cat <<'TORZS'
 Ez a commit a munka közbeni állapotot rögzíti, nem kész változat: a
-tesztkészlet nem futott le rá. A `wip:` előtag ezt mondja ki.
+tesztkészlet nem futott le rá. A "wip:" előtag ezt mondja ki.
 
-Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>" 2>/dev/null
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+TORZS
+)
+EOF
 
 exit 0
