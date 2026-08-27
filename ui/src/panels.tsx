@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { matchKind, matchOutcome } from './api';
 import type { AnalysisResult, MatchKind, MatchRow } from './api';
 
@@ -97,11 +97,7 @@ export function DocumentView({
   );
 
   const ref = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    if (selected === null) return;
-    const el = ref.current?.querySelector(`[data-hl="${selected}"]`);
-    el?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  }, [selected]);
+  useEffect(() => gorgessOda(ref.current, selected), [selected]);
 
   if (analysis.pages.length === 0) {
     return (
@@ -109,6 +105,7 @@ export function DocumentView({
         analysis={analysis}
         selected={selected}
         hivatalosIdk={hivatalosIdk}
+        onSelect={onSelect}
         {...(dontesek ? { dontesek } : {})}
         {...(onToggle ? { onToggle } : {})}
       />
@@ -142,11 +139,22 @@ export function DocumentView({
                     height: `${h.height * 100}%`,
                   }}
                   title={m ? kiemelesSugo(m, onToggle !== undefined) : ''}
+                  /* Billentyűzetről is: a szöveges nézet markjai eddig is
+                     kapcsolhatók voltak Enterrel, a lapképes kiemelés nem —
+                     ugyanaz a művelet a formátumtól függően hol járt, hol nem. */
+                  role="button"
+                  tabIndex={0}
                   onClick={
                     onToggle
                       ? () => onToggle(h.matchId)
                       : () => onSelect(selected === h.matchId ? null : h.matchId)
                   }
+                  onKeyDown={(e) => {
+                    if (e.key !== 'Enter' && e.key !== ' ') return;
+                    e.preventDefault();
+                    if (onToggle) onToggle(h.matchId);
+                    else onSelect(selected === h.matchId ? null : h.matchId);
+                  }}
                 />
               );
             })}
@@ -174,6 +182,28 @@ export function DocumentView({
  * ugyanezt adja vissza, tehát nem két igazság van, csak az egyik hamarabb
  * ér a képernyőre.
  */
+/**
+ * A KIJELÖLT TALÁLAT LÁTÓTÉRBE HOZÁSA — de csak ha tényleg nem látszik.
+ *
+ * A feltétel nem finomkodás: a kijelölést az iratra KATTINTÁS is állítja, és
+ * a feltétel nélkül a képernyő minden kattintásra középre görgette a
+ * megkattintott szót — elmozdult a felhasználó mutatója alól. Ami már
+ * látszik, azt nem mozgatjuk; ahova a lépegetés ugrik, az odagörög.
+ *
+ * KÉT NÉZET HASZNÁLJA: a lapképes és a szöveges is. Korábban csak a lapképesé
+ * volt, vagyis DOCX-en és TXT-n — a jogi iratok többségén — a „lépegetésre az
+ * irat odagörög" ígéret némán nem teljesült.
+ */
+function gorgessOda(tarto: HTMLElement | null, selected: number | null): void {
+  if (selected === null || !tarto) return;
+  const el = tarto.querySelector(`[data-hl="${selected}"]`);
+  if (!el) return;
+  const e = el.getBoundingClientRect();
+  const t = tarto.getBoundingClientRect();
+  if (e.top >= t.top && e.bottom <= t.bottom) return;
+  el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+}
+
 function frissSor(m: MatchRow, dontesek: Record<number, 'accept' | 'skip'> | undefined): MatchRow {
   const d = dontesek?.[m.id];
   return d === undefined ? m : { ...m, decision: d };
@@ -211,14 +241,19 @@ function TextView({
   selected,
   hivatalosIdk,
   dontesek,
+  onSelect,
   onToggle,
 }: {
   analysis: AnalysisResult;
   selected: number | null;
   hivatalosIdk: ReadonlySet<string>;
   dontesek?: Record<number, 'accept' | 'skip'>;
+  /** Kapcsoló nélküli (munkalapi) nézetben a kattintás kijelöl — mint a lapképesen. */
+  onSelect: (id: number | null) => void;
   onToggle?: (id: number) => void;
 }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => gorgessOda(ref.current, selected), [selected]);
   /*
     A darabolás POZÍCIÓ SZERINT megy, és az átfedéseket eldobja.
 
@@ -253,7 +288,7 @@ function TextView({
   }, [analysis.previewText, analysis.matches]);
 
   return (
-    <div className={`viewport source${onToggle ? ' kapcsolhato' : ''}`}>
+    <div className={`viewport source${onToggle ? ' kapcsolhato' : ''}`} ref={ref}>
       <div className="textview">
         {darabok.map((d) =>
           d.m === undefined ? (
@@ -267,18 +302,17 @@ function TextView({
                 hivatalosIdk,
               )}${selected === d.m.id ? ' selected' : ''}`}
               title={kiemelesSugo(frissSor(d.m, dontesek), onToggle !== undefined)}
-              {...(onToggle
-                ? {
-                    role: 'button',
-                    tabIndex: 0,
-                    onClick: () => onToggle(d.m!.id),
-                    onKeyDown: (e: React.KeyboardEvent) => {
-                      if (e.key !== 'Enter' && e.key !== ' ') return;
-                      e.preventDefault();
-                      onToggle(d.m!.id);
-                    },
-                  }
-                : {})}
+              role="button"
+              tabIndex={0}
+              onClick={() =>
+                onToggle ? onToggle(d.m!.id) : onSelect(selected === d.m!.id ? null : d.m!.id)
+              }
+              onKeyDown={(e: React.KeyboardEvent) => {
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+                e.preventDefault();
+                if (onToggle) onToggle(d.m!.id);
+                else onSelect(selected === d.m!.id ? null : d.m!.id);
+              }}
             >
               {d.szoveg}
             </mark>
@@ -382,189 +416,138 @@ function escapeRe(s: string): string {
   kérdésre válaszol, hogy „ez a szó ITT név volt-e" — nem arra, hogy „ezt a
   nevet cseréljük-e".
 */
-type Tab = 'review' | 'all';
+/*
+  A `CastPanel` ÉS A `MatchRowView` INNEN KIKERÜLT.
 
-export function CastPanel({
+  A munkalapon egy teljes döntéslista állt („Átnézésre vár / Minden találat”,
+  soronként „Cseréld le / Hagyd bent / Alapértelmezés” gombokkal) — vagyis
+  ugyanazok a döntések, amiket a beállító lap sorai és az iratra kattintás
+  már eldöntöttek, HARMADIK vezérlőkészlettel. A felhasználó ki is mondta,
+  hogy furcsa egy átnéző lista, ami csak a mentés előtt jelenik meg.
+
+  A döntés helye a beállító lap lett (kapcsoló + lépegetés + kattintás az
+  iraton); ez az állomás az ellenőrzésé és a mentésé — az alábbi
+  `OsszegzoPanel`.
+*/
+
+/**
+ * A MUNKALAP JOBB PANELE: mi történt, és mehet-e a fájlba.
+ *
+ * Nem döntésfelület — a döntések a beállító lapon születnek. Itt az áll,
+ * amit a mentés előtt tudni kell: hány találat cserélődik (fajtánként, a
+ * bal oldali kiemelés színeivel), hány marad bent, döntött-e a program
+ * ember helyett, és van-e akadálya a mentésnek.
+ */
+export function OsszegzoPanel({
   analysis,
-  selected,
-  onSelect,
-  onDecide,
-  reviewFocus = 0,
+  fajtak,
+  autoDecidedCount,
+  mentesAkadaly,
+  onMentes,
+  onVissza,
+  onAutoReport,
 }: {
   analysis: AnalysisResult;
-  selected: number | null;
-  onSelect: (id: number | null) => void;
-  onDecide: (id: number, d: 'accept' | 'skip' | undefined) => void;
-  /**
-   * Számláló: ha nő, a szereplap az „Átnézésre vár” fülre ugrik.
-   *
-   * A kérdezés nélküli útról visszaváltó felhasználó pontosan azért kattintott,
-   * hogy lássa a bizonytalan találatokat — ha a szereplap a másik fülön
-   * maradna, a visszaút a semmibe vinne. Számláló, nem logikai érték: ugyanaz
-   * a kérés kétszer is jöhet, és a másodiknak ugyanúgy oda kell vinnie.
-   */
-  reviewFocus?: number;
+  /** A jelmagyarázat sorai (fajta + darab) — UGYANABBÓL a számításból, mint a bal oldali sáv. */
+  fajtak: { kulcs: string; osztaly: string; cimke: string; db: number }[];
+  autoDecidedCount: number;
+  /** Miért nem lehet menteni; `null`, ha mehet. */
+  mentesAkadaly: string | null;
+  onMentes: () => void;
+  onVissza: () => void;
+  onAutoReport: () => void;
 }) {
-  const review = analysis.matches.filter((m) => m.disposition !== 'auto' && !m.decision);
-  /*
-    A KEZDŐ FÜL AZT MUTATJA, AHOL MUNKA VAN.
-
-    Átnézős úton az eldöntetlen találatok — azokért van nyitva ez a panel.
-    Kérdezés nélküli úton viszont egyetlen ilyen sincs, és egy üres, pipával
-    nyugtázó fül azt üzenné, hogy nincs mit nézni: ott a teljes lista a
-    hasznos kezdőkép.
-  */
-  const [tab, setTab] = useState<Tab>(() =>
-    analysis.matches.some((m) => m.disposition !== 'auto' && !m.decision) ? 'review' : 'all',
-  );
-
-  // Az iratban kijelölt kiemelés a TELJES listán található meg biztosan: az
-  // átnézési fülről egy már eldöntött találat hiányozna, és a kattintás a
-  // semmibe vinne.
-  useEffect(() => {
-    if (selected !== null) setTab('all');
-  }, [selected]);
-
-  // A nulladik érték a kezdőállapot, nem kérés: enélkül a szereplap minden
-  // megnyitáskor az átnézési fülön indulna.
-  useEffect(() => {
-    if (reviewFocus > 0) setTab('review');
-  }, [reviewFocus]);
+  const csere = analysis.outcomes?.csere ?? analysis.counts.auto;
+  const nincs = analysis.outcomes?.nincs ?? analysis.counts.reject;
+  const bizonytalan = analysis.outcomes?.bizonytalan ?? analysis.counts.review;
 
   return (
     <aside className="panel">
       <div className="panel-head">
-        <h2>Találatok</h2>
+        <h2>Ellenőrzés és mentés</h2>
         <p>
-          {analysis.cast.length} fél · {analysis.matches.length} találat az iratban
+          A csere kész. Nézd meg az előnézeten, aztán mentsd új fájlba — az eredeti irat érintetlen
+          marad.
         </p>
       </div>
 
-      <div className="tabs">
-        <button className={`tab${tab === 'review' ? ' active' : ''}`} onClick={() => setTab('review')}>
-          Átnézésre vár <span className="count">{review.length}</span>
-        </button>
-        <button className={`tab${tab === 'all' ? ' active' : ''}`} onClick={() => setTab('all')}>
-          Minden találat <span className="count">{analysis.matches.length}</span>
-        </button>
-      </div>
-
-      <div className="panel-body">
-        {/* Az elemzés figyelmeztetései a FÜLEKTŐL FÜGGETLENÜL állnak: eddig a
-            Felek fülön voltak, és azzal együtt tűntek volna el — pedig az
-            egész iratra vonatkoznak, nem a fül tartalmára. */}
+      <div className="panel-body osszegzo">
         {analysis.warnings.map((w, i) => (
-          <div key={i} className="note" style={{ margin: '12px 14px' }}>
+          <div key={i} className="note">
             {w}
           </div>
         ))}
 
-        {tab === 'review' &&
-          (review.length === 0 ? (
-            <div className="empty">
-              <div className="big">✓</div>
-              Nincs eldöntetlen találat. Minden, amit megtaláltunk, biztosan a megadott felekhez
-              tartozik.
+        <div className="resultrow fo">
+          <span>Lecserélődik</span>
+          <span className="v">{csere}</span>
+        </div>
+        {/* A fajtánkénti bontás UGYANAZOKKAL a színekkel, mint a bal oldali
+            kiemelés és a beállító lap fejlécei — a pötty köti össze a számot
+            azzal, amit a szem az iraton lát. */}
+        {fajtak
+          .filter((f) => !['bizonytalan', 'nincs'].includes(f.kulcs))
+          .map((f) => (
+            <div key={f.kulcs} className="resultrow al">
+              <span>
+                <span className={`dot ${f.osztaly.replace('csere ', '')}`} aria-hidden="true" /> {f.cimke}
+              </span>
+              <span className="v">{f.db}</span>
             </div>
-          ) : (
-            review.map((m) => (
-              <MatchRowView
-                key={m.id}
-                m={m}
-                selected={selected === m.id}
-                onSelect={onSelect}
-                onDecide={onDecide}
-              />
-            ))
           ))}
+        <div className="resultrow fo">
+          <span>Nincs csere — az eredeti marad</span>
+          <span className="v">{nincs}</span>
+        </div>
 
-        {tab === 'all' &&
-          analysis.matches.map((m) => (
-            <MatchRowView
-              key={m.id}
-              m={m}
-              selected={selected === m.id}
-              onSelect={onSelect}
-              onDecide={onDecide}
-            />
-          ))}
+        {/*
+          BIZONYTALAN TALÁLAT A MENTÉS ELŐTT: ezt nem elég egy számmal
+          elintézni. Aki idáig eljutott, annak meg kell mondani, hogy ezek az
+          előfordulások ebben az állásban NEM cserélődnek — és hogy hol tudja
+          eldönteni őket.
+        */}
+        {bizonytalan > 0 && (
+          <div className="note">
+            <b>{bizonytalan} találat még döntésre vár</b> — ezek most nem cserélődnek. A beállító
+            lapon a borostyán pöttyös soroknál egyenként végigmehetsz rajtuk.
+            <div className="pathacts">
+              <button className="btn sm" onClick={onVissza}>
+                Megnézem őket
+              </button>
+            </div>
+          </div>
+        )}
+
+        {autoDecidedCount > 0 && (
+          <div className="note">
+            <b>{autoDecidedCount} bizonytalan találatról a program döntött</b> ember helyett.
+            <div className="pathacts">
+              <button className="btn sm" onClick={onAutoReport}>
+                Melyek ezek?
+              </button>
+            </div>
+          </div>
+        )}
+
+        {mentesAkadaly !== null && (
+          <div className="note bad">{mentesAkadaly}</div>
+        )}
+      </div>
+
+      <div className="panel-foot">
+        <button className="btn ghost" onClick={onVissza}>
+          Vissza a beállításokhoz
+        </button>
+        <button
+          className="btn primary"
+          disabled={mentesAkadaly !== null}
+          title={mentesAkadaly ?? 'Mentés új fájlba (Ctrl+S)'}
+          onClick={onMentes}
+        >
+          Mentés másként…
+        </button>
       </div>
     </aside>
-  );
-}
-
-function MatchRowView({
-  m,
-  selected,
-  onSelect,
-  onDecide,
-}: {
-  m: MatchRow;
-  selected: boolean;
-  onSelect: (id: number | null) => void;
-  onDecide: (id: number, d: 'accept' | 'skip' | undefined) => void;
-}) {
-  /*
-    A PROGRAM DÖNTÉSE NEM UGYANAZ, MINT A FELHASZNÁLÓÉ.
-
-    Az „elfogadva" felirat a saját döntését jelenti; ha a program helyette
-    döntött, ugyanaz a szó azt hazudná, hogy ő döntött. A `MatchRow.autoDecided`
-    pontosan ezt a különbséget hordozza — enélkül a képernyőn a kettő
-    megkülönböztethetetlen volna, és a felhasználó nem tudná, hol nézzen utána.
-  */
-  const label = m.autoDecided
-    ? m.decision === 'skip'
-      ? 'a program bent hagyta'
-      : 'a program cserélte'
-    : m.decision === 'accept'
-      ? 'elfogadva'
-      : m.decision === 'skip'
-        ? 'kihagyva'
-        : m.disposition === 'auto'
-          ? 'automatikus'
-          : m.disposition === 'review'
-            ? 'átnézésre'
-            : 'köznév?';
-  const pillClass = m.decision === 'skip' ? 'reject' : m.decision === 'accept' ? 'auto' : m.disposition;
-
-  const [before, mid, after] = splitContext(m.context);
-
-  return (
-    <div className={`matchrow${selected ? ' selected' : ''}`} onClick={() => onSelect(selected ? null : m.id)}>
-      <div className="top">
-        <span className={`pill ${pillClass}`}>{label}</span>
-        <span className="surface">{m.surface}</span>
-        {m.replacement && (
-          <>
-            <span style={{ color: 'var(--muted)' }}>→</span>
-            <span className="to">{m.replacement}</span>
-          </>
-        )}
-      </div>
-      <div className="ctx">
-        {before}
-        <b>{mid}</b>
-        {after}
-      </div>
-      <div className="why">{m.reason}</div>
-      <div className="acts" onClick={(e) => e.stopPropagation()}>
-        <button
-          className="btn sm"
-          disabled={m.decision === 'accept'}
-          onClick={() => onDecide(m.id, 'accept')}
-        >
-          Cseréld le
-        </button>
-        <button className="btn sm" disabled={m.decision === 'skip'} onClick={() => onDecide(m.id, 'skip')}>
-          Hagyd bent
-        </button>
-        {m.decision && (
-          <button className="btn ghost sm" onClick={() => onDecide(m.id, undefined)}>
-            Alapértelmezés
-          </button>
-        )}
-      </div>
-    </div>
   );
 }
 

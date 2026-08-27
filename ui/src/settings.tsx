@@ -260,7 +260,7 @@ function FajtaBlokk({ fajta, kikapcsolva }: { fajta: Fajta; kikapcsolva: boolean
       <span className="hint">{fajta.mit}</span>
       {kikapcsolva && (
         <span className="hint" style={{ color: 'var(--amber)', fontWeight: 600 }}>
-          Most ki van kapcsolva — az irat megnyitása után, a „Mit cseréljünk?” lapon
+          Most ki van kapcsolva — az irat megnyitása után, a „Mit cserélünk?” fülön
           kapcsolhatod be.
         </span>
       )}

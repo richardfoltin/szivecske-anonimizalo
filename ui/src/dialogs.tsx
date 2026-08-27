@@ -883,10 +883,18 @@ function KeszletHozzaadasKartya({ onIndit, tiltva }: { onIndit: () => void; tilt
  */
 export function FelismeroSav({
   fut,
+  felirat,
   onVizsgalat,
 }: {
   /** Éppen tart a vizsgálat: ilyenkor nincs mit indítani, és nincs mit tölteni. */
   fut: boolean;
+  /**
+   * A vizsgálatgomb felirata — a HÍVÓ mondja meg, mert csak ő tudja, futott-e
+   * már vizsgálat. Két különböző felirat ugyanarra a műveletre („Vizsgálat
+   * indítása" itt, „Vizsgálat újra" a lista kiútjai közt) azt kérdeztette a
+   * felhasználóval, mi a különbség — semmi.
+   */
+  felirat: string;
   onVizsgalat: () => void;
 }) {
   const [modellek, setModellek] = useState<ModelStatus[]>([]);
@@ -989,7 +997,7 @@ export function FelismeroSav({
           <>
             <span className="jo">letöltve</span>
             <button className="btn sm" disabled={fut} onClick={onVizsgalat}>
-              {fut ? 'A vizsgálat fut…' : 'Vizsgálat indítása'}
+              {fut ? 'A vizsgálat fut…' : felirat}
             </button>
           </>
         ) : (
@@ -2567,15 +2575,25 @@ export function ExitDialog({
  */
 export function ScannedDialog({
   fileName,
+  onClose,
   onContinue,
   onOpenOther,
 }: {
   fileName: string;
+  /**
+   * A kérdés elhessegetése (Escape, kattintás a fátyolra) — NEM beleegyezés.
+   *
+   * Korábban az `onContinue` állt itt: aki a figyelmeztetést válasz nélkül
+   * bezárta, annak azonnal ELINDULT a percekig tartó vizsgálat — a
+   * leggyengébb mozdulat a legerősebb következménnyel. A bezárás után a
+   * „várunk" képernyő áll, ahonnan a vizsgálat kifejezett gombbal indítható.
+   */
+  onClose: () => void;
   onContinue: () => void;
   onOpenOther: () => void;
 }) {
   return (
-    <Overlay onClose={onContinue}>
+    <Overlay onClose={onClose}>
       <div className="dialog narrow" onMouseDown={(e) => e.stopPropagation()}>
         <div className="dialog-head">
           <h2>Ebből az iratból nem olvasható ki szöveg</h2>
@@ -2627,16 +2645,19 @@ export function ScannedDialog({
 export function LoadWarningsDialog({
   fileName,
   warnings,
+  onClose,
   onContinue,
   onOpenOther,
 }: {
   fileName: string;
   warnings: string[];
+  /** A kérdés elhessegetése — nem beleegyezés. Lásd a `ScannedDialog`-ot. */
+  onClose: () => void;
   onContinue: () => void;
   onOpenOther: () => void;
 }) {
   return (
-    <Overlay onClose={onContinue}>
+    <Overlay onClose={onClose}>
       <div className="dialog narrow" onMouseDown={(e) => e.stopPropagation()}>
         <div className="dialog-head">
           <h2>Az irat egy részét nem tudtuk elolvasni</h2>

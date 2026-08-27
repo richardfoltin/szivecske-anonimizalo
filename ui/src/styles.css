@@ -558,6 +558,13 @@ textarea {
   outline-offset: 1px;
   border-radius: 2px;
 }
+/* Billentyűzetes fókusz a lapképes kiemelésen — enélkül a Tabbal lépkedő
+   felhasználó nem látja, hol jár, és vaktában nyom Entert. */
+.hl:focus-visible {
+  outline: 2px solid var(--rose-deep);
+  outline-offset: 1px;
+  border-radius: 2px;
+}
 
 .textview {
   max-width: 820px;
@@ -1847,6 +1854,50 @@ textarea:focus {
   padding: 7px 0;
   border-bottom: 1px solid var(--line-soft);
   font-size: 13px;
+}
+/* Az összegző panel sorai: a fő sorok vastagon, a fajtánkénti bontás
+   behúzva, a kiemelés színeivel jelölt pöttyel. */
+.panel-body.osszegzo {
+  padding: 14px;
+}
+.panel-body.osszegzo .note {
+  margin: 10px 0;
+}
+.resultrow.fo {
+  font-weight: 600;
+}
+.resultrow.al {
+  padding-left: 14px;
+  color: var(--ink-soft);
+  font-size: 12.5px;
+}
+.resultrow.al .dot {
+  cursor: default;
+  width: 8px;
+  height: 8px;
+  margin-right: 3px;
+}
+.resultrow.al .dot.k-nev {
+  background: var(--rose);
+}
+.resultrow.al .dot.k-osszeg {
+  background: #17806a;
+}
+.resultrow.al .dot.k-datum {
+  background: #2e6aa8;
+}
+.resultrow.al .dot.k-hivatalos {
+  background: #7a4fa8;
+}
+/* A panel lábléce: ugyanaz a szerkezet, mint a párbeszédeké — balra a
+   visszaút, jobbra a fő művelet. */
+.panel-foot {
+  padding: 12px 14px;
+  border-top: 1px solid var(--line-soft);
+  display: flex;
+  gap: 9px;
+  justify-content: flex-end;
+  background: #fdfbfc;
 }
 .resultrow:last-child {
   border-bottom: 0;
@@ -3201,41 +3252,64 @@ textarea:focus {
 
   A szín SOSEM AZ EGYETLEN JEL: mellette ott a kapcsoló „Be"/„Ki" felirata is.
 */
+/*
+  A FAJTASZÍN A CSOPORT KERETÉN ÁLL (`.fgroup.k-*`), nem csak a fejlécén.
+
+  Két okból. Az egyik, hogy a színt nemcsak a fejléc viseli: a bekapcsolt
+  KAPCSOLÓ is ebből örököl — egy zöld „Összegek" csoportban rózsaszín
+  kapcsoló állt, és a rózsaszín ebben a programban azt jelenti, hogy NEVET
+  cserélünk. A másik, hogy a kikapcsolt állapot így nem egy MÁSIK szín
+  (szürke — ami ráadásul a rózsás `--surface-2` miatt halvány rózsaszínnek
+  látszott), hanem UGYANANNAK a színnek a halványabb változata. Egy szín, két
+  erősség: be = telt, ki = halvány. A szín sosem az egyetlen jel — mellette
+  ott a kapcsoló „Be"/„Ki" felirata.
+*/
+.fgroup.k-nev {
+  --fgszin: var(--rose);
+  --fghatter: rgba(196, 87, 125, 0.08);
+  --fghatter-ki: rgba(196, 87, 125, 0.03);
+}
+.fgroup.k-osszeg {
+  --fgszin: #17806a;
+  --fghatter: rgba(23, 128, 106, 0.08);
+  --fghatter-ki: rgba(23, 128, 106, 0.03);
+}
+.fgroup.k-datum {
+  --fgszin: #2e6aa8;
+  --fghatter: rgba(46, 106, 168, 0.08);
+  --fghatter-ki: rgba(46, 106, 168, 0.03);
+}
+.fgroup.k-hivatalos {
+  --fgszin: #7a4fa8;
+  --fghatter: rgba(122, 79, 168, 0.09);
+  --fghatter-ki: rgba(122, 79, 168, 0.03);
+}
 .fghead {
   display: flex;
   align-items: flex-start;
   gap: 12px;
   padding: 9px 13px 9px 11px;
-  background: var(--surface-2);
+  background: var(--fghatter, var(--surface-2));
   border-bottom: 1px solid var(--line);
   border-left: 3px solid var(--fgszin, var(--line));
   transition: border-color 0.16s, background 0.16s;
 }
-.fghead.k-nev {
-  --fgszin: var(--rose);
-  background: rgba(196, 87, 125, 0.07);
-}
-.fghead.k-osszeg {
-  --fgszin: #17806a;
-  background: rgba(23, 128, 106, 0.07);
-}
-.fghead.k-datum {
-  --fgszin: #2e6aa8;
-  background: rgba(46, 106, 168, 0.07);
-}
-.fghead.k-hivatalos {
-  --fgszin: #7a4fa8;
-  background: rgba(122, 79, 168, 0.08);
-}
-/* KIKAPCSOLVA: a csík elszürkül, a háttér semleges lesz. A csoport címe és
-   darabszáma olvasható marad — nem eltüntetjük, csak hátrébb tesszük. */
+/* KIKAPCSOLVA: ugyanaz a szín, halványabban. A `color-mix` a csíkot fakítja
+   ki — a fajta így kikapcsolva is felismerhető marad, csak hátrébb lép. */
 .fghead.ki {
-  --fgszin: var(--line);
-  background: var(--surface-2);
+  background: var(--fghatter-ki, var(--surface));
+  border-left-color: color-mix(in srgb, var(--fgszin, var(--line)) 30%, white);
 }
-.fghead.ki .t,
+.fghead.ki .t {
+  color: var(--ink-soft);
+}
 .fghead.ki .s {
   color: var(--muted);
+}
+/* A csoport kapcsolója a CSOPORT színét viseli bekapcsolva, nem a rózsát. */
+.fgroup .toggle:checked {
+  background: var(--fgszin, var(--rose));
+  border-color: color-mix(in srgb, var(--fgszin, var(--rose)) 75%, black);
 }
 .fgszoveg {
   flex: 1 1 auto;
@@ -3252,19 +3326,11 @@ textarea:focus {
 }
 
 /*
-  A HIVATALOS SZEREPLŐK FIGYELMEZTETÉSE — bekapcsolt csere mellett.
-
-  Nem a kapcsoló magyarázata (az a fejlécben áll), hanem a KÖVETKEZMÉNY
-  kimondása: ez az egyetlen kapcsoló a programban, aminek jogszabályi
-  következménye van. Ezért marad a sorok fölött, nem tűnik el a súgóba.
+  A `.keepfigy` SÁV KIKERÜLT: a hivatalos szereplők figyelmeztetése a fejléc
+  leírósorába költözött. Külön sávként a bekapcsolás MEGNÖVELTE a szakaszt,
+  minden alatta álló sor lejjebb csúszott, és a görgetés ugrott egyet a
+  felhasználó keze alatt.
 */
-.keepfigy {
-  padding: 8px 13px;
-  border-bottom: 1px solid var(--line-soft);
-  font-size: 11.5px;
-  line-height: 1.5;
-  color: var(--ink-soft);
-}
 .fghead .t {
   display: flex;
   align-items: center;
@@ -3289,12 +3355,22 @@ textarea:focus {
   max-width: 62ch;
 }
 
+/*
+  MINDEN SOR UGYANOLYAN MAGAS.
+
+  A sor magasságát eddig a benne álló szöveg szabta meg: a hosszú név két
+  sorba tört, a sok jelvény harmadikba — húsz különböző magasságú sor alatt a
+  szem nem talál vissza oda, ahol az előbb járt, és a kapcsolók sem állnak
+  egy vonalban. A rögzített két sorban ami nem fér el, az levágódik, a teljes
+  szöveg pedig a buboréksúgóban olvasható.
+*/
 .findrow {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 5px 12px;
+  grid-template-rows: 28px 24px;
+  gap: 3px 12px;
   align-items: center;
-  padding: 9px 13px;
+  padding: 8px 13px;
   border-bottom: 1px solid var(--line-soft);
 }
 .findrow:last-child {
@@ -3303,18 +3379,29 @@ textarea:focus {
 .findrow:hover {
   background: #fdf9fb;
 }
+/* A LÉPEGETETT SOR kap egy halk keretet: az irat és a lista ugyanarra a
+   találatra mutat, és ezt mindkét oldalon látni kell. */
+.findrow.aktiv {
+  background: color-mix(in srgb, var(--fgszin, var(--rose)) 5%, white);
+  box-shadow: inset 3px 0 0 var(--fgszin, var(--rose));
+}
 .fmain {
   grid-column: 1;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 7px;
   min-width: 0;
+  overflow: hidden;
 }
 .findrow .orig {
   font-weight: 600;
   font-size: 13.5px;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 0 1 auto;
+  max-width: 48%;
 }
 .findrow .farrow {
   color: var(--muted);
@@ -3353,6 +3440,12 @@ textarea:focus {
   justify-content: flex-end;
   gap: 8px;
 }
+/* A sor kapcsolójának „Be/Ki" felirata rögzített helyet kap, hogy a
+   kapcsolók oszlopa ne mozogjon a két betű szélessége szerint. */
+.fctl .tstate {
+  min-width: 16px;
+  text-align: right;
+}
 .seg.sm {
   padding: 2px;
 }
@@ -3382,19 +3475,115 @@ textarea:focus {
   font-size: 13px;
   font-weight: 600;
   color: var(--rose-deep);
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .fmeta {
   grid-column: 1;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
   font-size: 11.5px;
   color: var(--muted);
+  min-width: 0;
+  overflow: hidden;
 }
 .fmeta .occ {
   color: var(--muted);
+  white-space: nowrap;
+}
+.fmeta .pill {
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.fmeta .atirva {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/*
+  PÖTTY A JELVÉNY HELYETT.
+
+  A „bizonytalan volt — a program döntött" felirat a sor felét elfoglalta, és
+  közben nem mondta el, MI a teendő vele. A pötty csak jelez, a buboréksúgó
+  magyaráz. A pötty sosem az egyetlen jel: az iraton ugyanez az előfordulás
+  borostyán kiemelést kap, a lap tetején pedig ott a darabszám.
+
+  A TELT pötty döntésre váró találat, az ÜRES pötty a program által már
+  eldöntött — a kettő ránézésre is különbözik, nem csak árnyalatban.
+*/
+.dot {
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--amber);
+  cursor: help;
+}
+.dot.dontott {
+  background: var(--surface);
+  border: 2px solid var(--amber);
+}
+
+/*
+  A LÉPEGETŐ — a Word Csere párbeszédének mozdulata, egy sorba sűrítve.
+
+  ‹ › a mozgás, a szám a pozíció, a „Cserél" / „Kihagy" a döntés a mostani
+  előfordulásról. A világító gomb az AKTUÁLIS előfordulás állását mutatja:
+  ez nem díszítés, hanem az egyetlen hely, ahol az állás a sorból látszik.
+*/
+.lepteto {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+.lepbtn {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 11.5px;
+  line-height: 1;
+  color: var(--ink);
+}
+.lepbtn:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+.lepbtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.lepbtn.szo.on {
+  background: var(--fgszin, var(--rose));
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+}
+/* A „Kihagy" bekapcsolva NEM a fajta színét kapja: az a csere színe. Sötét,
+   semleges — azt mondja, ehhez nem nyúlunk. */
+.lepbtn.szo.ki.on {
+  background: var(--ink-soft);
+}
+.lepoz {
+  min-width: 38px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+/* A zárt lépegető gombja ugyanott áll, ahol nyitva a vezérlősor: a sor
+   szerkezete nem ugrik át a megnyitástól. */
+.lepnyit {
+  margin-left: auto;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 .fmeta .warn {
   color: var(--amber);
@@ -3420,7 +3609,14 @@ textarea:focus {
   egy MÁSIK szín adja, hanem ugyanannak a színnek a megléte vagy hiánya —
   pontosan úgy, ahogy a többi csoportnál.
 */
+/* A TÖRVÉNY SZERINTI SOR UGYANOLYAN MAGAS, mint a találatsor: a hivatalos
+   szereplők kapcsolgatásakor a kettő egymást váltja, és ha más magasak
+   volnának, a lista ugrana egyet a felhasználó keze alatt. */
 .keeprow {
+  display: grid;
+  grid-template-rows: 28px 24px;
+  gap: 3px 0;
+  align-items: center;
   padding: 8px 13px;
   border-bottom: 1px solid var(--line-soft);
 }
@@ -3430,11 +3626,17 @@ textarea:focus {
 .keeprow .val {
   font-size: 13px;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .keeprow .why {
   font-size: 11.5px;
   color: var(--muted);
   line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /*

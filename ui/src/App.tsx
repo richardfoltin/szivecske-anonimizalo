@@ -8,6 +8,8 @@ import {
   matchOutcome,
   type AnalysisResult,
   type MatchKind,
+  type MatchOutcome,
+  type MatchRow,
   type AppSettings,
   type DetectProgress,
   type DocumentInfo,
@@ -18,10 +20,12 @@ import {
   type ReplacementMode,
   type ThemeSummaryUi,
 } from './api';
-import { CastPanel, DocumentView, FAJTA_CIMKE, KIMENET_CIMKE, PreviewView } from './panels';
+import { DocumentView, FAJTA_CIMKE, KIMENET_CIMKE, OsszegzoPanel, PreviewView } from './panels';
 import {
   DocumentSetup,
+  MODE_LABEL,
   type DokumentumBeallitasok,
+  type LepesAllas,
   type TalaltTetel,
   type VizsgalatAllapot,
 } from './documentSetup';
@@ -33,6 +37,7 @@ import {
   LoadWarningsDialog,
   NewCaseDialog,
   OpenOtherDialog,
+  Overlay,
   PartiesDialog,
   RevisionsDialog,
   SajatKeszletDialog,
@@ -195,12 +200,11 @@ type SettingsTab = 'models' | 'what' | 'about';
  */
 type MenuAction = Parameters<Parameters<typeof api.onMenu>[0]>[0];
 
-const MODE_LABEL: Record<ReplacementMode, string> = {
-  theme: 'Fedőnevek',
-  role: 'Hivatalos (OBH)',
-  type: 'Adatfajta neve',
-  numbered: 'Számozott címke',
-};
+/*
+  A MODE_LABEL INNEN KIKERÜLT: a documentSetup exportálja. Két példány már el
+  is csúszott egymástól („Hivatalos (OBH)" állt itt, „Hivatalos (OBH) —
+  eljárási szerep" ott) — ugyanaz a mód két néven a felület két pontján.
+*/
 
 /**
  * A modell állapota a FEJLÉCBEN — csak akkor, ha nem futott.
@@ -577,7 +581,6 @@ export default function App() {
    * vár” fülre. Számláló, nem logikai érték — ugyanaz a kérés kétszer is
    * jöhet, és a második ugyanúgy oda kell vigyen.
    */
-  const [reviewFocus, setReviewFocus] = useState(0);
   /**
    * A FELISMERŐ MODELL hiánya — a program INDULÁSÁTÓL látszik.
    *
@@ -595,6 +598,9 @@ export default function App() {
    * `null`, amíg nem tudjuk: ilyenkor nem állítunk semmit.
    */
   const [modellHiany, setModellHiany] = useState<{ nev: string; hianyzik: boolean } | null>(null);
+
+  /** Az elemzések sorszámozása — lásd az elavulás-őrt a `runAnalysis`-ban. */
+  const elemzesSzamRef = useRef(0);
 
   const runAnalysis = useCallback(
     async (
@@ -648,6 +654,15 @@ export default function App() {
       */
     ): Promise<AnalysisResult | null> => {
       /*
+        ELAVULÁS-ŐR. Két elemzés átfedésben futhat (a csendes újraszámolás és
+        egy kifejezett kérés), és a motor nem ígér sorrendet: a korábban
+        indított később is visszaérhet. Őr nélkül a régebbi eredmény írná
+        felül a frissebbet, és a képernyő a döntés ELŐTTI állapotot mutatná —
+        pont azt, amit a felhasználó az imént megváltoztatott.
+      */
+      const sorszam = ++elemzesSzamRef.current;
+      const elavult = (): boolean => elemzesSzamRef.current !== sorszam;
+      /*
         A HIVATALOS SZEREPLŐK BEFŰZÉSE ITT TÖRTÉNIK, EGY HELYEN.
 
         A `runAnalysis`-t öt helyről hívjuk, és mindegyik a saját féllistáját
@@ -689,6 +704,8 @@ export default function App() {
           */
           keepList: replaceOfficials ? [] : keep,
         });
+        // Elavult válasz: közben újabb elemzés indult, az övé a képernyő.
+        if (elavult()) return null;
         setAnalysis(res);
         // Az előnézet az ELŐZŐ elemzésé volt: eldobjuk. Nem az `analysis`
         // változására figyelünk, mert az azonosság szerint dönt — egy
@@ -699,7 +716,7 @@ export default function App() {
         setPreviewError(null);
         return res;
       } catch (e) {
-        setError((e as Error).message);
+        if (!elavult()) setError((e as Error).message);
         return null;
       } finally {
         // Csak azt a fátylat vesszük le, amit MI húztunk föl: egy csendes
@@ -787,7 +804,15 @@ export default function App() {
         // Ezért a hiba nem zsákutca, hanem a vizsgálat képernyőjének harmadik
         // állása — onnan újra lehet indítani, vagy kézzel felvinni a neveket.
         setDetected(null);
-        setParties([]);
+        /*
+          A KÉZZEL FELVITT NEVEK A HIBAÁGON IS VISSZAKERÜLNEK. Az újraindítás
+          előtt a hívó a keziekRef-be tette őket; ha itt üres listát írnánk, a
+          FELISMERÉS hibája a FELHASZNÁLÓ munkáját törölné — és a következő
+          „Vizsgálat újra" már az üres listából stashelne, vagyis a nevek
+          véglegesen elvesznének.
+        */
+        setParties(keziekRef.current);
+        keziekRef.current = [];
         setIdentifiers([]);
         setDetectError((e as Error).message);
         setVizsgalat('hiba');
@@ -924,6 +949,18 @@ export default function App() {
         iratot.
       */
       setNyitandoNev(path.split(/[\/]/).pop() ?? path);
+      /*
+        A HIBAÁG VISSZAÚTJÁHOZ. A fázist a megnyitás ELŐTT váltjuk át (a
+        betöltőképernyő az első pillanattól látszik), de ha a megnyitás
+        elhasal, a RÉGI irat még megvan — az elemzésével és az összes
+        döntésével együtt. Ezeket az értékeket azért jegyezzük meg, hogy a
+        hibaüzenet után a felhasználó OTT folytassa, ahol volt, ne egy
+        „készen állunk" képernyőn ragadjon, ahonnan csak a döntéseit törlő
+        újravizsgálat vezet ki.
+      */
+      const elozoFazis = fazis;
+      const elozoKep = vizsgalatKep;
+      const voltIrat = doc !== null;
       setVizsgalat('kihagyva');
       setVizsgalatKep('nyit');
       setHaladas(null);
@@ -986,14 +1023,21 @@ export default function App() {
         }
         await continueAfterOpen(info, autoMode);
       } catch (e) {
-        // A megnyitás elakadt: nincs irat, tehát nincs mit vizsgálni sem. A
-        // nyitóképernyőre esünk vissza — ott van a következő mozdulat.
         setError((e as Error).message);
         setNyitandoNev(null);
-        setVizsgalatKep('var');
+        if (voltIrat) {
+          // A RÉGI irat érintetlen: oda esünk vissza, ahol a felhasználó a
+          // megnyitás előtt állt — a munkája (elemzés, döntések) megvan.
+          setFazis(elozoFazis);
+          setVizsgalatKep(elozoKep);
+        } else {
+          // Nincs korábbi irat: a nyitóképernyőre esünk vissza — ott van a
+          // következő mozdulat.
+          setVizsgalatKep('var');
+        }
       }
     },
-    [autoMode, continueAfterOpen],
+    [autoMode, continueAfterOpen, fazis, vizsgalatKep, doc],
   );
 
   const openDocument = useCallback(async () => {
@@ -1167,20 +1211,14 @@ export default function App() {
   };
 
   /*
-    A TALÁLATONKÉNTI DÖNTÉS a munkalapon marad, mert csak ott van meg hozzá,
-    ami a döntéshez kell: a találat körüli mondat. A beállító lap „Mit cserélünk?"
-    füle félenként dolgozik — az „ezt a nevet cseréljük-e" kérdésre válaszol —,
-    ez pedig arra, hogy „EZ a szó itt név volt-e".
+    A `decide` INNEN KIKERÜLT a munkalap találatlistájával együtt.
+
+    A találatonkénti döntés helye a BEÁLLÍTÓ LAP lett: ott áll az irat a
+    kiemelésekkel, és ott van a soronkénti lépegetés (`lepesDontes`), ami
+    ugyanezt tudta — csak a szövegkörnyezettel EGYÜTT mutatva. Két külön
+    képernyő ugyanarra a döntésre azt tanította a felhasználónak, hogy két
+    különböző dologról van szó.
   */
-  const decide = async (id: number, d: 'accept' | 'skip' | undefined) => {
-    const next = { ...decisions };
-    if (d) next[id] = d;
-    else delete next[id];
-    setDecisions(next);
-    setHasWork(true);
-    setSajatDontes(true);
-    await runAnalysis(parties, themeId, mode, next);
-  };
 
   const startNewCase = useCallback(() => {
     setCaseSecret(newCaseSecret());
@@ -1449,12 +1487,19 @@ export default function App() {
     setDialog(null);
     setExportResult(null);
     setAutoModeForDoc(false);
-    setFazis('munka');
+    /*
+      A BEÁLLÍTÓ LAPRA — nem egy külön átnéző képernyőre.
+
+      Az átnézés helye a beállító lap lett: ott áll az irat a kiemelésekkel,
+      a lista a kapcsolókkal és a lépegetéssel. Az `autoModeForDoc` lekapcsolása
+      után az újraszámolás a program által eldöntött találatokat visszaadja
+      emberi döntésre — azok borostyán pöttyel és kiemeléssel jelennek meg.
+    */
+    setFazis('beallitas');
     setView('source');
     // A mentés után a jelzést töröltük; ha innen visszalép, megint van
     // elveszíthető munka, és a bezárásnak megint kérdeznie kell.
     setHasWork(true);
-    setReviewFocus((n) => n + 1);
     ujraKert();
   }, [ujraKert]);
 
@@ -1783,9 +1828,12 @@ export default function App() {
     utáni maradványlista tételesen kiírja.
   */
   const pendingCount = analysis
-    ? analysis.matches.filter(
-        (m) => !m.autoDecided && (m.decision ? m.decision === 'skip' : m.disposition !== 'auto'),
-      ).length
+    ? analysis.matches.filter((m) => {
+        // A friss döntésekkel felülírva, a motor saját kimenet-fogalmával: a
+        // kimondott „maradjon" döntés és a kikapcsolt osztály NEM eldöntetlen.
+        const d = decisions[m.id];
+        return matchOutcome(d === undefined ? m : { ...m, decision: d }) === 'bizonytalan';
+      }).length
     : 0;
 
   /** Hány bizonytalan találatot fogadott el a program ember helyett. */
@@ -1847,9 +1895,33 @@ export default function App() {
    * Egy „dátum · 0” jelmagyarázat azt ígérné, hogy van a képernyőn ilyen szín,
    * és a felhasználó keresné.
    */
+  /**
+   * EGY TALÁLAT KIMENETE A FRISS DÖNTÉSEKKEL — az elemzés bevárása nélkül.
+   *
+   * A kattintás a `decisions` tárolóba ír, az új elemzés viszont csak egy
+   * rövid szünet után fut le. A számlálók és a lista eddig a RÉGI elemzésből
+   * számoltak: a felhasználó kikapcsolt egy csoportot, és a lap tetején álló
+   * szám negyed másodpercig mást mondott, mint amit az imént tett. Ugyanaz a
+   * felülírás, amit a dokumentumnézet `frissSor`-ja csinál — a következő
+   * elemzés pontosan ezt igazolja vissza.
+   */
+  const kimenetMost = useCallback(
+    (m: MatchRow): MatchOutcome => {
+      const d = decisions[m.id];
+      return matchOutcome(d === undefined ? m : { ...m, decision: d });
+    },
+    [decisions],
+  );
+
+  /** Hány találat cserélődik MOST — a lap tetején álló számhoz. */
+  const csereDb = useMemo(
+    () => (analysis ? analysis.matches.filter((m) => kimenetMost(m) === 'csere').length : 0),
+    [analysis, kimenetMost],
+  );
+
   const jelmagyarazat = useMemo(() => {
     if (!analysis) return [];
-    const cserelodo = analysis.matches.filter((m) => matchOutcome(m) === 'csere');
+    const cserelodo = analysis.matches.filter((m) => kimenetMost(m) === 'csere');
     const fajtak: MatchKind[] = ['nev', 'osszeg', 'datum', 'hivatalos'];
     const sorok = fajtak.map((f) => ({
       kulcs: f,
@@ -1864,18 +1936,18 @@ export default function App() {
         kulcs: 'bizonytalan',
         osztaly: 'bizonytalan',
         cimke: KIMENET_CIMKE.bizonytalan,
-        db: analysis.matches.filter((m) => matchOutcome(m) === 'bizonytalan').length,
+        db: analysis.matches.filter((m) => kimenetMost(m) === 'bizonytalan').length,
         sugo: 'A program bizonytalan benne, és még senki nem döntött róla.',
       },
       {
         kulcs: 'nincs',
         osztaly: 'nincs',
         cimke: KIMENET_CIMKE.nincs,
-        db: analysis.matches.filter((m) => matchOutcome(m) === 'nincs').length,
+        db: analysis.matches.filter((m) => kimenetMost(m) === 'nincs').length,
         sugo: 'Nem cserélődik: az eredeti szöveg marad. Kattints rá az iraton, ha mégis kell.',
       },
     ].filter((j) => j.db > 0);
-  }, [analysis, hivatalosIdk]);
+  }, [analysis, hivatalosIdk, kimenetMost]);
 
   const keziIdk = useMemo(() => {
     const felismert = new Set([
@@ -1935,8 +2007,10 @@ export default function App() {
       vanKovetkezo: boolean;
     } => {
       const lista = talalatok.get(entityId) ?? [];
-      const cserelodik = lista.filter((m) => matchOutcome(m) === 'csere').length;
-      const bizonytalanDb = lista.filter((m) => matchOutcome(m) === 'bizonytalan').length;
+      // A friss döntésekkel felülírva (`kimenetMost`): a kapcsoló átbillentése
+      // AZONNAL látszik a soron, nem az újraelemzés után negyed másodperccel.
+      const cserelodik = lista.filter((m) => kimenetMost(m) === 'csere').length;
+      const bizonytalanDb = lista.filter((m) => kimenetMost(m) === 'bizonytalan').length;
       return {
         elofordulas: lista.length,
         cserelodik,
@@ -1972,14 +2046,12 @@ export default function App() {
         ...(sajat === '' ? {} : { sajatCsere: sajat }),
         ...(keziIdk.has(c.entityId) ? { kezi: true } : {}),
         /*
-          BIZONYTALAN = van még emberi döntésre váró találata, VAGY a program
-          döntött helyette. A kettő ugyanannak a névnek a két útja: a felhasználó
-          döntetlenül hagyva `pendingCount`-ot lát, a „Mindent cserélünk” után
-          viszont a motor dönt, és a `pendingCount` lenullázódik. Csak az elsőt
-          nézve a mindent-cserélő úton egyetlen bizonytalan találat sem
-          látszana — épp azon az úton, ahol a legfontosabb tudni róluk.
+          A „PROGRAM DÖNTÖTT" PÖTTY CSAK A TÉNYLEGES PROGRAMDÖNTÉSÉ. Korábban
+          az eldöntetlen (`pendingCount > 0`) sorok is megkapták a jelvényt —
+          a program a saját tétlenségét mutatta be döntésként. A döntésre váró
+          sort a `bizonytalanDb` jelzi, a maga pöttyével.
         */
-        bizonytalan: c.pendingCount > 0 || bizonytalanok.has(c.entityId),
+        ...(bizonytalanok.has(c.entityId) ? { programDontott: true } : {}),
       };
       // Ugyanaz az azonosító kétszer csak akkor fordulhat elő, ha a motor a mi
       // sorunk mellé fölvette a magáét. Az AKTÍV sor az igaz: az mondja meg,
@@ -2030,7 +2102,7 @@ export default function App() {
     }
 
     return [...sorok.values()];
-  }, [analysis, parties, identifiers, keziIdk, hivatalosIdk]);
+  }, [analysis, parties, identifiers, keziIdk, hivatalosIdk, kimenetMost]);
 
   /**
    * VAN-E EGYÁLTALÁN MIT MENTENI — és ha nincs, MIÉRT nincs.
@@ -2124,7 +2196,7 @@ export default function App() {
     tetelValtoztat(id, { manualReplacement: szoveg.trim() === '' ? undefined : szoveg }, minta);
   };
 
-  /* ─────────── a sor három gombja: mind / következő / nincs csere ─────────── */
+  /* ─────────── a sor kapcsolója és a lépegetés ─────────── */
 
   /**
    * A SOR DÖNTÉSE TALÁLATONKÉNT ÍRÓDIK BE, nem félre szólóan.
@@ -2156,13 +2228,19 @@ export default function App() {
     ujraKert();
   };
 
-  const setupMind = (id: string): void => {
+  /**
+   * A SOR KAPCSOLÓJA: cserélődjön-e ez a tétel. A régi „Mind" és „Nincs
+   * csere" gomb egyetlen kapcsolóban — be = minden előfordulás cserélődik,
+   * ki = egyik sem.
+   */
+  const sorKapcsol = (id: string, be: boolean): void => {
     // Az összeg és a dátum FAJTAKAPCSOLÓJA is átbillen: a találatonkénti
-    // döntés önmagában működne, de a kapcsoló a képernyőn kikapcsolva maradna,
-    // és az új találatok (más csere-mód, újraszámolás) megint kimaradnának.
-    if (id === '#osszeg') setReplaceAmounts(true);
-    if (id === '#datum') setShiftDates(true);
-    dontesekre(id, () => 'accept');
+    // döntés önmagában működne, de a kapcsoló a képernyőn az ellenkező
+    // állásban maradna, és az új találatok (más csere-mód, újraszámolás)
+    // megint kimaradnának.
+    if (id === '#osszeg') setReplaceAmounts(be);
+    if (id === '#datum') setShiftDates(be);
+    dontesekre(id, () => (be ? 'accept' : 'skip'));
   };
 
   /**
@@ -2192,31 +2270,67 @@ export default function App() {
     ujraKert();
   };
 
-  const setupNincs = (id: string): void => {
-    if (id === '#osszeg') setReplaceAmounts(false);
-    if (id === '#datum') setShiftDates(false);
-    dontesekre(id, () => 'skip');
+  /** Egy tétel találatai az IRATBELI sorrendjükben — a lépegetés pályája. */
+  const entitasSorrend = useCallback(
+    (id: string): MatchRow[] => (analysis ? analysis.matches.filter((m) => m.entityId === id) : []),
+    [analysis],
+  );
+
+  /**
+   * A LÉPEGETÉS ÁLLÁSA — a dokumentum kijelöléséből SZÁRMAZTATVA.
+   *
+   * Nem külön állapot: a lépegetés és az iratra kattintás ugyanazt a
+   * kijelölést (`selected`) mozgatja, tehát a kettő nem tud széttartani. Az
+   * iraton megjelölt előfordulásnál a lista sora is kinyitja a lépegetőt,
+   * a megfelelő pozíción.
+   */
+  const lepes: LepesAllas | null = useMemo(() => {
+    if (selected === null || !analysis) return null;
+    const m = analysis.matches.find((x) => x.id === selected);
+    if (!m) return null;
+    const lista = analysis.matches.filter((x) => x.entityId === m.entityId);
+    return {
+      entityId: m.entityId,
+      index: lista.findIndex((x) => x.id === selected),
+      osszes: lista.length,
+      cserelodik: kimenetMost(m) === 'csere',
+    };
+  }, [selected, analysis, kimenetMost]);
+
+  /**
+   * Lépegetés indítása: az első DÖNTÉSRE VÁRÓ előfordulásra ugrik, ha van —
+   * aki végig akar menni, jellemzően a bizonytalanok miatt teszi. Ha nincs
+   * ilyen, az elsőre.
+   */
+  const lepesKezd = (id: string): void => {
+    const lista = entitasSorrend(id);
+    const cel = lista.find((m) => kimenetMost(m) === 'bizonytalan') ?? lista[0];
+    if (cel) setSelected(cel.id);
+  };
+
+  /** Előző/következő előfordulás — döntés nélkül. Az irat odagörög. */
+  const lepesMozog = (id: string, irany: 1 | -1): void => {
+    const lista = entitasSorrend(id);
+    const most = lista.findIndex((m) => m.id === selected);
+    const cel = most === -1 ? lista[0] : lista[most + irany];
+    if (cel) setSelected(cel.id);
   };
 
   /**
-   * A KÖVETKEZŐ ELŐFORDULÁS — és az irat oda is görög.
-   *
-   * A döntés és a mondat, amiről szól, egyszerre kell hogy látszódjon: aki
-   * egyesével dönt, azért teszi, mert a szövegkörnyezet számít. A kijelölés
-   * (`setSelected`) az, amitől a bal oldali nézet odagörget.
+   * DÖNTÉS A MOSTANI ELŐFORDULÁSRÓL, aztán ugrás a következőre — a Word
+   * Csere párbeszédének mozdulata. Ugyanabba a tárolóba ír, mint az iratra
+   * kattintás (`iratKattintas`), tehát a „Kihagy" tényleg ugyanaz a művelet.
    */
-  const setupKovetkezo = (id: string): void => {
-    if (!analysis) return;
-    const kovetkezo = analysis.matches.find(
-      (m) => m.entityId === id && matchOutcome(m) !== 'csere',
-    );
-    if (!kovetkezo) return;
-    if (id === '#osszeg') setReplaceAmounts(false);
-    if (id === '#datum') setShiftDates(false);
-    setSelected(kovetkezo.id);
-    setDecisions({ ...decisions, [kovetkezo.id]: 'accept' });
+  const lepesDontes = (id: string, dontes: 'accept' | 'skip'): void => {
+    if (selected === null) return;
+    const lista = entitasSorrend(id);
+    const most = lista.findIndex((m) => m.id === selected);
+    if (most === -1) return;
+    setDecisions({ ...decisions, [selected]: dontes });
     setHasWork(true);
     setSajatDontes(true);
+    const kovetkezo = lista[most + 1];
+    if (kovetkezo) setSelected(kovetkezo.id);
     ujraKert();
   };
 
@@ -2520,10 +2634,10 @@ export default function App() {
               <button
                 className="btn ghost icon"
                 onClick={() => setFazis('beallitas')}
-                title={`Beállítások és találatok: mit cseréljünk, és mire — ${MODE_LABEL[mode]}${
+                title={`A csere beállításai és a találatok — ${MODE_LABEL[mode]}${
                   mode === 'theme' ? ` · ${themes.find((t) => t.id === themeId)?.name ?? '—'}` : ''
-                } · ${tetelek.length} név`}
-                aria-label="Beállítások és találatok"
+                } · ${tetelek.length} tétel`}
+                aria-label="A csere beállításai és a találatok"
               >
                 <FejlecIkon nev="iratbeallitas" />
               </button>
@@ -2719,7 +2833,11 @@ export default function App() {
                     ))}
                   </span>
                   <span className="spacer" />
-                  <span className="db">{analysis.matches.length} találat</span>
+                  {/* A jobb felső szám a KAPCSOLÓK állását is beszámítja: a
+                      puszta találatszám azt sugallta, hogy mind cserélődik. */}
+                  <span className="db">
+                    <b>{csereDb}</b> cserélődik · {analysis.matches.length} találat
+                  </span>
                 </>
               ) : null}
             </div>
@@ -2772,9 +2890,11 @@ export default function App() {
             {...(vizsgalatUzenet === undefined ? {} : { vizsgalatUzenet })}
             onBeallitas={setupBeallitas}
             onCsereSzoveg={setupCsereSzoveg}
-            onMind={setupMind}
-            onKovetkezo={setupKovetkezo}
-            onNincs={setupNincs}
+            onKapcsol={sorKapcsol}
+            lepes={lepes}
+            onLepesKezd={lepesKezd}
+            onLepesMozog={lepesMozog}
+            onLepesDontes={lepesDontes}
             onCsoport={setupCsoport}
             onUjraVizsgalat={ujraVizsgalat}
             onKeziFelvitel={keziFelvitel}
@@ -2841,12 +2961,22 @@ export default function App() {
               <PreviewView analysis={analysis} text={preview} error={previewError} />
             )}
           </div>
-          <CastPanel
+          {/*
+            A TALÁLATLISTA INNEN KIKERÜLT. A felhasználó kimondta, hogy furcsa
+            egy döntéslista, ami csak a mentés előtti pillanatban jelenik meg —
+            és igaza volt: ugyanazok a döntések a beállító lapon is ott álltak,
+            más vezérlőkkel. A döntés helye a beállító lap; ez az állomás az
+            ELLENŐRZÉSÉ ÉS A MENTÉSÉ: mit csináltunk, mennyit, és mehet-e a
+            fájlba.
+          */}
+          <OsszegzoPanel
             analysis={analysis}
-            selected={selected}
-            onSelect={setSelected}
-            onDecide={decide}
-            reviewFocus={reviewFocus}
+            fajtak={jelmagyarazat}
+            autoDecidedCount={autoDecidedCount}
+            mentesAkadaly={mentesAkadaly}
+            onMentes={requestExport}
+            onVissza={() => setFazis('beallitas')}
+            onAutoReport={() => setDialog('autoReport')}
           />
         </div>
       )}
@@ -2975,6 +3105,7 @@ export default function App() {
       {dialog === 'scanned' && doc && (
         <ScannedDialog
           fileName={doc.fileName}
+          onClose={() => setDialog(null)}
           onContinue={() => {
             setDialog(null);
             void continueAfterOpen(doc);
@@ -2989,6 +3120,7 @@ export default function App() {
         <LoadWarningsDialog
           fileName={doc.fileName}
           warnings={doc.loadWarnings}
+          onClose={() => setDialog(null)}
           onContinue={() => {
             setDialog(null);
             void startScan();
@@ -3104,7 +3236,7 @@ export default function App() {
       )}
 
       {error && (
-        <div className="overlay" onMouseDown={() => setError(null)}>
+        <Overlay onClose={() => setError(null)}>
           <div className="dialog narrow" onMouseDown={(e) => e.stopPropagation()}>
             <div className="dialog-head">
               <h2>Hiba történt</h2>
@@ -3118,7 +3250,7 @@ export default function App() {
               </button>
             </div>
           </div>
-        </div>
+        </Overlay>
       )}
     </div>
   );
