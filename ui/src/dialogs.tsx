@@ -2934,7 +2934,7 @@ export function KeyFileDialog({
             </>
           ) : entries.length === 0 ? (
             <div className="empty">
-              <div className="big">∅</div>
+              <div className="big">◌</div>
               A kulcsfájl kinyílt, de nincs benne egyetlen bejegyzés sem. Ez akkor fordul elő, ha a
               mentéskor egyetlen nevet sem cseréltünk le.
             </div>
@@ -2975,7 +2975,7 @@ export function KeyFileDialog({
 
         <div className="dialog-foot">
           <button className="btn ghost" onClick={onClose}>
-            Bezárom
+            Bezárás
           </button>
           {entries === null ? (
             <button

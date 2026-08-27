@@ -947,7 +947,9 @@ function CsereLap({
   onKeziFelvitel: () => void;
 }) {
   const szazalek = Math.round(beallitasok.autoThreshold * 100);
-  const bizonytalan = tetelek.filter((t) => t.bizonytalanDb > 0).length;
+  /* Előfordulást számol, nem sort: a „találat" szó a lap tetején és a
+     jelmagyarázatban is előfordulást jelent — itt sem jelenthet mást. */
+  const bizonytalan = tetelek.reduce((db, t) => db + t.bizonytalanDb, 0);
   /* Egy művelet egy néven: ha a vizsgálat még nem futott le, az indítása
      „indítás", ha már igen, „újra" — és ugyanez a szó áll a modellsávon is. */
   const vizsgalatFelirat = vizsgalat === 'kihagyva' ? 'Vizsgálat indítása' : 'Vizsgálat újra';
@@ -1136,7 +1138,7 @@ function CsereLap({
                   kapcsolo={
                     <Kapcsolo
                       id={az(fajta)}
-                      cimke={`${FAJTA_CIM[fajta]} cseréje`}
+                      cimke={fajta === 'date' ? 'Dátumok eltolása' : `${FAJTA_CIM[fajta]} cseréje`}
                       be={be}
                       onValt={(ujBe) =>
                         /*
@@ -1423,7 +1425,7 @@ function TalaltSor({
         ) : (
           <Kapcsolo
             id={`sor-${tetel.id.replace(/[^\w-]/g, '_')}`}
-            cimke={`${tetel.eredeti} cseréje`}
+            cimke={`${tetel.eredeti} ${tetel.fajta === 'date' ? 'eltolása' : 'cseréje'}`}
             be={be}
             onValt={(ujBe) => onKapcsol(tetel.id, ujBe)}
           />

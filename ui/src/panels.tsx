@@ -14,7 +14,7 @@ import type { AnalysisResult, MatchKind, MatchRow } from './api';
  * a felirat viszont csak az utolsóra volt igaz.
  */
 export const KIMENET_CIMKE: Record<ReturnType<typeof matchOutcome>, string> = {
-  csere: 'lecseréljük',
+  csere: 'lecserélve',
   bizonytalan: 'bizonytalan',
   nincs: 'nincs csere',
 };
@@ -338,26 +338,57 @@ export function PreviewView({
   analysis,
   text,
   error,
+  hivatalosIdk = new Set<string>(),
 }: {
   analysis: AnalysisResult;
   /** null: még töltjük a motortól. */
   text: string | null;
   error: string | null;
+  /** A Bszi. szerinti szereplők — tőlük kapja az előnézet az ibolya jelölést. */
+  hivatalosIdk?: ReadonlySet<string>;
 }) {
   const html = useMemo(() => {
     if (text === null) return '';
     const escaped = escapeHtml(text);
-    // Az álneveket a szövegben MEGRAGOZVA találjuk meg („Kvarcos Tűzkővel”),
-    // ezért csak a szótövet jelöljük, a toldalék jelöletlenül marad utána.
-    // Szóhatárt (\b) tilos használni: a JS ASCII-alapon értelmezi, és az
-    // ékezetes betűkön csendben elromlik.
-    const needles = [
-      ...new Set(analysis.cast.filter((c) => !c.skipped && c.replacement).map((c) => c.replacement)),
-    ].sort((a, b) => b.length - a.length);
+    /*
+      MINDEN CSERE MEG VAN JELÖLVE, A FAJTÁJA SZÍNÉVEL — nem csak a nevek.
+
+      Eddig csak a szereplők álnevei kaptak jelölést, és mind a nevek
+      rózsaszínjével: az összeg- és dátumcserék jelöletlenül ültek a
+      szövegben, mintha az eredeti értékek volnának. Pedig az előnézet egyetlen
+      dolga megmutatni, MI VÁLTOZOTT — és a bal oldali nézet négy színét a
+      felhasználó itt is ugyanabban a jelentésben várja.
+
+      Az álneveket a szövegben MEGRAGOZVA találjuk meg („Kvarcos Tűzkővel”),
+      ezért csak a szótövet jelöljük, a toldalék jelöletlenül marad utána.
+      Szóhatárt (\b) tilos használni: a JS ASCII-alapon értelmezi, és az
+      ékezetes betűkön csendben elromlik.
+    */
+    const fajtaSzerint = new Map<string, string>();
+    for (const c of analysis.cast) {
+      if (c.skipped || !c.replacement) continue;
+      fajtaSzerint.set(
+        escapeHtml(c.replacement),
+        hivatalosIdk.has(c.entityId) ? 'k-hivatalos' : 'k-nev',
+      );
+    }
+    // Az összeg és a dátum cseréi a találatokból jönnek: ők nem szereplők,
+    // a `cast` nem ismeri őket.
+    for (const m of analysis.matches) {
+      if (m.replacement === null || matchOutcome(m) !== 'csere') continue;
+      if (m.entityId === '#osszeg') fajtaSzerint.set(escapeHtml(m.replacement), 'k-osszeg');
+      else if (m.entityId === '#datum') fajtaSzerint.set(escapeHtml(m.replacement), 'k-datum');
+    }
+    const needles = [...fajtaSzerint.keys()].sort((a, b) => b.length - a.length);
     if (needles.length === 0) return escaped;
-    const re = new RegExp(needles.map((n) => escapeRe(escapeHtml(n))).join('|'), 'g');
-    return escaped.replace(re, (m) => `<mark>${m}</mark>`);
-  }, [text, analysis.cast]);
+    const re = new RegExp(needles.map(escapeRe).join('|'), 'g');
+    // A `csere` osztállyal a jelölés UGYANAZOKAT a stílusszabályokat kapja,
+    // mint az eredeti nézet markjai — egy színrend, két nézet.
+    return escaped.replace(
+      re,
+      (t) => `<mark class="csere ${fajtaSzerint.get(t) ?? 'k-nev'}">${t}</mark>`,
+    );
+  }, [text, analysis.cast, analysis.matches, hivatalosIdk]);
 
   return (
     <div className="viewport preview">
@@ -479,7 +510,7 @@ export function OsszegzoPanel({
         ))}
 
         <div className="resultrow fo">
-          <span>Lecserélődik</span>
+          <span>Lecserélve</span>
           <span className="v">{csere}</span>
         </div>
         {/* A fajtánkénti bontás UGYANAZOKKAL a színekkel, mint a bal oldali
@@ -508,7 +539,7 @@ export function OsszegzoPanel({
         */}
         {bizonytalan > 0 && (
           <div className="note">
-            <b>{bizonytalan} találat még döntésre vár</b> — ezek most nem cserélődnek. A beállító
+            <b>{bizonytalan} találat még bizonytalan</b> — ezek most nem cserélődnek. A beállító
             lapon a borostyán pöttyös soroknál egyenként végigmehetsz rajtuk.
             <div className="pathacts">
               <button className="btn sm" onClick={onVissza}>

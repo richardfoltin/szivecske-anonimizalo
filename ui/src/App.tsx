@@ -218,19 +218,19 @@ type MenuAction = Parameters<Parameters<typeof api.onMenu>[0]>[0];
 const MODEL_CHIP: Record<'off' | 'missing' | 'failed', { t: string; title: string; loud: boolean }> =
   {
     off: {
-      t: '◈ Modell: kikapcsolva',
+      t: 'Modell: kikapcsolva',
       title:
         'A nyelvi modell ki van kapcsolva, ezért csak a szerkezeti minták találtak feleket: a folyó szövegben elszórt nevekre nem kerestünk rá. Kattints: itt olvasható, mit jelent ez, és mit tehetsz.',
       loud: false,
     },
     missing: {
-      t: '◈ Modell: hiányzik',
+      t: 'Modell: hiányzik',
       title:
         'A nyelvi modell nincs telepítve, ezért csak a szerkezeti minták találtak feleket: a folyó szövegben elszórt nevekre nem kerestünk rá. Kattints: itt lehet letölteni.',
       loud: false,
     },
     failed: {
-      t: '◈ Modell: hiba',
+      t: 'Modell: hiba',
       title:
         'A nyelvi modell hibára futott, ezért csak a szerkezeti minták találtak feleket. Ezt az iratot ne fogadd el anonimizáltként, amíg a modell újra le nem futott. Kattints a részletekért.',
       loud: true,
@@ -399,7 +399,19 @@ export default function App() {
   const [decisions, setDecisions] = useState<Record<number, 'accept' | 'skip'>>({});
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
-  const [dialog, setDialog] = useState<Dialog>(null);
+  const [dialog, setDialogNyers] = useState<Dialog>(null);
+  /**
+   * A BEZÁRÁSI KÉRDÉST SEMMI NEM ÍRHATJA FELÜL.
+   *
+   * A kérdést a főfolyamat teszi fel, és a válaszunkra vár. Ha egy közben
+   * megnyíló másik ablak (egy kései hibaüzenet, egy letöltés vége) simán a
+   * `dialog` állapotba írna, a kérdés némán eltűnne — a főfolyamat pedig
+   * hiába várna, majd a tartalékkal kérdezné meg ugyanazt. A bezárás
+   * (`null`) és maga az exit szabad; minden más várjon sorára.
+   */
+  const setDialog = useCallback((d: Dialog): void => {
+    setDialogNyers((elozo) => (elozo === 'exit' && d !== null && d !== 'exit' ? elozo : d));
+  }, []);
   /**
    * Hol tart a folyamat. Csak megnyitott irat mellett számít; irat nélkül a
    * nyitóképernyő áll a helyén.
@@ -2691,7 +2703,9 @@ export default function App() {
           azért ilyen rövid, mert a nyelvi modell el sem indult. A fejléc végig
           ott van, ezért a jelzés innentől a mentésig kint marad.
         */}
-        {detected && detected.model.state !== 'ok' && (
+        {/* A beállító lapon NEM: ott a modellsáv áll, saját letöltővel — két
+            vezérlő két különböző úttal ugyanarra a tényre. */}
+        {detected && detected.model.state !== 'ok' && fazis !== 'beallitas' && (
           <button
             className="btn ghost sm"
             style={MODEL_CHIP[detected.model.state].loud ? { color: 'var(--amber)' } : undefined}
@@ -2919,7 +2933,8 @@ export default function App() {
               <div className="docname" title={doc.path}>
                 <b>{doc.fileName}</b>
                 <span>
-                  {doc.format.toUpperCase()} · {doc.pageCount} oldal
+                  {doc.format.toUpperCase()} · {doc.pageCount}{' '}
+                  {doc.format === 'docx' ? 'dokumentumrész' : 'oldal'}
                 </span>
               </div>
               <div className="seg">
@@ -2958,7 +2973,12 @@ export default function App() {
                 onSelect={setSelected}
               />
             ) : (
-              <PreviewView analysis={analysis} text={preview} error={previewError} />
+              <PreviewView
+                analysis={analysis}
+                text={preview}
+                error={previewError}
+                hivatalosIdk={hivatalosIdk}
+              />
             )}
           </div>
           {/*
@@ -3018,7 +3038,7 @@ export default function App() {
               (`outcomes` nélkül) esetén a fokozatokra esünk vissza — az kevesebbet
               mond, de nem hazudik. */}
           <span>
-            <b>{analysis.outcomes?.csere ?? analysis.counts.auto}</b> lecserélve
+            <b>{analysis.outcomes?.csere ?? analysis.counts.auto}</b> {KIMENET_CIMKE.csere}
           </span>
           <span className="sep" />
           {/* Kérdezés nélküli úton EGYETLEN találat sem vár átnézésre — azokat
@@ -3032,13 +3052,16 @@ export default function App() {
               </>
             ) : (
               <>
-                <b>{analysis.outcomes?.bizonytalan ?? analysis.counts.review}</b> átnézésre vár
+                {/* Ugyanaz a szó, mint a jelmagyarázatban és a pöttyön: az
+                    „átnézésre vár" harmadik névként keringett ugyanarra. */}
+                <b>{analysis.outcomes?.bizonytalan ?? analysis.counts.review}</b>{' '}
+                {KIMENET_CIMKE.bizonytalan}
               </>
             )}
           </span>
           <span className="sep" />
           <span>
-            <b>{analysis.outcomes?.nincs ?? analysis.counts.reject}</b> nincs csere
+            <b>{analysis.outcomes?.nincs ?? analysis.counts.reject}</b> {KIMENET_CIMKE.nincs}
           </span>
           <span className="sep" />
           <span>

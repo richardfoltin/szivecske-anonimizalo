@@ -532,9 +532,13 @@ textarea {
   background: rgba(169, 115, 24, 0.2);
   box-shadow: inset 0 -2px 0 rgba(169, 115, 24, 0.6);
 }
+/* Szaggatott, mint a szövegnézetben: egy állapot, egy rajz mindkét nézeten.
+   (Az elemen nincs tartalom, ezért a vonalat a border adja, nem a szöveg
+   aláhúzása.) */
 .hl.nincs {
   background: transparent;
-  box-shadow: inset 0 -1px 0 rgba(122, 110, 128, 0.55);
+  box-shadow: none;
+  border-bottom: 1px dashed rgba(122, 110, 128, 0.7);
 }
 .hl.nincs:hover {
   background: rgba(154, 141, 158, 0.14);
@@ -2797,9 +2801,13 @@ textarea:focus {
   background: rgba(169, 115, 24, 0.2);
   box-shadow: inset 0 -2px 0 rgba(169, 115, 24, 0.6);
 }
+/* Ugyanaz a rajz, mint a kiemelésé: szaggatott aláhúzás. A jelmagyarázat ne
+   mutasson mást, mint amit magyaráz. */
 .setupdoc-head .jel.nincs::before {
   background: transparent;
-  box-shadow: inset 0 -1px 0 rgba(122, 110, 128, 0.55);
+  box-shadow: none;
+  border-bottom: 1px dashed rgba(122, 110, 128, 0.7);
+  border-radius: 0;
 }
 
 /*

@@ -601,8 +601,10 @@ export function SettingsDialog({
         </div>
 
         <div className="dialog-foot">
+          {/* A nyugtázó gomb neve mindenhol „Rendben" — a „Kész" itt negyedik
+              szóként állt ugyanarra a mozdulatra. */}
           <button className="btn primary" onClick={onClose}>
-            Kész
+            Rendben
           </button>
         </div>
       </div>

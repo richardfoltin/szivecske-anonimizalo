@@ -1064,6 +1064,11 @@ export function installDevMock(): void {
     mert minden döntést a felhasználó hozott.
   */
   let kerdezesNelkul = false;
+  /* Az álkimenet is kövesse az összeg/dátum kapcsolót: az előnézet a valódi
+     motornál a friss beállításokkal készül, a mocknak sem szabad a kapcsoló
+     ellenére az eredeti értékeket mutatnia. */
+  let osszegCsere = false;
+  let datumTolas = false;
   /** A letöltés haladásának feliratkozója és a megszakítás jelzése. */
   let downloadProgress: ((p: DownloadProgress) => void) | null = null;
   let letoltesMegszakitva = false;
@@ -1377,6 +1382,8 @@ export function installDevMock(): void {
       };
       parties.splice(0, parties.length, ...i.parties);
       kerdezesNelkul = i.acceptReview === true;
+      osszegCsere = i.replaceAmounts === true;
+      datumTolas = i.shiftDates === true;
 
       const osztaly = (entityId: string): 'skip' | undefined => {
         if (entityId === '#osszeg') return i.replaceAmounts === true ? undefined : 'skip';
@@ -1436,7 +1443,12 @@ export function installDevMock(): void {
         })),
       });
     },
-    previewText: () => wait(ANON_TEXT, 0),
+    previewText: () => {
+      let t = ANON_TEXT;
+      if (osszegCsere) t = t.replace('3 550 000 Ft', '4 118 000 Ft');
+      if (datumTolas) t = t.replace('2025. március 14.', '2025. június 2.');
+      return wait(t, 0);
+    },
     suggestOutputPath: () => wait(EXPORT.outputPath, 0),
     chooseSaveTarget: () => wait(EXPORT.outputPath),
     exportDocument: () =>
