@@ -70,6 +70,7 @@ import type {
   ExportResult,
   MatchRow,
   ModelStatus as ModelRunStatus,
+  PreviewPages,
   ThemeSummary,
 } from '../src/app/types.js';
 import type { Theme } from '../src/pseudonym.js';
@@ -2342,6 +2343,27 @@ function registerHandlers(): void {
     const s = path === undefined ? elsoSession() : sessions.find((x) => x.info.path === path);
     if (!s) throw new Error('Nincs megnyitott irat.');
     return s.anonymizedText();
+  });
+
+  /**
+   * AZ ÁLNEVESÍTETT IRAT LAPKÉPEI — a PDF-előnézet.
+   *
+   * A KIEMELÉSEK AZONOSÍTÓJÁT ITT KELL ELTOLNI, ugyanazzal az `ID_LEPES`
+   * lépéssel, amivel az elemzés a találatokét (lásd `mindenIratotElemez`). A
+   * munkamenetek mind a saját, nulláról induló számozásukat ismerik; eltolás
+   * nélkül a második irat előnézetén minden kiemelés az ELSŐ irat találatait
+   * keresné meg — rossz szín, rossz buboréksúgó, néma hiba.
+   */
+  handle('doc:previewPages', async (_e, path?: string): Promise<PreviewPages> => {
+    const i = path === undefined ? 0 : sessions.findIndex((x) => x.info.path === path);
+    const s = sessions[i < 0 ? 0 : i];
+    if (!s) throw new Error('Nincs megnyitott irat.');
+    const eltolas = (i < 0 ? 0 : i) * ID_LEPES;
+    const res = await s.anonymizedPages();
+    return {
+      pages: res.pages,
+      highlights: res.highlights.map((h) => ({ ...h, matchId: h.matchId + eltolas })),
+    };
   });
 
   /**

@@ -36,6 +36,7 @@ import {
   PDFArray,
   PDFDict,
   PDFDocument,
+  PDFFont,
   PDFHexString,
   PDFName,
   PDFRawStream,
@@ -74,7 +75,13 @@ import {
 } from '../pdf/textRuns.js';
 import { readPageStreams } from '../pdf/resources.js';
 import { formatPdfWarnings, type PageWarnings } from '../pdf/warnings.js';
-import { buildPageText, segmentTextAfterEdits, type Edit, type PageText } from '../pdf/pageText.js';
+import {
+  buildPageText,
+  segmentEditPlan,
+  type Edit,
+  type EditPlacement,
+  type PageText,
+} from '../pdf/pageText.js';
 import {
   AZONOSITO_NEV,
   findAzonositok,
@@ -281,6 +288,21 @@ export interface SessionExportResult extends ExportResult {
   autoAccepted: AutoDecisionRow[];
   /** A nyelvi modell állapota — ugyanaz, ami a jegyzőkönyvbe is bekerült. */
   model: ModelStatus;
+}
+
+/**
+ * A PDF-kimenet egyetlen összeállításból: bájtok, panaszok, kiemelések.
+ *
+ * A HÁROM UGYANABBÓL A FUTÁSBÓL VALÓ, és ez a lényeg. A mentés a bájtokat
+ * viszi el, az előnézet a bájtokat ÉS a kiemeléseket — ha a kettőt két külön
+ * összeállítás adná, az előnézeten látott jelölés nem arról a fájlról szólna,
+ * ami a mentéskor keletkezik.
+ */
+interface PdfBuildResult {
+  bytes: Uint8Array;
+  warnings: string[];
+  /** A csereszövegek helye a KÉSZ lapokon, a lap méretének arányában. */
+  highlights: Highlight[];
 }
 
 export class DocumentSession {
@@ -825,7 +847,14 @@ export class DocumentSession {
     for (const { row, match, unit } of this.lastMatches) {
       if (!isAccepted(row) || !row.replacement) continue;
       const list = out.get(unit) ?? [];
-      list.push({ start: match.start, end: match.end, replacement: row.replacement });
+      // A `matchId` csak a megjelenítésé: az előnézet lapképén ebből tudja a
+      // kiemelés, melyik találat áll alatta (szín, buboréksúgó).
+      list.push({
+        start: match.start,
+        end: match.end,
+        replacement: row.replacement,
+        matchId: row.id,
+      });
       out.set(unit, list);
     }
     return out;
@@ -1178,7 +1207,7 @@ export class DocumentSession {
    * a név pedig a helyén maradna. Ezért a `groupRangesByStream` szerinti
    * csoportosítás nem kényelmi lépés, hanem a helyesség feltétele.
    */
-  private async exportPdf(editsByUnit: Map<number, Edit[]>): Promise<{ bytes: Uint8Array; warnings: string[] }> {
+  private async exportPdf(editsByUnit: Map<number, Edit[]>): Promise<PdfBuildResult> {
     const doc = await PDFDocument.load(this.bytes);
     doc.registerFontkit(fontkit);
     const fontPath = FALLBACK_FONTS.find((f) => {
@@ -1193,6 +1222,7 @@ export class DocumentSession {
     const embedded = await doc.embedFont(readFileSync(fontPath), { subset: true });
 
     const warnings: string[] = [];
+    const highlights: Highlight[] = [];
     const redraws: { page: number; x: number; y: number; size: number; text: string }[] = [];
 
     this.units.forEach((unit, ui) => {
@@ -1206,7 +1236,7 @@ export class DocumentSession {
 
       const toDelete: ByteRange[] = [];
       for (const span of pdf.pageText.spans) {
-        const newText = segmentTextAfterEdits(span, edits);
+        const { text: newText, placements } = segmentEditPlan(span, edits);
         if (newText === span.segment.text) continue;
         toDelete.push(...span.segment.opRanges);
         redraws.push({
@@ -1216,6 +1246,21 @@ export class DocumentSession {
           size: span.segment.fontSize,
           text: newText,
         });
+        /*
+          A KIEMELÉS A KÉSZ SORBAN MÉRVE — nem az eredetiben.
+
+          Az álnév ritkán ugyanolyan hosszú, mint a valódi név, és a sort
+          amúgy is a MI betűkészletünkkel rajzoljuk újra. Az eredeti
+          koordinátákból számolt téglalap ezért fokozatosan elcsúszna a sor
+          mentén: a második csere már a szomszéd szót karikázná be. A
+          szélességet ugyanazzal a betűvel és mérettel mérjük, amivel
+          rajzolunk — így a jelölés pontosan azon a szón ül, ami a lapon áll.
+        */
+        for (const p of placements) {
+          if (p.edit.matchId === undefined) continue;
+          const box = redrawHighlight(embedded, span.segment, newText, p, pdf);
+          if (box) highlights.push({ matchId: p.edit.matchId, page: unit.page, ...box });
+        }
       }
       if (toDelete.length === 0) return;
 
@@ -1254,7 +1299,36 @@ export class DocumentSession {
     // Teljes újraírás, soha nem növekményes mentés — különben a régi tartalom
     // ott marad a fájlban és visszafejthető.
     const bytes = await doc.save({ useObjectStreams: false });
-    return { bytes, warnings };
+    return { bytes, warnings, highlights };
+  }
+
+  /**
+   * AZ ÁLNEVESÍTETT IRAT LAPKÉPEI — a valódi kimenet kirajzolva.
+   *
+   * Ez az előnézet PDF-en. Nem a szöveg egy másik szedése: pontosan azokat a
+   * bájtokat rajzoljuk ki, amelyek a mentéskor a fájlba kerülnének (ugyanaz az
+   * `exportPdf`, ugyanaz a betűtörlés, ugyanaz az újrarajzolás). Előtte az
+   * előnézet a lapról LESZEDETT szöveget mutatta egyetlen folyó bekezdésben —
+   * abban se sortörés nem volt, se hasáb, se táblázat, se fejléc a helyén, és
+   * a felhasználó a mentés pillanatáig nem látta, milyen lesz az irat.
+   *
+   * A tördelésen túl ez azt is megmutatja, amit CSAK a kész fájl tud: hogy az
+   * álnév kifut-e a sorból, és hogy a visszaírt sor betűje elüt-e az eredetitől.
+   * Ezekre eddig semmi nem figyelmeztetett.
+   *
+   * SEMMI NEM MEGY LEMEZRE. A bájtok a memóriában készülnek és ott is
+   * maradnak; a mentés külön út (`export`), a saját ellenőrző körével.
+   *
+   * Nem PDF-en üres listát ad — DOCX-hez és TXT-hez nincs lapképünk, ott az
+   * előnézet marad a szöveg.
+   */
+  async anonymizedPages(): Promise<{ pages: PageImage[]; highlights: Highlight[] }> {
+    if (this.info.format !== 'pdf') return { pages: [], highlights: [] };
+    const built = await this.exportPdf(this.editsByUnit());
+    const pages = await renderPdfPages(built.bytes, this.units.length, this.units);
+    // Lapkép nélkül a kiemelésnek sincs mire ülnie: a felület ilyenkor a
+    // szöveges előnézetre esik vissza, és ott a saját jelöléseit használja.
+    return pages.length === 0 ? { pages: [], highlights: [] } : { pages, highlights: built.highlights };
   }
 
   /**
@@ -2421,6 +2495,46 @@ function highlightFor(
   return {
     left: x / pdf.pageWidth,
     top: (pdf.pageHeight - (startRun.y + ascent)) / pdf.pageHeight,
+    width: w / pdf.pageWidth,
+    height: (ascent + descent) / pdf.pageHeight,
+  };
+}
+
+/**
+ * Kiemelő téglalap a KÉSZ (újrarajzolt) sorban.
+ *
+ * A `highlightFor` párja, más bemenettel: az az EREDETI lapon méri a találat
+ * helyét a forrás betűszélesség-becslésével, ez a kimeneti lapon a csereszöveg
+ * helyét — azzal a betűvel és mérettel mérve, amivel a sort ténylegesen
+ * kirajzoljuk. Ezért nem becslés: a `drawText` ugyanezt a szélességet kapja.
+ *
+ * `null`, ha a mérés nem megy (a betűkészletből hiányzó jel). A kiemelés
+ * díszítés — a hiánya nem áshatja alá az előnézetet.
+ */
+function redrawHighlight(
+  font: PDFFont,
+  seg: TextSegment,
+  newText: string,
+  p: EditPlacement,
+  pdf: NonNullable<TextUnit['pdf']>,
+): { left: number; top: number; width: number; height: number } | null {
+  let x: number;
+  let w: number;
+  try {
+    x = seg.x + font.widthOfTextAtSize(newText.slice(0, p.start), seg.fontSize);
+    w = font.widthOfTextAtSize(newText.slice(p.start, p.end), seg.fontSize);
+  } catch {
+    return null;
+  }
+  if (!Number.isFinite(x) || !Number.isFinite(w) || w <= 0) return null;
+  // Ugyanaz a két arányszám, mint a `highlightFor`-ban: a sor alapvonala
+  // felett és alatt ennyi a betűtest. Két külön szám két nézeten azt adná,
+  // hogy ugyanaz a szó az eredetin és az előnézeten más magasan ül.
+  const ascent = seg.fontSize * 0.82;
+  const descent = seg.fontSize * 0.24;
+  return {
+    left: x / pdf.pageWidth,
+    top: (pdf.pageHeight - (seg.y + ascent)) / pdf.pageHeight,
     width: w / pdf.pageWidth,
     height: (ascent + descent) / pdf.pageHeight,
   };

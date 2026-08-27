@@ -312,6 +312,8 @@ const api = {
   analyze: (input: unknown) => ipcRenderer.invoke('doc:analyze', input),
   /** Az álnevesített szöveg; útvonal nélkül az első betöltött iraté. */
   previewText: (path?: string) => ipcRenderer.invoke('doc:previewText', path),
+  /** Az álnevesített irat LAPKÉPEI (PDF); útvonal nélkül az első betöltött iraté. */
+  previewPages: (path?: string) => ipcRenderer.invoke('doc:previewPages', path),
   suggestOutputPath: (mode: string) => ipcRenderer.invoke('doc:suggestOutputPath', mode),
   chooseSaveTarget: (suggested: string) => ipcRenderer.invoke('doc:chooseSaveTarget', suggested),
   exportDocument: (opts: unknown) => ipcRenderer.invoke('doc:export', opts),

@@ -412,6 +412,23 @@ export interface DocSection {
   matchIdIg: number;
 }
 
+/**
+ * AZ ÁLNEVESÍTETT IRAT LAPKÉPEI — a PDF-előnézet tartalma.
+ *
+ * Nem az elemzés része, és szándékosan nem is: az elemzés minden
+ * beállításváltozásra újrafut, ez viszont a KÉSZ KIMENETET rajzolja ki
+ * (betűtörlés, újrarajzolás, teljes újramentés), tehát drága. Csak akkor
+ * készül el, amikor a felhasználó tényleg az előnézetre vált.
+ *
+ * Üres lista: nincs lapkép (DOCX, TXT, vagy hiányzik a natív rajzoló) — a
+ * felület ilyenkor a szöveges előnézetre esik vissza.
+ */
+export interface PreviewPages {
+  pages: PageImage[];
+  /** A csereszövegek helye a KÉSZ lapon; a `matchId` a találatra mutat vissza. */
+  highlights: Highlight[];
+}
+
 export interface AnalysisResult {
   /**
    * AZ ELSŐ betöltött irat — a `docs` első eleme, kibontva.

@@ -5,6 +5,7 @@ import type {
   ExportResult,
   ModelStatus as MotorModelStatus,
   PartyInput,
+  PreviewPages,
   ReplacementMode,
   ThemeSummary,
 } from '../../src/app/types.js';
@@ -39,7 +40,9 @@ export type {
   DocSection,
   MatchOutcome,
   MatchRow,
+  PageImage,
   PartyInput,
+  PreviewPages,
   ReplacementMode,
   ThemeSummary,
   VerifyReportUi,
@@ -678,6 +681,18 @@ interface SzivecskeApi {
   closeDecision?(valasz: 'save' | 'discard' | 'cancel'): Promise<void>;
   /** Az álnevesített szöveg; útvonal nélkül az első betöltött iraté. */
   previewText(path?: string): Promise<string>;
+  /**
+   * AZ ÁLNEVESÍTETT IRAT LAPKÉPEI (PDF) — az előnézet valódi tördeléssel.
+   *
+   * A motor a KÉSZ kimeneti bájtokat rajzolja ki, tehát az előnézet nem
+   * hasonlít a mentett fájlra: az. Üres `pages`: nincs lapkép (DOCX, TXT, vagy
+   * hiányzik a natív rajzoló) — olyankor a `previewText` szövege marad.
+   *
+   * Opcionális, mert egy RÉGEBBI híd (és a böngészős fejlesztői álkimenet) nem
+   * ismeri. Hiányában az előnézet a szöveges nézetre esik vissza — ugyanaz,
+   * ami eddig volt.
+   */
+  previewPages?(path?: string): Promise<PreviewPages>;
   suggestOutputPath(mode: string): Promise<string>;
   chooseSaveTarget(suggested: string): Promise<string | null>;
   exportDocument(opts: ExportOptions): Promise<ExportResult>;

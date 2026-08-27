@@ -16,6 +16,7 @@ import {
   type ExportResult,
   type IratBeallitas,
   type PartyInput,
+  type PreviewPages,
   type DetectionResult,
   type ReplacementMode,
   type ThemeSummaryUi,
@@ -276,6 +277,7 @@ type IkonNev =
   | 'mentes'
   | 'iratbeallitas'
   | 'ujugy'
+  | 'nyomtatas'
   | 'programbeallitas'
   | 'dontottunk'
   | 'figyelem';
@@ -291,6 +293,12 @@ const IKON_UTVONALAK: Record<IkonNev, string[]> = {
     'M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2',
     'M10 14a2 2 0 1 0 4 0a2 2 0 1 0 -4 0',
     'M14 4l0 4l-6 0l0 -4',
+  ],
+  // tabler: printer
+  nyomtatas: [
+    'M17 17h2a2 2 0 0 0 2 -2v-4a2 2 0 0 0 -2 -2h-14a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2',
+    'M17 9v-4a2 2 0 0 0 -2 -2h-6a2 2 0 0 0 -2 2v4',
+    'M7 13m0 2a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-6a2 2 0 0 1 -2 -2z',
   ],
   // tabler: adjustments — az EBBEN AZ IRATBAN érvényes beállítások
   iratbeallitas: [
@@ -530,6 +538,15 @@ export default function App() {
   const [caseSecret, setCaseSecret] = useState(newCaseSecret);
   const [view, setView] = useState<View>('source');
   const [preview, setPreview] = useState<string | null>(null);
+  /**
+   * AZ ÁLNEVESÍTETT IRAT LAPKÉPEI — PDF-en ez az előnézet.
+   *
+   * Külön állapot a szöveg mellett, mert a kettő KIZÁRJA egymást: ha lapkép
+   * van, a szöveget le sem kérjük. Mindkettő ugyanakkor esik el (a `null`
+   * jelenti azt, hogy „ezt még elő kell állítani"), különben az előnézet a
+   * döntés előtti kimenetet mutatná a friss elemzés alatt.
+   */
+  const [previewPages, setPreviewPages] = useState<PreviewPages | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   // Mentés után ezzel nyílik a kulcsfájl-ablak: a most készült fájlt ne kelljen
   // újra megkeresni a tallózóban.
@@ -759,6 +776,7 @@ export default function App() {
         // kimenet maradna, és a felhasználó azt hinné, hogy a döntése nem
         // érvényesült.
         setPreview(null);
+        setPreviewPages(null);
         setPreviewError(null);
         return res;
       } catch (e) {
@@ -1075,6 +1093,7 @@ export default function App() {
         // Az előnézet az ELŐZŐ iratról szólt: eldobjuk, és az eredetivel
         // indulunk, hogy a felhasználó ne a régi kimenetet lássa új irat alatt.
         setPreview(null);
+        setPreviewPages(null);
         setPreviewError(null);
         setView('source');
         setHasWork(true);
@@ -1325,6 +1344,7 @@ export default function App() {
     setHasWork(false);
     setSajatDontes(false);
     setPreview(null);
+    setPreviewPages(null);
     setPreviewError(null);
     setView('source');
     setNyitandoNev(null);
@@ -1446,25 +1466,49 @@ export default function App() {
    * ismeri sem a ragozást, sem a döntéseket. Ezért kérjük le, ahelyett hogy
    * összeraknánk.
    */
+  /**
+   * AZ ELŐNÉZET LEKÉRÉSE — PDF-en lapkép, egyébként szöveg.
+   *
+   * A KÉT ÚT KIZÁRJA EGYMÁST, és a sorrend nem mindegy: PDF-en előbb a
+   * lapképet kérjük (az a valódi kimenet kirajzolva), és csak akkor esünk
+   * vissza a szövegre, ha nem lett lapkép — nincs natív rajzoló, régebbi híd,
+   * vagy nem is PDF az irat. Enélkül a felhasználó a mentés pillanatáig nem
+   * látta, hogyan fog kinézni az irat: az előnézet a lapról leszedett szöveget
+   * mutatta egyetlen folyó bekezdésben.
+   *
+   * Ígéret helyett igazság: ha a lapkép nem jön össze, a szöveges nézet áll
+   * be, és a fejléc sávja MEGMONDJA, hogy ilyenkor a tördelést nem látni.
+   */
+  const elonezetKer = useCallback(async (): Promise<void> => {
+    const kepesUt = doc?.format === 'pdf' && api.previewPages !== undefined;
+    if (kepesUt) {
+      // A MEGJELENÍTETT irat lapképei — több irat mellett a főfolyamat
+      // különben az elsőét adná vissza, akármelyiket is nézzük.
+      const res = await api.previewPages!(doc?.path);
+      if (res.pages.length > 0) {
+        setPreviewPages(res);
+        setPreviewError(null);
+        return;
+      }
+    }
+    const t = await api.previewText(doc?.path);
+    setPreview(t);
+    setPreviewError(null);
+  }, [doc?.format, doc?.path]);
+
   useEffect(() => {
-    // Csak akkor kérjük le, ha tényleg az előnézet látszik: a szöveg
-    // előállítása az egész iraton végigmegy.
-    if (view !== 'preview' || !analysis || preview !== null || previewError !== null) return;
+    // Csak akkor kérjük le, ha tényleg az előnézet látszik: az előállítás az
+    // egész iraton végigmegy — PDF-en a kész kimenetet is megrajzolja.
+    if (view !== 'preview' || !analysis) return;
+    if (preview !== null || previewPages !== null || previewError !== null) return;
     let el = true;
-    void api
-      // A MEGJELENÍTETT irat álnevesített szövege — több irat mellett a
-      // főfolyamat különben az elsőét adná vissza, akármelyiket is nézzük.
-      .previewText(doc?.path)
-      .then((t) => {
-        if (el) setPreview(t);
-      })
-      .catch((e: Error) => {
-        if (el) setPreviewError(e.message);
-      });
+    void elonezetKer().catch((e: Error) => {
+      if (el) setPreviewError(e.message);
+    });
     return () => {
       el = false;
     };
-  }, [view, analysis, preview, previewError, doc?.path]);
+  }, [view, analysis, preview, previewPages, previewError, elonezetKer]);
 
   /**
    * Nyomtatás.
@@ -1490,13 +1534,15 @@ export default function App() {
       return;
     }
     setView('preview');
-    // A fátyol csak akkor jár, ha tényleg várni kell rá: kész szövegnél a
+    // A fátyol csak akkor jár, ha tényleg várni kell rá: kész előnézetnél a
     // felvillanó jelzés hazudna.
-    if (preview === null) setBusy('Az álnevesített szöveg előállítása…');
+    const kesz = preview !== null || previewPages !== null;
+    if (!kesz) setBusy('Az álnevesített irat előállítása…');
     try {
-      const text = preview ?? (await api.previewText());
-      setPreview(text);
-      setPreviewError(null);
+      // UGYANAZ AZ ÚT, mint a nézetváltásnál. Külön ág itt azt jelentené, hogy
+      // a nyomtatás más képet visz papírra, mint amit a képernyő mutat — PDF-en
+      // épp a tördelést, vagyis a lényeget hagyná el.
+      if (!kesz) await elonezetKer();
       setBusy(null);
       await kovetkezoKep();
       await api.print();
@@ -1505,7 +1551,7 @@ export default function App() {
     } finally {
       setBusy(null);
     }
-  }, [analysis, fazis, preview]);
+  }, [analysis, fazis, preview, previewPages, elonezetKer]);
 
   /**
    * AZ ÖSSZEGYŰJTÖTT ÚJRASZÁMOLÁSI KÉRÉSEK KISZOLGÁLÁSA.
@@ -2022,11 +2068,25 @@ export default function App() {
     [decisions],
   );
 
-  /** Hány találat cserélődik MOST — a lap tetején álló számhoz. */
-  const csereDb = useMemo(
-    () => (analysis ? analysis.matches.filter((m) => kimenetMost(m) === 'csere').length : 0),
-    [analysis, kimenetMost],
-  );
+  /**
+   * A HÁROM KIMENET SZÁMA MOST — az állapotsor számaihoz.
+   *
+   * A friss döntéssel, nem a legutóbbi elemzés `outcomes` hármasából: a
+   * kattintás után az elemzés csak egy rövid szünettel fut újra, és addig az
+   * állapotsor a kattintás ELŐTTI állást mutatta. A `matchOutcome` ugyanaz a
+   * függvény, amiből a motor is számol, tehát a következő elemzés pontosan
+   * ezt igazolja vissza.
+   *
+   * EGYÜTT SZÁMOLJUK MIND A HÁRMAT. Amíg csak a „cserélődik" volt friss (a
+   * lap tetején), a másik kettő pedig a régi elemzésből jött (az
+   * állapotsorban), a három szám egy fél másodpercig nem adta ki a találatok
+   * számát — a felhasználó a különbséget hiányzó tételnek olvassa.
+   */
+  const kimenetSzamok = useMemo(() => {
+    const t = { csere: 0, bizonytalan: 0, nincs: 0 };
+    for (const m of analysis?.matches ?? []) t[kimenetMost(m)]++;
+    return t;
+  }, [analysis, kimenetMost]);
 
   const jelmagyarazat = useMemo(() => {
     if (!analysis) return [];
@@ -2045,18 +2105,18 @@ export default function App() {
         kulcs: 'bizonytalan',
         osztaly: 'bizonytalan',
         cimke: KIMENET_CIMKE.bizonytalan,
-        db: analysis.matches.filter((m) => kimenetMost(m) === 'bizonytalan').length,
+        db: kimenetSzamok.bizonytalan,
         sugo: 'A program bizonytalan benne, és még senki nem döntött róla.',
       },
       {
         kulcs: 'nincs',
         osztaly: 'nincs',
         cimke: KIMENET_CIMKE.nincs,
-        db: analysis.matches.filter((m) => kimenetMost(m) === 'nincs').length,
+        db: kimenetSzamok.nincs,
         sugo: 'Nem cserélődik: az eredeti szöveg marad. Kattints rá az iraton, ha mégis kell.',
       },
     ].filter((j) => j.db > 0);
-  }, [analysis, hivatalosIdk, kimenetMost]);
+  }, [analysis, hivatalosIdk, kimenetMost, kimenetSzamok]);
 
   /**
    * A HIVATALOS SZEREPLŐK NEVE, ahogy a felismerés adta.
@@ -2570,6 +2630,7 @@ export default function App() {
     if (index === aktivDoc) return;
     setAktivDoc(index);
     setPreview(null);
+    setPreviewPages(null);
     setPreviewError(null);
     setSelected(null);
   };
@@ -2609,6 +2670,7 @@ export default function App() {
         setDecisions({});
         setSelected(null);
         setPreview(null);
+        setPreviewPages(null);
         setPreviewError(null);
         if (lista.length === 0) {
           setAnalysis(null);
@@ -2771,7 +2833,7 @@ export default function App() {
           pedig nincs mit: két szürke ikon a fejlécben csak azt kérdeztetné
           meg, mikor élednek föl.
 
-          MINDKÉT GOMB A MENÜ ÚTJÁT HÍVJA (`handleMenu`), nem egy másolt
+          MINDHÁROM GOMB A MENÜ ÚTJÁT HÍVJA (`handleMenu`), nem egy másolt
           műveletet. Így a fejléc, a menüsor és a Ctrl+O / Ctrl+S ugyanazon az
           egyetlen elágazáson megy át — beleértve azt is, hogy a beállító
           lapon a mentés parancs TOVÁBBLÉPÉST jelent, és hogy a megnyitás
@@ -2812,6 +2874,31 @@ export default function App() {
               aria-label="Mentés másként"
             >
               <FejlecIkon nev="mentes" />
+            </button>
+            {/*
+              NYOMTATÁS — a bal panel fejlécéből ide.
+
+              Ott egy egész sort foglalt a nézetváltó mellett; itt a másik két
+              művelet mellé kerül, amelyek szintén a KÉSZ irattal csinálnak
+              valamit. A gomb csak akkor él, ha van mit papírra vinni: a
+              nyomtatás a képernyő tartalmát viszi, tehát a vizsgálat alatt a
+              beállítások képét adná ki — a felhasználó pedig abban a hitben
+              venné el a papírt, hogy az iratot nyomtatta ki. A `doPrint` ezt
+              eddig is elutasította, csak hibaüzenettel; a letiltott gomb
+              hamarabb szól, és nem üzenettel bünteti a kattintást.
+            */}
+            <button
+              className="btn ghost icon"
+              disabled={!analysis || fazis !== 'beallitas'}
+              onClick={() => handleMenu('print')}
+              title={
+                !analysis || fazis !== 'beallitas'
+                  ? 'Nyomtatni akkor lehet, ha a vizsgálat végigfutott — a papírra az álnevesített előnézet kerül.'
+                  : 'Nyomtatás: az álnevesített előnézet megy papírra, sosem az eredeti (Ctrl+P)'
+              }
+              aria-label="Nyomtatás"
+            >
+              <FejlecIkon nev="nyomtatas" />
             </button>
 
             {/*
@@ -2997,53 +3084,74 @@ export default function App() {
               látszik: ami ebben a sorban áll, az egy ügy, és egyetlen elemzés
               fut rájuk. Hozzáadni egy kattintás, kivenni egy másik.
 
-              Egy iratnál is kint van a sáv: a „+ Dokumentum" gomb így nem
-              bukkan elő a semmiből a második iratnál, hanem végig ott áll.
+              Egy iratnál is kint van a sáv: a „+" fül így nem bukkan elő a
+              semmiből a második iratnál, hanem végig ott áll.
+
+              A KIVÉTEL MOSTANTÓL A FÜLÖN VAN, nem a sáv végén.
+
+              Régen egyetlen „Kivétel" gomb állt a fülek után, és az mindig az
+              ÉPPEN NÉZETT iratra vonatkozott: amit ki akartál venni, arra
+              előbb át kellett váltani. A fülön ülő × arra az iratra mutat,
+              amelyiken ül — ez az, amit egy fülsortól bárki elvár. Hogy ne
+              gomb legyen a gombban (érvénytelen HTML, és a képernyőolvasó sem
+              tud vele mit kezdeni), a fül maga sávvá lett: benne KÉT gomb, a
+              névé és a bezárásé.
             */}
             <div className="iratsav">
               {docs.map((d, i) => (
-                <button
+                <div
                   key={d.path}
                   className={`iratful${i === aktivDoc ? ' active' : ''}`}
-                  title={`${d.path}\n${d.format.toUpperCase()} · ${d.pageCount} ${
+                  title={`${d.path}
+${d.format.toUpperCase()} · ${d.pageCount} ${
                     d.format === 'docx' ? 'dokumentumrész' : 'oldal'
                   }`}
-                  onClick={() => iratValt(i)}
                 >
-                  <span className="nev">{d.fileName}</span>
-                  {/*
-                    A KIVÉTEL NEM GOMB A GOMBBAN: az érvénytelen HTML, és a
-                    képernyőolvasó sem tud mit kezdeni vele. Ezért a jel csak
-                    rajz, a művelet pedig az iratsáv MELLETT álló gombé — az
-                    éppen nézett iratra vonatkozik, és kimondja, melyikre.
-                  */}
-                </button>
+                  <button className="ful-nev" onClick={() => iratValt(i)}>
+                    {d.fileName}
+                  </button>
+                  {/* Egyetlen iratnál nincs ×: az ügy utolsó iratát kivenni
+                      annyi, mint félúton bezárni a programot. */}
+                  {docs.length > 1 && (
+                    <button
+                      className="ful-x"
+                      title={`„${d.fileName}" kivétele az ügyből — a fájlhoz nem nyúlunk`}
+                      aria-label={`${d.fileName} kivétele az ügyből`}
+                      onClick={() => void iratBezar(d.path)}
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
               ))}
-              {docs.length > 1 && (
-                <button
-                  className="btn ghost sm iratki"
-                  title={`„${doc.fileName}" kivétele az ügyből — a fájlhoz nem nyúlunk`}
-                  onClick={() => void iratBezar(doc.path)}
-                >
-                  Kivétel
-                </button>
-              )}
-              <div className="spacer" />
+              {/* A HOZZÁADÁS IS FÜL, csak jel van rajta felirat helyett: a
+                  helye mondja meg, mit csinál — ide kerül a következő irat. A
+                  teljes mondat a buboréksúgóban áll. */}
               <button
-                className="btn ghost sm"
+                className="iratplusz"
                 title="Ugyanehhez az ügyhöz még egy irat — közös álnév-kiosztással"
+                aria-label="Irat hozzáadása az ügyhöz"
                 onClick={() => void iratHozzaad()}
               >
-                + Dokumentum
+                +
               </button>
+              <div className="spacer" />
             </div>
+            {/*
+              A DOKUMENTUM SÁVJA: mit lát a szemem, és mit nézek belőle.
+
+              HÁROM SORBÓL LETT KETTŐ. A fájlnév innen kikerült — egy sorral
+              feljebb, a fülön ott áll —, a „100 cserélődik · 101 találat"
+              pedig az állapotsorba, ahol a többi szám is lakik: ugyanaz az
+              adat két helyen csak azt kérdezteti meg, melyik az igazi.
+
+              Ami maradt, az a KÉT teherhordó dolog: balra a jelmagyarázat
+              (mit jelentenek a színek az iraton, és melyikből mennyi van),
+              jobbra a nézetváltó — az irat fölött, mert az iratról szól.
+            */}
             <div className="setupdoc-head">
-              <b>{doc.fileName}</b>
               {analysis ? (
                 <>
-                  {/* A JELMAGYARÁZAT a kiemelés színeit köti a döntéshez.
-                      Enélkül a rózsaszín és a borostyán csak dísz volna, és a
-                      felhasználó nem tudná, mit néz. */}
                   {/*
                     A JELMAGYARÁZAT KÉT DOLGOT MAGYARÁZ, mert a kiemelés is
                     kettőt mond egyszerre.
@@ -3067,62 +3175,77 @@ export default function App() {
                       </span>
                     ))}
                   </span>
-                  <span className="spacer" />
-                  {/* A jobb felső szám a KAPCSOLÓK állását is beszámítja: a
-                      puszta találatszám azt sugallta, hogy mind cserélődik. */}
-                  <span className="db">
-                    <b>{csereDb}</b> cserélődik · {analysis.matches.length} találat
-                  </span>
                 </>
               ) : null}
-            </div>
+              <span className="spacer" />
+              {/* Az irat fajtája és terjedelme — a NEVE a fülön áll. */}
+              <span className="docmeta" title={doc.path}>
+                {doc.format.toUpperCase()} · {doc.pageCount}{' '}
+                {doc.format === 'docx' ? 'dokumentumrész' : 'oldal'}
+              </span>
+              {/*
+                A NÉZETVÁLTÓ — két szó, magyarázat nélkül.
 
-            {/*
-              A NÉZETVÁLTÓ MOST MÁR ITT ÁLL, nem egy külön képernyőn.
+                Régen egy egész sort kapott, és a feliratai mondatok voltak
+                („Eredeti — kiemelve", „Előnézet — ez kerül a fájlba"). A
+                magyarázat egyszer hasznos, utána minden megnyitásnál ott
+                zsúfolódik. Ami a kettő közti különbségből tényleg számít, azt
+                a NÉZET maga mondja el: az egyiken valódi nevek állnak, a
+                másikon álnevek.
 
-              Az előnézet a megszűnt munkalapon volt elérhető, vagyis csak
-              azután, hogy a felhasználó végigment a beállításokon — pedig épp
-              a beállítás közben a leghasznosabb: egyetlen kattintással
-              megnézhető, mi lesz a kimenet, aztán vissza a jelölt eredetihez.
-            */}
-            {analysis && (
-              <div className="viewtabs">
-                <div className="seg">
+                KÉT SZAKASZ, NEM EGY ÁTBILLENŐ GOMB. Egy „Előnézet" feliratú
+                gombról nem derül ki, hogy azt MUTATJA-e éppen, vagy oda
+                visz; ezen az egy helyen ez a félreértés drága, mert a
+                nyomtatás a képernyő tartalmát viszi papírra.
+              */}
+              {/* Elemzés nélkül nincs mire váltani: az előnézet az elemzésből
+                  áll elő. Egy ilyenkor is kint álló váltó azt ígérné, hogy van
+                  már kimenet — a kattintás után pedig ugyanaz az üres nézet
+                  maradna, csak a gomb billenne át. */}
+              {analysis && (
+                <div className="seg sm nezetvalto">
                   <button
                     className={`segbtn${view === 'source' ? ' active' : ''}`}
                     onClick={() => setView('source')}
+                    title="Az eredeti irat, a megtalált nevekkel kiemelve"
                   >
-                    Eredeti — kiemelve
+                    Eredeti
                   </button>
                   <button
                     className={`segbtn${view === 'preview' ? ' active' : ''}`}
                     onClick={() => setView('preview')}
+                    title="Az álnevesített irat — pontosan ez kerül a mentett fájlba"
                   >
-                    Előnézet — ez kerül a fájlba
+                    Előnézet
                   </button>
                 </div>
-                <div className="spacer" />
-                <span className="docmeta" title={doc.path}>
-                  {doc.format.toUpperCase()} · {doc.pageCount}{' '}
-                  {doc.format === 'docx' ? 'dokumentumrész' : 'oldal'}
-                </span>
-                <button className="btn ghost sm" onClick={() => void doPrint()} title="Ctrl+P">
-                  Nyomtatás…
-                </button>
-              </div>
-            )}
-            {/* Külön sorban, teljes szélességben: a nézetváltó mellé zsúfolva
-                keskeny ablakon négy sorba tört, és feltolta a fejlécet. */}
-            {view === 'preview' && analysis && analysis.doc.format === 'pdf' && (
-              <div className="viewbanner">
-                A PDF tördelését az előnézet nem mutatja, csak a szöveget — a mentett fájl az
-                eredeti tördelést megtartja.
-              </div>
-            )}
+              )}
+            </div>
+            {/*
+              A SÁV MOSTANTÓL CSAK AKKOR SZÓLAL MEG, HA VAN MIT BEVALLANI.
+
+              Régen feltétel nélkül kiírta PDF-en, hogy „a tördelést az
+              előnézet nem mutatja" — ez ma már nem igaz: a lapképes előnézet a
+              KÉSZ kimeneti bájtokat rajzolja ki. Igaz viszont akkor maradt, ha
+              a lapkép nem jött össze (hiányzó natív rajzoló, régebbi híd), és
+              a szöveges nézetre estünk vissza. A mondat ezért a tényleges
+              állapothoz tartozik, nem a formátumhoz.
+            */}
+            {view === 'preview' &&
+              analysis &&
+              doc.format === 'pdf' &&
+              previewPages === null &&
+              preview !== null && (
+                <div className="viewbanner">
+                  A lapképet nem tudtuk elkészíteni, ezért az előnézet csak a szöveget mutatja, a
+                  tördelését nem — a mentett fájl az eredeti tördelést megtartja.
+                </div>
+              )}
             {analysis && view === 'preview' ? (
               <PreviewView
                 analysis={analysis}
                 text={preview}
+                lapok={previewPages}
                 error={previewError}
                 hivatalosIdk={hivatalosIdk}
               />
@@ -3233,18 +3356,31 @@ export default function App() {
         az irat, jobbra egy panel —, tehát a köztük való váltás nem látszott
         váltásnak; a hozzá tartozó fejléc-ikon pedig a folyamat harmadik
         állomását rejtette el, miközben az első kettő fülként állt egymás
-        mellett. A nézetváltó (Eredeti / Előnézet) és a nyomtatás a bal panel
-        fejlécébe került, ahol az irat maga is van.
+        mellett. A nézetváltó (Eredeti / Előnézet) a bal panel fejlécébe
+        került, ahol az irat maga is van; a nyomtatás a programfejléc műveleti
+        gombjai közé, a megnyitás és a mentés mellé — az is a kész iratból
+        csinál valamit.
       */}
 
       {doc && fazis === 'beallitas' && analysis && (
         <footer className="statusbar">
-          {/* A KIMENET SZÁMAI, nem a felismerés fokozatai: az állapotsor arra a
-              kérdésre válaszol, hogy mi lesz az irattal. Régebbi motor
-              (`outcomes` nélkül) esetén a fokozatokra esünk vissza — az kevesebbet
-              mond, de nem hazudik. */}
+          {/*
+            A KIMENET SZÁMAI, nem a felismerés fokozatai: az állapotsor arra a
+            kérdésre válaszol, hogy mi lesz az irattal.
+
+            ITT JÖTT ÖSSZE A KÉT HELYEN ÁLLÓ SZÁM. A bal panel fejlécében
+            ugyanez állt még egyszer („100 cserélődik · 101 találat”), csak
+            durvábban: a hármas bontás nélkül. Két helyen mutatott számokból a
+            felhasználó előbb-utóbb azt kérdezi, melyik az igazi — pedig
+            ugyanaz volt, más felbontásban.
+
+            A számok a FRISS döntéseket számolják (`kimenetSzamok`), nem a
+            legutóbbi elemzés `outcomes` hármasát: kattintás után az elemzés
+            csak egy rövid szünettel fut újra, és addig ez a sáv a kattintás
+            előtti állást mutatta.
+          */}
           <span>
-            <b>{analysis.outcomes?.csere ?? analysis.counts.auto}</b> {KIMENET_CIMKE.csere}
+            <b>{kimenetSzamok.csere}</b> {KIMENET_CIMKE.csere}
           </span>
           <span className="sep" />
           {/* Kérdezés nélküli úton EGYETLEN találat sem vár átnézésre — azokat
@@ -3260,15 +3396,19 @@ export default function App() {
               <>
                 {/* Ugyanaz a szó, mint a jelmagyarázatban és a pöttyön: az
                     „átnézésre vár" harmadik névként keringett ugyanarra. */}
-                <b>{analysis.outcomes?.bizonytalan ?? analysis.counts.review}</b>{' '}
-                {KIMENET_CIMKE.bizonytalan}
+                <b>{kimenetSzamok.bizonytalan}</b> {KIMENET_CIMKE.bizonytalan}
               </>
             )}
           </span>
           <span className="sep" />
           <span>
-            <b>{analysis.outcomes?.nincs ?? analysis.counts.reject}</b> {KIMENET_CIMKE.nincs}
+            <b>{kimenetSzamok.nincs}</b> {KIMENET_CIMKE.nincs}
           </span>
+          <span className="sep" />
+          {/* A HÁROM SZÁM ÖSSZEGE — a bal panel fejlécéből költözött ide.
+              Nem dísz: ez mondja meg, hogy a fenti hármat teljesnek lehet-e
+              olvasni, vagy hiányzik belőle valami. */}
+          <span>{analysis.matches.length} találat</span>
           <span className="sep" />
           <span>
             {/* MINDEN betöltött irat együtt: a jobb oldali lista is az egészre

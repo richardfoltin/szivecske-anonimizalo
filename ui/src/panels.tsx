@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { matchKind, matchOutcome } from './api';
-import type { AnalysisResult, DocSection, MatchKind, MatchRow } from './api';
+import type {
+  AnalysisResult,
+  DocSection,
+  MatchKind,
+  MatchRow,
+  PreviewPages,
+} from './api';
 
 /* ─────────────────────────── dokumentum-nézet ─────────────────────────── */
 
@@ -367,16 +373,35 @@ function TextView({
 export function PreviewView({
   analysis,
   text,
+  lapok,
   error,
   hivatalosIdk = new Set<string>(),
 }: {
   analysis: AnalysisResult;
-  /** null: még töltjük a motortól. */
+  /** null: még töltjük a motortól — vagy a lapképes út vitte el. */
   text: string | null;
+  /**
+   * AZ ÁLNEVESÍTETT IRAT LAPKÉPEI — PDF-en ez az előnézet.
+   *
+   * A motor a KÉSZ kimeneti bájtokat rajzolja ki, tehát ami itt látszik, az
+   * nem hasonlít a mentett fájlra: az. Enélkül az előnézet a lapról leszedett
+   * szöveget mutatta egyetlen folyó bekezdésben — se sortörés, se hasáb, se
+   * táblázat, se fejléc a helyén —, és a felhasználónak külön mondatban
+   * kellett elmagyarázni, hogy amit lát, az nem a kimenet képe.
+   *
+   * `null`: nincs (DOCX, TXT, régebbi híd, vagy hiányzik a natív rajzoló) —
+   * olyankor a `text` szövege áll be, ahogy eddig.
+   */
+  lapok: PreviewPages | null;
   error: string | null;
   /** A Bszi. szerinti szereplők — tőlük kapja az előnézet az ibolya jelölést. */
   hivatalosIdk?: ReadonlySet<string>;
 }) {
+  const matchById = useMemo(
+    () => new Map(analysis.matches.map((m) => [m.id, m])),
+    [analysis.matches],
+  );
+
   const html = useMemo(() => {
     if (text === null) return '';
     const escaped = escapeHtml(text);
@@ -420,23 +445,84 @@ export function PreviewView({
     );
   }, [text, analysis.cast, analysis.matches, hivatalosIdk]);
 
-  return (
-    <div className="viewport preview">
-      {error !== null ? (
+  if (error !== null) {
+    return (
+      <div className="viewport preview">
         <div className="textview">
           <div className="note bad" style={{ margin: 0 }}>
             Az előnézet nem készült el: {error}
           </div>
         </div>
-      ) : text === null ? (
+      </div>
+    );
+  }
+
+  /*
+    A LAPKÉPES ÚT — a kész kimenet kirajzolva, a cserék megjelölve.
+
+    A jelölés UGYANAZ a `.hl` elem, mint az eredeti nézeten, csak nem
+    kapcsolható: az előnézeten már nincs mit eldönteni, ez az irat állapota.
+    A színrend viszont közös — ami ott rózsaszín volt, az itt is az.
+  */
+  if (lapok !== null) {
+    const oldalanként = new Map<number, typeof lapok.highlights>();
+    for (const h of lapok.highlights) {
+      oldalanként.set(h.page, [...(oldalanként.get(h.page) ?? []), h]);
+    }
+    return (
+      <div className="viewport preview">
+        <div className="pagewrap">
+          {lapok.pages.map((p) => (
+            <div className="page" key={p.index}>
+              <img src={p.dataUrl} alt={`${p.index + 1}. oldal — álnevesítve`} draggable={false} />
+              {(oldalanként.get(p.index) ?? []).map((h) => {
+                const m = matchById.get(h.matchId);
+                return (
+                  <div
+                    key={h.matchId}
+                    className={`hl csere k-${m ? matchKind(m, hivatalosIdk) : 'nev'}`}
+                    style={{
+                      left: `${h.left * 100}%`,
+                      top: `${h.top * 100}%`,
+                      width: `${h.width * 100}%`,
+                      height: `${h.height * 100}%`,
+                    }}
+                    title={m ? elonezetSugo(m) : ''}
+                  />
+                );
+              })}
+              <span className="pageno">{p.index + 1}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="viewport preview">
+      {text === null ? (
         <div className="textview">
-          <span className="spinner" /> Az álnevesített szöveg előállítása…
+          <span className="spinner" /> Az álnevesített irat előállítása…
         </div>
       ) : (
         <div className="textview" dangerouslySetInnerHTML={{ __html: html }} />
       )}
     </div>
   );
+}
+
+/**
+ * A LAPKÉPES ELŐNÉZET BUBORÉKSÚGÓJA — visszafelé olvas.
+ *
+ * Az eredeti nézeten a kérdés az, hogy „mi lesz ezzel a szóval"; itt már az,
+ * hogy „mi állt ennek a helyén". A nyíl iránya ezért fordított, és ez nem
+ * szőrszálhasogatás: az álnév és a valódi név ugyanolyan hihető magyar név,
+ * a kettőt csak az különbözteti meg, melyik oldalán áll a nyílnak.
+ */
+function elonezetSugo(m: MatchRow): string {
+  return `${m.replacement ?? '—'} ← az eredetiben: ${m.surface}
+${m.reason}`;
 }
 
 function escapeHtml(s: string): string {
