@@ -40,6 +40,7 @@ export function DocumentView({
   selected,
   onSelect,
   hivatalosIdk = new Set<string>(),
+  dontesek,
   onToggle,
 }: {
   analysis: AnalysisResult;
@@ -53,6 +54,20 @@ export function DocumentView({
    * kívülről. Üres halmaz is jó: olyankor mindenki „név”.
    */
   hivatalosIdk?: ReadonlySet<string>;
+  /**
+   * A FELHASZNÁLÓ DÖNTÉSEI, AHOGY ÉPP ÁLLNAK — az elemzés előtt.
+   *
+   * A kattintás a `decisions` tárolóba ír, az új elemzés viszont csak egy
+   * rövid szünet után indul (a küszöbcsúszka miatt késleltetett). Enélkül a
+   * kiemelés ez alatt a RÉGI színben állt volna: a felhasználó kikapcsolja a
+   * cserét, és negyed másodpercig azt látja, hogy nem történt semmi — vagy
+   * ami rosszabb, hogy még mindig cserélünk.
+   *
+   * A friss döntés ezért a megjelenítésnél FELÜLÍRJA az elemzésből kapott
+   * állapotot. Nem külön igazság: pontosan az, amit a motor a következő
+   * körben visszaigazol.
+   */
+  dontesek?: Record<number, 'accept' | 'skip'>;
   /**
    * KATTINTÁSRA KI-BE KAPCSOLÁS — a beállító lap bal oldalán ez a fő működés.
    *
@@ -94,6 +109,7 @@ export function DocumentView({
         analysis={analysis}
         selected={selected}
         hivatalosIdk={hivatalosIdk}
+        {...(dontesek ? { dontesek } : {})}
         {...(onToggle ? { onToggle } : {})}
       />
     );
@@ -108,7 +124,8 @@ export function DocumentView({
           <div className="page" key={p.index}>
             <img src={p.dataUrl} alt={`${p.index + 1}. oldal`} draggable={false} />
             {(byPage.get(p.index) ?? []).map((h) => {
-              const m = matchById.get(h.matchId);
+              const nyers = matchById.get(h.matchId);
+              const m = nyers ? frissSor(nyers, dontesek) : undefined;
               // KÉT OSZTÁLY: a kimenet adja a fedettséget, a fajta a színt.
               const cls = m
                 ? `${matchOutcome(m)} k-${matchKind(m, hivatalosIdk)}`
@@ -149,6 +166,19 @@ export function DocumentView({
  * szónál is. Az ügyvéd tehát azt olvasta, hogy cserélünk, miközben nem
  * cserélünk — ez a legdrágább fajta félreértés ebben a programban.
  */
+/**
+ * A TALÁLAT SORA A FRISS DÖNTÉSSEL — az elemzés bevárása nélkül.
+ *
+ * A kattintás azonnal látszik: a `decisions` tároló friss értéke felülírja
+ * azt, amit az elemzés még a régi állapotból hozott. A következő elemzés
+ * ugyanezt adja vissza, tehát nem két igazság van, csak az egyik hamarabb
+ * ér a képernyőre.
+ */
+function frissSor(m: MatchRow, dontesek: Record<number, 'accept' | 'skip'> | undefined): MatchRow {
+  const d = dontesek?.[m.id];
+  return d === undefined ? m : { ...m, decision: d };
+}
+
 function kiemelesSugo(m: MatchRow, kapcsolhato: boolean): string {
   const kimenet = matchOutcome(m);
   const fej =
@@ -180,11 +210,13 @@ function TextView({
   analysis,
   selected,
   hivatalosIdk,
+  dontesek,
   onToggle,
 }: {
   analysis: AnalysisResult;
   selected: number | null;
   hivatalosIdk: ReadonlySet<string>;
+  dontesek?: Record<number, 'accept' | 'skip'>;
   onToggle?: (id: number) => void;
 }) {
   /*
@@ -230,10 +262,11 @@ function TextView({
             <mark
               key={d.kulcs}
               data-hl={d.m.id}
-              className={`${matchOutcome(d.m)} k-${matchKind(d.m, hivatalosIdk)}${
-                selected === d.m.id ? ' selected' : ''
-              }`}
-              title={kiemelesSugo(d.m, onToggle !== undefined)}
+              className={`${matchOutcome(frissSor(d.m, dontesek))} k-${matchKind(
+                d.m,
+                hivatalosIdk,
+              )}${selected === d.m.id ? ' selected' : ''}`}
+              title={kiemelesSugo(frissSor(d.m, dontesek), onToggle !== undefined)}
               {...(onToggle
                 ? {
                     role: 'button',

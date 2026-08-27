@@ -1,0 +1,94 @@
+# A KIADÁS ÉPÍTÉSE — címkére indul, és a telepítőt a Releases oldalra teszi.
+#
+# Miért címkére, és nem minden push-ra: a telepítő ~142 MB, és minden futás egy
+# Windows-futtatót foglal le tíz percre. Egy kiadás szándékos lépés — a
+# `v0.1.0` alakú címke maga a döntés. A `workflow_dispatch` mellette azért van,
+# hogy kézzel is indítható legyen, ha egy futás elakadt.
+#
+# AMI SZÁNDÉKOSAN NEM KERÜL A KIADÁSBA: a nyelvi modell. 809 MB, a licence
+# külön feltételekkel jár, és a program futásidőben tölti le a Hugging Face-ről
+# (`foltin/nerkor-hubert-hungarian-onnx`). A telepítő nélküle is teljes: a
+# felhasználó a Beállításokban vagy a csere lapján egy gombbal letölti.
+
+name: Kiadás építése
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+# A kiadás létrehozásához írnia kell a tárba; egyébhez nem kell jog.
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    # A telepítő NSIS-alapú Windows-csomag: keresztfordítás nélkül, valódi
+    # Windows-futtatón épül. Az `electron-builder` a natív függőségeket
+    # (onnxruntime-node, @napi-rs/canvas) is ehhez a rendszerhez húzza be.
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      # `npm ci`, nem `npm install`: a package-lock.json-höz kötve, tehát a
+      # kiadás pontosan azokkal a csomagverziókkal épül, amikkel a fejlesztés
+      # ment. Egy „majdnem ugyanaz" függőségfa itt csendes viselkedésváltozás.
+      - name: Függőségek
+        run: npm ci
+
+      # A TESZTKÉSZLET A KIADÁS KAPUJA.
+      #
+      # Nem azért fut le, hogy zöld pipa legyen a lapon: ez a program iratokból
+      # töröl személyes adatot, és a tesztek nagy része pont azt méri, hogy a
+      # kimenetben tényleg nem maradt bent semmi. Egy piros készlet mellett
+      # kiadott telepítő rosszabb, mint a kiadás elmaradása.
+      #
+      # A nyelvi modell a futtatón nincs meg — a készletek ezt tudják, és a
+      # szerkezeti ágon mérnek tovább (a `detectByStructure` modell nélkül is
+      # teljes). Amit ez nem fed le, az a modell saját mérése; azt kézzel
+      # futtatjuk, gépen, ahol a modell megvan.
+      - name: Tesztek
+        run: npm run test:all
+
+      # `--publish never`: az electron-buildernek CSAK ÉPÍTENIE kell.
+      #
+      # A feltöltés külön lépés (lentebb), és ez nem stílus: a builder saját
+      # közzétevője a `package.json` `build.publish` mezőjéből dolgozik, ami itt
+      # nincs beállítva — token jelenlétében viszont találgatni kezdene a
+      # tárról és a kiadás nevéről. Egy kiadás ne találgatásból keletkezzen.
+      - name: Telepítő építése
+        run: npm run dist:ci
+
+      # A mellékletet MI csatoljuk, nem az electron-builder auto-publish ága:
+      # így a lépés akkor is átlátható marad, ha a builder beállítása változik,
+      # és a fájlnév pontosan az, ami a lemezen keletkezett.
+      - name: Feltöltés a kiadáshoz
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/telepito/*.exe
+            dist/telepito/*.exe.blockmap
+          body: |
+            ## Szivecske Anonimizáló ${{ github.ref_name }}
+
+            Windows-telepítő. Töltsd le az `.exe` fájlt, és futtasd.
+
+            **A nyelvi modell nincs a telepítőben.** 809 MB, és külön licenc
+            alatt áll — a program az első indítás után egy gombbal letölti a
+            Hugging Face-ről. Addig is működik, csak kevesebb nevet talál meg:
+            azokat, amiket az irat rovatai kifejezetten megneveznek
+            („Felperes:", „anyja neve:", cégforma).
+
+            **Nincs kódaláírás.** A Windows SmartScreen az első indításnál
+            figyelmeztet; a „További információ → Futtatás mindenképp" úton
+            indítható. Ez a telepítő tulajdonsága, nem a gépedé.
+
+            A kiadás akkor keletkezett, amikor a teljes tesztkészlet zöld volt.

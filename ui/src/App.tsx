@@ -2129,6 +2129,33 @@ export default function App() {
     dontesekre(id, () => 'accept');
   };
 
+  /**
+   * EGY EGÉSZ CSOPORT KI- VAGY BEKAPCSOLÁSA a fejlécéből.
+   *
+   * Húsz név mellett a soronkénti döntés húsz kattintás; ez egy. A művelet
+   * ugyanaz, amit a sorok „Mind" és „Nincs csere" gombja tesz, csak a csoport
+   * minden tételére — tehát ugyanabba a tárolóba (`decisions`) ír, és a
+   * képernyő ugyanúgy tükrözi vissza.
+   *
+   * A hivatalos szereplők NEM ezen az úton mennek: nekik saját kapcsolójuk van
+   * (`replaceOfficials`), ami nem a cserét állítja, hanem azt, hogy egyáltalán
+   * a felek közé kerüljenek-e.
+   */
+  const setupCsoport = (fajta: TalaltTetel['fajta'], be: boolean): void => {
+    if (!analysis) return;
+    const idk = new Set(tetelek.filter((t) => t.fajta === fajta).map((t) => t.id));
+    if (idk.size === 0) return;
+    const next = { ...decisions };
+    for (const m of analysis.matches) {
+      if (!idk.has(m.entityId)) continue;
+      next[m.id] = be ? 'accept' : 'skip';
+    }
+    setDecisions(next);
+    setHasWork(true);
+    setSajatDontes(true);
+    ujraKert();
+  };
+
   const setupNincs = (id: string): void => {
     if (id === '#osszeg') setReplaceAmounts(false);
     if (id === '#datum') setShiftDates(false);
@@ -2180,7 +2207,18 @@ export default function App() {
     const m = analysis.matches.find((x) => x.id === matchId);
     if (!m) return;
     setSelected(matchId);
-    setDecisions({ ...decisions, [matchId]: matchOutcome(m) === 'csere' ? 'skip' : 'accept' });
+    /*
+      A MOSTANI ÁLLAPOTBÓL BILLENTÜNK, nem az elemzésből olvasottból.
+
+      Két gyors kattintás között az elemzés még nem futott le, tehát az
+      `analysis` sora a RÉGI döntést hordozza — abból számolva a második
+      kattintás ugyanoda állítaná, ahova az első, és a felhasználó azt látná,
+      hogy a program nem reagál. A `decisions` friss értéke viszont már
+      megvan.
+    */
+    const most = decisions[matchId] ?? m.decision;
+    const cserelodik = matchOutcome({ ...m, ...(most ? { decision: most } : {}) }) === 'csere';
+    setDecisions({ ...decisions, [matchId]: cserelodik ? 'skip' : 'accept' });
     setHasWork(true);
     setSajatDontes(true);
     ujraKert();
@@ -2665,6 +2703,7 @@ export default function App() {
                 analysis={analysis}
                 selected={selected}
                 hivatalosIdk={hivatalosIdk}
+                dontesek={decisions}
                 onSelect={setSelected}
                 onToggle={iratKattintas}
               />
@@ -2700,6 +2739,7 @@ export default function App() {
             onMind={setupMind}
             onKovetkezo={setupKovetkezo}
             onNincs={setupNincs}
+            onCsoport={setupCsoport}
             onUjraVizsgalat={ujraVizsgalat}
             onKeziFelvitel={keziFelvitel}
             onUjKeszlet={() => setDialog('sajatKeszlet')}
@@ -2758,6 +2798,7 @@ export default function App() {
                 analysis={analysis}
                 selected={selected}
                 hivatalosIdk={hivatalosIdk}
+                dontesek={decisions}
                 onSelect={setSelected}
               />
             ) : (

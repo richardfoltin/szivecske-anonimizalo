@@ -200,6 +200,8 @@ export interface DocumentSetupProps {
   onKovetkezo: (id: string) => void;
   /** Ne cseréljük le egyiket sem: az eredeti szöveg marad. */
   onNincs: (id: string) => void;
+  /** Egy egész csoport ki- vagy bekapcsolása a fejlécéből. */
+  onCsoport: (fajta: Fajta, be: boolean) => void;
   /** Mindent, ami az iratban találat: egyetlen kattintással cserére. */
   onUjraVizsgalat: () => void;
   onKeziFelvitel: () => void;
@@ -359,15 +361,26 @@ const FAJTA_SUGO: Record<Fajta, string> = {
 function CsoportFejlec({
   fajta,
   darab,
+  be,
   kapcsolo,
 }: {
   fajta: Fajta;
   darab: number;
+  /**
+   * Cserélődik-e ebből a csoportból bármi.
+   *
+   * A FEJLÉC SZÍNE MONDJA EL — nem soronként egy felirat. Korábban minden
+   * kikapcsolt sor alatt ott állt, hogy „az eredeti szöveg bent marad az
+   * iratban”: húsz sornál hússzor ugyanaz a mondat, és a lényeg — hogy EGY
+   * egész csoporthoz nem nyúlunk — épp elveszett benne. A bekapcsolt csoport
+   * fejléce viseli a saját színét, a kikapcsolté elhalványul.
+   */
+  be: boolean;
   /** A csoport egészére szóló kapcsoló; ahol nincs, ott a fejléc egyszerű. */
   kapcsolo?: React.ReactNode;
 }) {
   return (
-    <div className="fghead" title={FAJTA_SUGO[fajta]}>
+    <div className={`fghead ${FAJTA_SZIN[fajta]}${be ? '' : ' ki'}`} title={FAJTA_SUGO[fajta]}>
       <div className="fgszoveg">
         <div className="t">
           {FAJTA_CIM[fajta]} <span className="count">{darab}</span>
@@ -378,6 +391,29 @@ function CsoportFejlec({
     </div>
   );
 }
+
+/**
+ * A CSOPORT SZÍNE UGYANAZ, MINT A KIEMELÉSÉ AZ IRATON.
+ *
+ * A bal oldali nézeten négy szín különbözteti meg a találatokat: név (rózsa),
+ * összeg (zöld), dátum (kék), hivatalos szereplő (ibolya). Ha a jobb oldali
+ * lista csoportjai semlegesek maradnának, a felhasználónak fejben kellene
+ * párosítania a kettőt — pedig ugyanarról a négy dologról van szó. A csoport
+ * fejléce ezért ugyanazt a színt viseli, amit az iratbeli kiemelés.
+ *
+ * A négy NÉV-JELLEGŰ fajta (személy, szervezet, hely, azonosító) egy színre
+ * megy, mert az iraton is egy színnel áll: mind a négy „név", a csere is
+ * ugyanaz rájuk. A csoportok elkülönítése a CÍMÜK dolga, nem a színé.
+ */
+const FAJTA_SZIN: Record<Fajta, string> = {
+  person: 'k-nev',
+  org: 'k-nev',
+  place: 'k-nev',
+  identifier: 'k-nev',
+  amount: 'k-osszeg',
+  date: 'k-datum',
+  hivatalos: 'k-hivatalos',
+};
 
 /* ─────────────────────────── építőelemek ─────────────────────────── */
 
@@ -505,6 +541,7 @@ export function DocumentSetup({
   onMind,
   onKovetkezo,
   onNincs,
+  onCsoport,
   onUjraVizsgalat,
   onKeziFelvitel,
   onUjKeszlet,
@@ -621,6 +658,7 @@ export function DocumentSetup({
               onMind={onMind}
               onKovetkezo={onKovetkezo}
               onNincs={onNincs}
+              onCsoport={onCsoport}
               onUjraVizsgalat={onUjraVizsgalat}
               onKeziFelvitel={onKeziFelvitel}
             />
@@ -855,6 +893,7 @@ function CsereLap({
   onMind,
   onKovetkezo,
   onNincs,
+  onCsoport,
   onUjraVizsgalat,
   onKeziFelvitel,
 }: {
@@ -871,6 +910,7 @@ function CsereLap({
   onMind: (id: string) => void;
   onKovetkezo: (id: string) => void;
   onNincs: (id: string) => void;
+  onCsoport: (fajta: Fajta, be: boolean) => void;
   onUjraVizsgalat: () => void;
   onKeziFelvitel: () => void;
 }) {
@@ -937,17 +977,18 @@ function CsereLap({
           />
         </Sor>
 
-        <Sor
-          cim="Készüljön visszafejtő kulcsfájl"
-          vezerloId={az('key')}
-          leiras="Melyik álnév melyik nevet takarja. Amíg megvan, a kimenet a GDPR szerint személyes adat."
-        >
-          <Kapcsolo
-            id={az('key')}
-            be={beallitasok.keepKey}
-            onValt={(be) => onBeallitas({ keepKey: be })}
-          />
-        </Sor>
+        {/*
+          A KULCSFÁJL KAPCSOLÓJA INNEN KIKERÜLT.
+
+          Ugyanezt a kérdést a mentés ablaka is felteszi — ott, ahol a
+          jelszót is meg kell adni hozzá, és ahol a döntésnek tényleg
+          következménye van. Két helyen ugyanaz a kapcsoló azt tanítja meg,
+          hogy az egyik állás valahol felülíródik; ráadásul a lapon beállított
+          érték csak a mentés ablakának INDULÓ állása volt, nem a végleges.
+
+          Az érték nem veszett el: a mentés ablaka továbbra is a legutóbbi
+          állásból indul (`keepKey`), csak most ott is dől el.
+        */}
       </div>
 
       {vizsgalat === 'megszakitva' && (
@@ -1026,22 +1067,37 @@ function CsereLap({
             if (sorok.length === 0) return null;
             return (
               <div className="fgroup" key={fajta}>
+                {/*
+                  MINDEN CSOPORT KAPCSOLHATÓ, nem csak az összeg és a dátum.
+
+                  Húsz név mellett a soronkénti „Nincs csere" húsz kattintás; a
+                  csoportkapcsoló egy. Az összeg és a dátum a saját FAJTA-
+                  kapcsolóját állítja (az a következő elemzésre is érvényes
+                  marad), a névcsoportok pedig a soraik döntését — a kettő
+                  ugyanúgy néz ki, mert a felhasználó számára ugyanaz a
+                  kérdés.
+                */}
                 <CsoportFejlec
                   fajta={fajta}
                   darab={sorok.length}
-                  {...(fajta === 'amount' || fajta === 'date'
-                    ? {
-                        kapcsolo: (
-                          <Kapcsolo
-                            id={az(fajta)}
-                            be={fajta === 'amount' ? beallitasok.replaceAmounts : beallitasok.shiftDates}
-                            onValt={(be) =>
-                              onBeallitas(fajta === 'amount' ? { replaceAmounts: be } : { shiftDates: be })
-                            }
-                          />
-                        ),
-                      }
-                    : {})}
+                  be={sorok.some((t) => t.cserelodik > 0)}
+                  kapcsolo={
+                    fajta === 'amount' || fajta === 'date' ? (
+                      <Kapcsolo
+                        id={az(fajta)}
+                        be={fajta === 'amount' ? beallitasok.replaceAmounts : beallitasok.shiftDates}
+                        onValt={(be) =>
+                          onBeallitas(fajta === 'amount' ? { replaceAmounts: be } : { shiftDates: be })
+                        }
+                      />
+                    ) : (
+                      <Kapcsolo
+                        id={az(fajta)}
+                        be={sorok.some((t) => t.cserelodik > 0)}
+                        onValt={(be) => onCsoport(fajta, be)}
+                      />
+                    )
+                  }
                 />
                 {sorok.map((t) => (
                   <TalaltSor
@@ -1121,28 +1177,35 @@ function HivatalosSzakasz({
     <div className={`fgroup keep${be ? ' nyitva' : ''}`}>
       <CsoportFejlec
         fajta="hivatalos"
-        darab={be ? sorok.length : bentMaradok.length}
+        darab={be && sorok.length > 0 ? sorok.length : bentMaradok.length}
+        be={be}
         {...(cserelheto ? { kapcsolo: <Kapcsolo id={az('officials')} be={be} onValt={onValt} /> } : {})}
       />
 
       {/*
-        BEKAPCSOLVA UGYANOLYAN SOROK, MINT MÁSHOL.
+        A SZAKASZ SOSEM ÜRÜL KI ÁTKAPCSOLÁSKOR.
 
-        Korábban a bekapcsolás a felek közé olvasztotta őket, és itt csak egy
-        kapcsoló maradt — a felhasználó tehát nem látta egy helyen, KIKET
-        érintett a döntése, és azt sem, mire cserélődnek. Innentől a szakasz
-        megtartja a saját bontását: minden névnél ott a csereszöveg és
-        ugyanaz a három gomb, mint a többi csoportban.
+        A kapcsoló átbillentése új elemzést indít, és az néhány tized
+        másodpercig tart. Ha a sorokat pusztán a kapcsoló állására kötnénk, a
+        szakasz ez alatt ÜRESEN állna: a nevek eltűnnének, majd más
+        magasságban visszajönnének — a felhasználó ezt ugrásnak látja, és
+        joggal, mert az.
+
+        Ezért a döntés nem a kapcsolón múlik, hanem azon, VAN-E MÁR SOR. Amíg
+        nincs, a törvény szerinti lista áll ott, ugyanazokkal a nevekkel; ha
+        megjött, a teljes sorok veszik át a helyét.
       */}
       {be && (
-        <>
-          <div className="keepfigy">
-            <b className="warntext">
-              Bírósági határozat közzétett változatában ez jogszabályba ütközik.
-            </b>{' '}
-            Csak akkor hagyd bekapcsolva, ha az irat nem közzétételre megy.
-          </div>
-          {sorok.map((t) => (
+        <div className="keepfigy">
+          <b className="warntext">
+            Bírósági határozat közzétett változatában ez jogszabályba ütközik.
+          </b>{' '}
+          Csak akkor hagyd bekapcsolva, ha az irat nem közzétételre megy.
+        </div>
+      )}
+
+      {be && sorok.length > 0
+        ? sorok.map((t) => (
             <TalaltSor
               key={t.id}
               tetel={t}
@@ -1151,17 +1214,13 @@ function HivatalosSzakasz({
               onKovetkezo={onKovetkezo}
               onNincs={onNincs}
             />
+          ))
+        : bentMaradok.map((b) => (
+            <div className="keeprow" key={`${b.name}|${b.why}`}>
+              <div className="val">{b.name}</div>
+              <div className="why">{b.why}</div>
+            </div>
           ))}
-        </>
-      )}
-
-      {!be &&
-        bentMaradok.map((b) => (
-          <div className="keeprow" key={`${b.name}|${b.why}`}>
-            <div className="val">{b.name}</div>
-            <div className="why">{b.why}</div>
-          </div>
-        ))}
     </div>
   );
 }
@@ -1327,7 +1386,10 @@ function TalaltSor({
         {(tetel.fajta === 'amount' || tetel.fajta === 'date') && tetel.elofordulas > 1 && (
           <span className="occ">példa az elsőre; a többivel ugyanez történik</span>
         )}
-        {nincs && <span className="warn">az eredeti szöveg bent marad az iratban</span>}
+        {/* Az „eredeti szöveg bent marad" felirat INNEN KIKERÜLT: minden
+            kikapcsolt sor alatt ott állt, tehát húsz sornál hússzor mondta
+            ugyanazt. Amit közölt, azt ma a csoport FEJLÉCÉNEK színe mondja el
+            egyszer — és az a képernyő tetején látszik, nem soronként. */}
         {atirt && !nincs && (
           <span className="occ">
             kézzel átírva — alapból: <b>{tetel.csere}</b>{' '}

@@ -539,11 +539,24 @@ textarea {
 .hl.nincs:hover {
   background: rgba(154, 141, 158, 0.14);
 }
+/*
+  A KIJELÖLÉS KERET, NEM KITÖLTÉS.
+
+  Itt egy erős rózsaszín háttér állt, ami FELÜLÍRTA a találat saját színét: egy
+  kikapcsolt összegre kattintva a jelölés rózsaszínben gyulladt ki, vagyis a
+  képernyő azt mondta, hogy cserélni fogjuk — miközben épp az ellenkezőjét
+  kapcsolta be a felhasználó. A két dolog két külön kérdésre válaszol:
+
+    a KITÖLTÉS azt mondja meg, MI TÖRTÉNIK a találattal,
+    a KERET azt, hogy MELYIKET NÉZZÜK ÉPPEN.
+
+  Ezért a kijelölés csak keretet ad, a kitöltéshez nem nyúl. Így a kattintás
+  után a szín AZONNAL a friss állapotot mutatja.
+*/
 .hl.selected {
-  background: rgba(196, 87, 125, 0.34);
-  box-shadow:
-    inset 0 -2px 0 var(--rose),
-    0 0 0 2px rgba(196, 87, 125, 0.35);
+  outline: 2px solid var(--rose-deep);
+  outline-offset: 1px;
+  border-radius: 2px;
 }
 
 .textview {
@@ -596,7 +609,7 @@ textarea {
   border-bottom: 1px dashed rgba(122, 110, 128, 0.7);
 }
 .textview mark.selected {
-  outline: 2px solid rgba(196, 87, 125, 0.45);
+  outline: 2px solid var(--rose-deep);
   outline-offset: 1px;
 }
 /* Kattintható nézetben a jelölés gomb: a mutató és a fókuszkeret is ezt mondja. */
@@ -1584,11 +1597,22 @@ textarea:focus {
   padding-top: 5px;
   padding-bottom: 5px;
 }
+/*
+  A MÉRET NEM HALVÁNYODIK EL.
+
+  Itt `opacity: 0.82` állt, ami a rózsaszín gombon fehér betűvel épp a
+  kontrasztot vitte el: a „2,7 GB" olvashatatlanul beleolvadt a háttérbe. Egy
+  letöltés gombon a MÉRET a legfontosabb adat — az dönti el, belevág-e a
+  felhasználó —, tehát nem az a rovat, amit halványítani szabad.
+
+  Ami megkülönbözteti a felirattól, az a betűméret és a sortörés, nem az
+  átlátszóság. A szín a gombé marad, teljes fedéssel.
+*/
 .btn.tordelt .meret {
-  font-size: 10.5px;
-  font-weight: 600;
-  opacity: 0.82;
+  font-size: 11px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
 }
 
 /*
@@ -3057,13 +3081,56 @@ textarea:focus {
   szélén nincs kérdés: a kapcsoló arra vonatkozik, aminek a nevét mellette
   olvassa a felhasználó.
 */
+/*
+  A CSOPORT FEJLÉCE UGYANAZT A SZÍNT VISELI, MINT A KIEMELÉS AZ IRATON.
+
+  Bal oldalt négy szín különbözteti meg a találatokat; ha a jobb oldali lista
+  semleges maradna, a felhasználónak fejben kellene párosítania a kettőt. A
+  bal szélen futó vastag csík ezt köti össze — ugyanaz a négy szín, ugyanabban
+  a jelentésben.
+
+  A SZÍN EGYBEN ÁLLAPOTJELZŐ IS. Bekapcsolt csoport: telt szín. Kikapcsolt:
+  halvány, szürkés csík. Ez váltotta ki a soronkénti „az eredeti szöveg bent
+  marad az iratban" feliratot — húsz sornál hússzor ugyanaz a mondat, a
+  lényeg meg elveszett benne.
+
+  A szín SOSEM AZ EGYETLEN JEL: mellette ott a kapcsoló „Be"/„Ki" felirata is.
+*/
 .fghead {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 9px 13px;
+  padding: 9px 13px 9px 11px;
   background: var(--surface-2);
   border-bottom: 1px solid var(--line);
+  border-left: 3px solid var(--fgszin, var(--line));
+  transition: border-color 0.16s, background 0.16s;
+}
+.fghead.k-nev {
+  --fgszin: var(--rose);
+  background: rgba(196, 87, 125, 0.07);
+}
+.fghead.k-osszeg {
+  --fgszin: #17806a;
+  background: rgba(23, 128, 106, 0.07);
+}
+.fghead.k-datum {
+  --fgszin: #2e6aa8;
+  background: rgba(46, 106, 168, 0.07);
+}
+.fghead.k-hivatalos {
+  --fgszin: #7a4fa8;
+  background: rgba(122, 79, 168, 0.08);
+}
+/* KIKAPCSOLVA: a csík elszürkül, a háttér semleges lesz. A csoport címe és
+   darabszáma olvasható marad — nem eltüntetjük, csak hátrébb tesszük. */
+.fghead.ki {
+  --fgszin: var(--line);
+  background: var(--surface-2);
+}
+.fghead.ki .t,
+.fghead.ki .s {
+  color: var(--muted);
 }
 .fgszoveg {
   flex: 1 1 auto;
@@ -3239,17 +3306,15 @@ textarea:focus {
   border-color: var(--line-soft);
 }
 
-/* A törvény szerint bent maradó nevek. Nem hibák, ezért nem borostyán és nem
-   rózsa — halk, zöldes keret, amiről látszik, hogy így van rendben. */
-.fgroup.keep .fghead {
-  background: var(--mint-soft);
-  border-bottom-color: #cfe6dd;
-}
-.fgroup.keep .fghead .count {
-  background: var(--surface);
-  border-color: #cfe6dd;
-  color: var(--mint);
-}
+/*
+  A HIVATALOS SZEREPLŐK SZÍNE INNEN KIKERÜLT.
+
+  Korábban külön zöld (majd bekapcsolva borostyán) színt kapott. Ma ugyanabból
+  a négy színből dolgozik, mint a többi csoport és az iratbeli kiemelés: az
+  ibolyából (`.fghead.k-hivatalos`). A bekapcsolt/kikapcsolt különbséget nem
+  egy MÁSIK szín adja, hanem ugyanannak a színnek a megléte vagy hiánya —
+  pontosan úgy, ahogy a többi csoportnál.
+*/
 .keeprow {
   padding: 8px 13px;
   border-bottom: 1px solid var(--line-soft);
@@ -3282,14 +3347,7 @@ textarea:focus {
 .keepctl .setrow:last-child {
   border-bottom: 0;
 }
-.fgroup.keep.nyitva .fghead {
-  background: var(--amber-soft);
-  border-bottom-color: #e8d5ae;
-}
-.fgroup.keep.nyitva .fghead .count {
-  border-color: #e8d5ae;
-  color: var(--amber);
-}
+
 .warntext {
   color: var(--amber);
   font-weight: 600;

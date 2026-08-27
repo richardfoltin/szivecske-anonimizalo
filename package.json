@@ -6,7 +6,11 @@
   "author": {
     "name": "Foltin Csaba"
   },
-  "license": "UNLICENSED",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/richardfoltin/szivecske-anonimizalo.git"
+  },
   "type": "module",
   "scripts": {
     "spike1": "tsx spike/run-spike1.ts",
@@ -17,6 +21,7 @@
     "build:preload": "esbuild electron/preload.ts --bundle --platform=node --format=cjs --external:electron --outfile=dist-electron/preload.cjs",
     "build:ui": "vite build",
     "dist": "npm run build:electron && npm run build:preload && npm run build:aiworker && npm run build:ui && electron-builder",
+    "dist:ci": "npm run build:electron && npm run build:preload && npm run build:aiworker && npm run build:ui && electron-builder --publish never",
     "dev": "npm run build:electron && npm run build:preload && npm run build:aiworker && concurrently -k \"vite\" \"wait-on tcp:5273 && cross-env SZIVECSKE_DEV_URL=http://localhost:5273 electron .\"",
     "start": "npm run build:electron && npm run build:preload && npm run build:aiworker && npm run build:ui && electron .",
     "app": "npm run build:electron && npm run build:preload && cross-env SZIVECSKE_DEV_URL=http://localhost:5273 electron .",

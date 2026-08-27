@@ -1,0 +1,44 @@
+# A TESZTKÉSZLET MINDEN PUSH-RA — telepítő nélkül.
+#
+# A kiadás építése (`kiadas.yml`) tíz percig foglal egy Windows-futtatót, ezért
+# csak címkére indul. A tesztek viszont olcsók, és ez a program pont olyan,
+# amiben egy csendes elromlás nem látszik a képernyőn: a kimenetből kimaradt
+# csere ugyanúgy „kész fájlt" ad, csak épp bent maradt benne egy név.
+#
+# Ezért fut le minden push-ra és minden beolvasztási kérésre, és ezért NEM
+# `continue-on-error`: ha piros, az azt jelenti, hogy a tár állapota nem
+# adható ki.
+
+name: Ellenőrzés
+
+on:
+  push:
+    branches: ['**']
+    tags-ignore: ['v*'] # címkénél a kiadás munkafolyamata úgyis lefuttatja
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tesztek:
+    # UGYANAZON A RENDSZEREN, amin a program fut. Nem kényelmi kérdés: a
+    # PDF-motor a Windows betűkészleteire esik vissza pótbetűként
+    # (`FALLBACK_FONTS`, src/app/session.ts), és a DOCX-tesztek a
+    # sorvégkezelést is mérik.
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Függőségek
+        run: npm ci
+
+      # A `test:all` első lépése a típusellenőrzés (`tsc --noEmit`), tehát a
+      # fordítási hibák is itt bukkannak ki — nem kell külön lépés rá.
+      - name: Teljes tesztkészlet
+        run: npm run test:all

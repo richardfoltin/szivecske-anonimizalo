@@ -1,27 +1,49 @@
-Szivecske Anonimizáló
+MIT License
+
 Copyright (c) 2026 Foltin Csaba
-Minden jog fenntartva. / All rights reserved.
 
-Ez a mű nem szabad szoftver. A szerző semmilyen engedélyt nem ad a program vagy
-forráskódja használatára, másolására, módosítására, egyesítésére, közzétételére,
-terjesztésére, allicencelésére vagy értékesítésére. Ez a fájl a package.json
-`"license": "UNLICENSED"` bejegyzésének a kifejtése, nem eltérés tőle.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-A privát tárolóhoz adott hozzáférés önmagában nem jelent felhasználási engedélyt.
-Ha valakinek jogokat akarunk adni, azt külön, írásban kell megtenni.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-A PROGRAM „AHOGY VAN” ÁLLAPOTBAN ÉRHETŐ EL, MINDENFÉLE — KIFEJEZETT VAGY
-VÉLELMEZETT — JÓTÁLLÁS NÉLKÜL. A SZERZŐT NEM TERHELI FELELŐSSÉG A PROGRAM
-HASZNÁLATÁBÓL EREDŐ SEMMILYEN KÁRÉRT. Ez a kikötés jogi iratokat kezelő
-programnál nem formaság: az anonimizálás eredményét minden esetben emberi
-átnézés kell hogy kövesse, mielőtt az irat kikerül.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
-── Harmadik felektől származó részek ────────────────────────────────────────
+--------------------------------------------------------------------------
 
-A fenti szöveg KIZÁRÓLAG a szerző saját munkájára vonatkozik. A program más
-szerzőktől származó összetevőket is használ és szállít — köztük egy Apache-2.0
-licencű nyelvi modellt és több nyílt forráskódú npm-csomagot —, amelyekre a
-saját licenceik érvényesek, és amelyek feltételeit ez a fájl nem írja felül.
+MAGYARUL, TÁJÉKOZTATÁSUL — a fenti angol szöveg az irányadó
 
-Ezek tételes felsorolása, a szállított és a csak fejlesztéskor használt részek
-szétválasztásával: docs/licencek.md
+A program szabadon használható, másolható, módosítható és továbbadható, akár
+kereskedelmi célra is; az egyetlen feltétel, hogy a fenti szerzői jogi közlés
+és engedélyszöveg minden másolatban benne maradjon.
+
+AMIRE A LICENC NEM VONATKOZIK, és amit külön meg kell nézni:
+
+  - A NYELVI MODELL. Nem ezzel a programmal érkezik: a felhasználó tölti le
+    futásidőben. A saját licence (Apache-2.0) és a származása a
+    docs/licencek.md fájlban áll.
+  - A NÉVKÉSZLETEK. A szállított négy készletből három saját alkotás, a
+    „Kőkorszak" viszont védjegyzett műből származó szereplőneveket használ.
+    A feltételeket a data/themes/kokorszak.json `license_note` mezője és a
+    docs/licencek.md rögzíti — nyilvánosan terjesztett termékben a jogosult
+    engedélye nélkül nem használható.
+  - A HARMADIK FELEK KÓDJA. Az npm-csomagok és a beágyazott Tabler-ikonok
+    saját licenc alatt állnak; a teljes felsorolás a docs/licencek.md-ben.
+
+FIGYELMEZTETÉS A PROGRAM RENDELTETÉSÉRŐL
+
+Ez a program személyes adatok kitakarásában segít, de a felelősséget nem
+veszi át. A kimenetet minden esetben át kell nézni, mielőtt az irat kikerül a
+kezünkből: a nyelvi modell tévedhet, és a program maga is megmondja, hol volt
+bizonytalan. A „MINDEN JÓTÁLLÁS NÉLKÜL" kitétel fent nem formaság.

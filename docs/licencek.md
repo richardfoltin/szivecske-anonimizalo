@@ -16,12 +16,26 @@ feltüntetési és mellékelési kötelezettségek is járnak vele.
 | | |
 |---|---|
 | Szerző | Foltin Csaba |
-| Licenc | `UNLICENSED` — minden jog fenntartva, lásd a gyökérben álló `LICENSE` fájlt |
-| Tár | privát |
+| Licenc | **MIT** — lásd a gyökérben álló `LICENSE` fájlt |
+| Tár | **publikus** |
 
-Privát tárolónál ez rendben van. Egyetlen dolgot érdemes tudni: az `UNLICENSED`
-a saját kódra vonatkozik, és **nem** írja felül az alábbi harmadik felek
-feltételeit. A kettő párhuzamosan él.
+**A tár publikus lett, a licenc pedig `UNLICENSED`-ről MIT-re változott.** A
+kettő együtt jár: egy nyilvános tárban az `UNLICENSED` azt jelentette volna,
+hogy a kód látható, de senki nem használhatja — ami félreértésre hív, nem
+szándékot közöl.
+
+Az MIT a saját kódra vonatkozik, és **nem** írja felül az alábbi harmadik
+felek feltételeit. A kettő párhuzamosan él, és a különbség itt nem elméleti:
+
+- a **nyelvi modell** nem ezzel a programmal érkezik, hanem a felhasználó
+  tölti le futásidőben — a saját licence (Apache-2.0) szerint;
+- a **„Kőkorszak" névkészlet** védjegyzett műből származó szereplőneveket
+  használ, tehát az MIT rá NEM ad engedélyt. Nyilvánosan terjesztett vagy
+  értékesített termékben a jogosult engedélye nélkül nem használható; a másik
+  három szállított készlet egyetlen védett nevet sem tartalmaz.
+
+A `package.json` `private: true` mezője megmarad: az nem a licencről szól,
+hanem arról, hogy a csomag véletlenül se kerüljön föl az npm-re.
 
 ---
 
