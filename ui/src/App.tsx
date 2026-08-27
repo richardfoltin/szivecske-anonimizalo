@@ -32,6 +32,7 @@ import {
   type VizsgalatAllapot,
 } from './documentSetup';
 import {
+  AutoDecisionReport,
   AutoReportDialog,
   ExitDialog,
   ExportDialog,
@@ -3313,10 +3314,31 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
                 <OsszegzoLap
                   analysis={analysis}
                   fajtak={jelmagyarazat}
-                  autoDecidedCount={autoDecidedCount}
+                  /*
+                    A JELENTÉS MAGA MEGY ÁT, NEM EGY GOMB HOZZÁ.
+
+                    Ugyanaz a `AutoDecisionReport`, amit a mentés utáni ablak
+                    is kirajzol — nem másolat: két külön lista előbb-utóbb két
+                    különbözőt mondana ugyanarról a tíz találatról. A
+                    `panels.tsx` nem tudja maga meghívni (a `dialogs.tsx` már
+                    onnan importál, a kör oda-vissza nem mehet), ezért itt
+                    állítjuk elő, ahol mindkettő látszik.
+                  */
+                  autoJelentes={
+                    autoDecidedCount > 0 ? (
+                      <AutoDecisionReport
+                        rows={autoAccepted}
+                        /* „Nézzük át együtt" = ÁTVÁLTÁS AZ ÁTNÉZŐS ÚTRA
+                           (`switchToReview`), nem fülváltás: a program
+                           döntéseit csak úgy lehet felülbírálni, ha az irat
+                           újra kérdezős módban fut le. */
+                        onReview={switchToReview}
+                        saved={false}
+                      />
+                    ) : null
+                  }
                   mentesAkadaly={mentesAkadaly}
                   onVissza={() => setSetupFul('csere')}
-                  onAutoReport={() => setDialog('autoReport')}
                 />
               ) : (
                 /*

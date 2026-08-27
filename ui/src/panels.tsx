@@ -593,24 +593,42 @@ function escapeRe(s: string): string {
 export function OsszegzoLap({
   analysis,
   fajtak,
-  autoDecidedCount,
+  autoJelentes,
   mentesAkadaly,
   onVissza,
-  onAutoReport,
 }: {
   analysis: AnalysisResult;
   /** A jelmagyarázat sorai (fajta + darab) — UGYANABBÓL a számításból, mint a bal oldali sáv. */
   fajtak: { kulcs: string; osztaly: string; cimke: string; db: number }[];
-  autoDecidedCount: number;
+  /**
+   * AMIRŐL A PROGRAM DÖNTÖTT HELYETTED — kész lista, nem szám és nem gomb.
+   *
+   * Eddig egy „Melyek ezek?" gomb állt itt, ami ablakot nyitott: a felhasználó
+   * a mentés előtti utolsó képernyőn azt látta, hogy 10 dologról döntöttek
+   * helyette, és hogy ezért még kattintania kell egyet. A lista viszont pont
+   * ide való — ez az az állomás, ahol az irat átnézése történik.
+   *
+   * Csomópontként érkezik, nem sorokként: a jelentés a `dialogs.tsx`-ben lakik
+   * (a mentés utáni ablak is ugyanazt mutatja), és ez a fájl nem hívhatja meg
+   * onnan — a `dialogs.tsx` már innen importál, a kör pedig oda-vissza nem
+   * mehet. `null`, ha a program nem döntött semmiről.
+   */
+  autoJelentes: React.ReactNode;
   /** Miért nem lehet menteni; `null`, ha mehet. A gomb a lap láblécében áll. */
   mentesAkadaly: string | null;
   /** Vissza a „Mit cserélünk?" fülre — ott lehet dönteni a bizonytalanokról. */
   onVissza: () => void;
-  onAutoReport: () => void;
 }) {
   const csere = analysis.outcomes?.csere ?? analysis.counts.auto;
   const nincs = analysis.outcomes?.nincs ?? analysis.counts.reject;
   const bizonytalan = analysis.outcomes?.bizonytalan ?? analysis.counts.review;
+  /*
+    UGYANAZ A MONDAT EGYSZER. A dátumterv iratrészenként keletkezik, és a
+    „csak hónap pontossággal szerepel" figyelmeztetést mindegyik külön adja ki
+    — a listán ettől kétszer-háromszor állt ugyanaz a bekezdés, csak más
+    darabszámmal. A szó szerinti egyezéseket itt vonjuk össze.
+  */
+  const figyelmeztetesek = useMemo(() => [...new Set(analysis.warnings)], [analysis.warnings]);
 
   return (
     <>
@@ -623,12 +641,6 @@ export function OsszegzoLap({
       </div>
 
       <div className="osszegzo">
-        {analysis.warnings.map((w, i) => (
-          <div key={i} className="note">
-            {w}
-          </div>
-        ))}
-
         <div className="resultrow fo">
           <span>Lecserélve</span>
           <span className="v">{csere}</span>
@@ -662,22 +674,44 @@ export function OsszegzoLap({
             <b>{bizonytalan} találat még bizonytalan</b> — ezek most nem cserélődnek. A beállító
             lapon a borostyán pöttyös soroknál egyenként végigmehetsz rajtuk.
             <div className="pathacts">
-              <button className="btn sm" onClick={onVissza}>
+              {/* UGYANAZ A BOROSTYÁN, mint a beállító lap „Végignézem"
+                  gombján: mindkettő ugyanoda visz, ugyanazért. */}
+              <button className="btn sm varakozik" onClick={onVissza}>
                 Megnézem őket
               </button>
             </div>
           </div>
         )}
 
-        {autoDecidedCount > 0 && (
-          <div className="note">
-            <b>{autoDecidedCount} bizonytalan találatról a program döntött</b> ember helyett.
-            <div className="pathacts">
-              <button className="btn sm" onClick={onAutoReport}>
-                Melyek ezek?
-              </button>
-            </div>
-          </div>
+        {/* A jelentés MAGA, nem egy gomb hozzá. */}
+        {autoJelentes}
+
+        {/*
+          A FIGYELMEZTETÉSEK ÖSSZECSUKVA — nem eltüntetve.
+
+          Öt-hat bekezdésnyi borostyán szöveg állt itt a lap tetején, a
+          számok ELŐTT: a felhasználó a mentés előtti utolsó képernyőn először
+          egy fal szöveget kapott, és csak alatta azt, hogy mi lett az
+          irattal. Ráadásul ugyanaz a mondat többször is szerepelt, más
+          darabszámmal.
+
+          Törölni mégsem szabad: van köztük olyan, hogy „a modell 9 találatát
+          nem tudtuk értelmezni — ezeket kézzel kell felvenni". Egy sorba
+          csukva ott marad, kinyitható, és ugyanez a lista bekerül a mentés
+          melletti jegyzőkönyvbe (FIGYELMEZTETÉSEK rovat) és a mentés utáni
+          ablakba is — tehát három helyen érhető el, csak nem áll az útban.
+        */}
+        {figyelmeztetesek.length > 0 && (
+          <details className="figyelmek">
+            <summary>
+              {figyelmeztetesek.length} figyelmeztetés az elemzésből
+            </summary>
+            {figyelmeztetesek.map((w, i) => (
+              <div key={i} className="note">
+                {w}
+              </div>
+            ))}
+          </details>
         )}
 
         {mentesAkadaly !== null && <div className="note bad">{mentesAkadaly}</div>}

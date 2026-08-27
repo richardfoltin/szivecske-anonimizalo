@@ -1413,16 +1413,42 @@ function HivatalosSzakasz({
                 {b.name}
               </span>
               <div className="fctl" />
+              {/*
+                A JOGSZABÁLY EGYSZER ÁLL A KÉPERNYŐN, NEM SORONKÉNT.
+
+                Itt korábban két címke ült egymás mellett, és mindkettő
+                ugyanazt mondta: „— a törvény szerint a neve bent marad" és „a
+                Bszi. 166. § (2) szerint bent marad". Nyolc-tíz név mellett
+                ugyanez a mondat tizenhatszor. A hivatkozást a SZAKASZ FEJLÉCE
+                mondja ki (`CSOPORT_LEIRAS.hivatalos`), egyszer, ahol a
+                szabály hatálya is van.
+
+                Ami soronként MÁS, az marad: a szerep — „eljáró bíró",
+                „hatóság vagy bíróság", „eljáró ügyvédi iroda". Ez az, amiért
+                ez a név ezen a listán van. A teljes indoklás a buboréksúgóban.
+              */}
               <div className="fmeta">
                 <span className="pill kind" title={b.why}>
-                  {b.why}
+                  {szerepBol(b.why)}
                 </span>
-                <span className="occ">a Bszi. 166. § (2) szerint bent marad</span>
               </div>
             </div>
           ))}
     </div>
   );
+}
+
+/**
+ * A MEGTARTÁS INDOKÁBÓL CSAK A SZEREP.
+ *
+ * A motor egy mondatot ad („eljáró bíró — a törvény szerint a neve bent
+ * marad"): elöl az, ami soronként más, a gondolatjel után az, ami mindegyikre
+ * ugyanaz. A képernyőn az elsőre van szükség; a másodikat a szakasz fejléce
+ * mondja ki egyszer. A teljes mondat a buboréksúgóban marad, tehát nem vész el.
+ */
+function szerepBol(why: string): string {
+  const i = why.indexOf(' — ');
+  return i < 0 ? why : why.slice(0, i);
 }
 
 /**
@@ -1652,9 +1678,24 @@ function TalaltSor({
               </button>
             </span>
           ) : (
+            /*
+              A GOMB KIEMELKEDIK, HA VAN MIT VÉGIGNÉZNI.
+
+              Halvány szellemgombként minden soron ugyanúgy nézett ki — azon
+              is, ahol a program mindenről döntött, és azon is, ahol tíz
+              előfordulás vár emberre. A borostyán UGYANAZ a szín, mint a
+              bizonytalan találat pöttyéé a sor másik végén és a kiemelésé az
+              iraton: a szem így köti össze, hogy ez a gomb pont azokhoz visz.
+              Ahol nincs eldöntetlen, ott marad a halvány gomb — az végignézés,
+              nem teendő.
+            */
             <button
-              className="btn ghost sm lepnyit"
-              title="Előfordulásról előfordulásra az iratban, egyenkénti döntéssel"
+              className={`btn ghost sm lepnyit${tetel.bizonytalanDb > 0 ? ' varakozik' : ''}`}
+              title={
+                tetel.bizonytalanDb > 0
+                  ? `${tetel.bizonytalanDb} előfordulásról még senki nem döntött — menj végig rajtuk egyesével`
+                  : 'Előfordulásról előfordulásra az iratban, egyenkénti döntéssel'
+              }
               onClick={() => onLepesKezd(tetel.id)}
             >
               Végignézem
