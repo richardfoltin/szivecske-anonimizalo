@@ -72,6 +72,15 @@ spike/out/*
 # baleset az, hogy egy éles irat megnyitáskor vagy mentéskor a projektkönyvtárba
 # kerül. A gyökérben álló irat ezért alapból nem követett. Ez nem érinti a
 # tesztadatokat: azok a samples/ és a spike/out/ alatt vannak, nem itt.
+# A MINTA GYÖKÉR-HORGONYZOTT (`/` előtag), és ez SZÁNDÉKOS, nem hiányosság:
+# a `samples/iratok/*.pdf` és a `spike/out/keresetlevel.*` KÖVETETT tesztadat,
+# egy általános `*.pdf` tehát azokat is kizárná — és a friss klónon öt
+# tesztkészlet dőlne el tőle.
+#
+# A rés, amit ez nyitva hagy: egy alkönyvtárba (docs/, test/) mentett valódi
+# irat nem akad fenn rajta. Ezt a MÁSODIK ZÁR fogja meg — a
+# `scripts/auto-commit.sh` a commit előtt átnézi, mit venne fel, és veszélyes
+# mintánál megáll. A gitignore a szokásos utat zárja, a vészfék a szokatlant.
 /*.pdf
 /*.docx
 /*.doc
@@ -95,6 +104,16 @@ npm-debug.log*
 .env.*
 *.pfx
 *.p12
+*.pem
+*.key
+*.crt
+*.cer
+*.jks
+*.keystore
+id_rsa*
+id_ed25519*
+.npmrc
+.netrc
 
 .vscode/
 .idea/

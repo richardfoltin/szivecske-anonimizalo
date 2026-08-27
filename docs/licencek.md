@@ -240,28 +240,54 @@ teljes személyi adatsorral: névvel, lakcímmel, adóazonosítóval, TAJ-számm
 telefonnal, e-mail címmel, bankszámlaszámmal. Mivel ezek felkerülnek a tárba, nem
 elég feltételezni, hogy kitaláltak — meg is néztem.
 
-**Az azonosítók ellenőrzőszáma nem stimmel, tehát nem tartoznak élő nyilvántartási
-tételhez:**
+**Az azonosítók többsége már az ellenőrzőszámán elbukik, tehát nem tartozhat élő
+nyilvántartási tételhez.** A táblázat MINDEN mintaazonosítót felsorol, a
+kivételeket is — az alábbi eredményeket a program saját ellenőrzője adta
+(`adoazonositoOk`, `tajOk`, `src/hu/azonositok.ts`), nem kézi számolás:
 
 | Adat | Minta | Eredmény |
 |---|---|---|
 | adóazonosító jel | `8442130976` (felperes) | ellenőrzőszám **érvénytelen** |
 | adóazonosító jel | `8391764205` (I. r. alperes) | ellenőrzőszám **érvénytelen** |
+| adóazonosító jel | `8517029364` (II. r. alperes) | ellenőrzőszám **érvényes** — lásd alább |
+| TAJ-szám | `041 273 856` | ellenőrzőszám **érvényes** — lásd alább |
 | bankszámlaszám | `10402142-49575354-56561008` | a három blokkból csak az első ad érvényes GIRO-ellenőrzőszámot |
 | IBAN | `HU42 1040 2142 4957 5354 5656 1008` | mod-97 maradék 64 az előírt 1 helyett — **érvénytelen** |
 
 Ezt a projekt saját auditja is rögzíti (`docs/hatralevo-reszletek.json`), ott
 kifejezetten „fiktív irat”-ként hivatkozva rájuk.
 
-**Két apró megjegyzés, a teljesség kedvéért:**
+**A KÉT ÉRVÉNYES ELLENŐRZŐSZÁMRÓL — mert a szakasz állítása enélkül hamis volna.**
 
-- A `041 273 856` TAJ-szám ellenőrzőszáma történetesen **helyes**. Ettől még nem
-  köthető senkihez — egy kilencjegyű szám tízből egyszer véletlenül is átmegy a
-  próbán —, és az irat többi adata igazoltan kitalált. Ha valaki mégis kényelmetlennek
-  találja, a `samples/*.json` és a belőlük gyártott minták cseréje egy szerkesztés.
+Ez a bekezdés egy korábbi hiba javítása: a táblázat eredetileg csak a két
+érvénytelen adóazonosítót sorolta fel, a fölötte álló mondat viszont ÁLTALÁNOS
+állítást tett („az azonosítók ellenőrzőszáma nem stimmel”). A II. r. alperes
+adóazonosítójára ez nem igaz, és ezt egy külső átnézés vette észre — pont abban
+a dokumentumban, aminek az a dolga, hogy a minták közzétételét megindokolja.
+
+Amit az érvényes ellenőrzőszám JELENT: hogy a szám alaki próbán átmegy. Amit NEM
+jelent: hogy kiadták valakinek. Az adóazonosító jel tíz számjegy egy
+ellenőrzőszámmal — véletlenszerű számsor tizenegyből egyszer átmegy a próbán —, a
+TAJ kilenc számjegy, ott tízből egyszer. Két találat hat azonosító között tehát
+pontosan az, amit a véletlentől várni lehet, és nem utal arra, hogy a számokat
+valódi nyilvántartásból másolták volna.
+
+Ami az érvényességnél többet mond: a minták körül MINDEN MÁS kitalált — a nevek,
+a lakcímek, a cégnevek, az ügyszám, a bíróság —, és a bankszámlaszám meg az IBAN
+elbukik a saját próbáján. Egy valódi iratból átvett adatsor nem viselkedne így.
+
+Ha valaki mégis kényelmetlennek találja: a `samples/*.json` és a belőlük gyártott
+minták cseréje egyetlen szerkesztés, és a két számot ellenőrzőszám-hibásra
+állítva a táblázat minden sora „érvénytelen” lesz.
+
+**Egy megjegyzés az e-mail címről:**
+
 - A `kovacs.janos58@freemail.hu` cím létező szolgáltatónál van. Ez a mintában
   szándékos: az egyik teszt épp azt méri, hogy a program az e-mail címbe *rejtett*
   nevet is megtalálja. Valódi postafiókra utaló jel nincs.
+- A `docs/zaro-audit.md` egy `kis.robert@gmail.com` tesztcímet is idéz, míg a
+  többi tesztcím a `pelda.hu` tartományt használja. Kitalált, de a
+  következetesség kedvéért érdemes lecserélni `pelda.hu`-ra.
 
 **Következtetés: a mintairatok felmehetnek a tárba.**
 
