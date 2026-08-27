@@ -1,0 +1,362 @@
+{
+ "id": "semleges_magyar_en",
+ "lang": "en",
+ "family": "semleges_magyar",
+ "name_hu": "Semleges angol nevek",
+ "description_hu": "A „Semleges magyar nevek” készlet angol párja: hétköznapi, feltűnésmentes angol nevek olyan iratokhoz, amelyeknek anonimizálás után is normálisan kell olvasódniuk. Szándékosan unalmas. Magyar iratba való: minden név magyar toldalékot kap, a KIEJTÉSE szerint — Bruce-szal, Wrighttal, Meredithtel, Barlow-val.",
+ "license_note": "Az utónevek angol köznyelvi szavak és anyakönyvezhető angol utónevek, a vezetéknevek és a helységnevek saját képzésű összetételek az angol névadás szokásos utótagjaiból (-ford, -wood, -wick, -moor). Egyik sem valós, azonosítható személy neve, és egyik sem védjegy. A cégformák (Kft., Zrt., Bt.) és az intézménymegjelölések magyarok, mert a pszeudonim magyar iratba kerül. A ragozási kivételeket — kiejtés szerinti hangrend, néma véghangzó, kötőjeles kapcsolás — alakonként ember ellenőrizte a program ragozó motorjával.",
+ "given_names": [
+  {
+   "form": "Bruce",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "Néma szó végi e, a kiejtett véghang [sz]: Bruce-szal, Bruce-t.",
+   "overrides": {
+    "hyphenate": true,
+    "ins": "Bruce-szal"
+   }
+  },
+  {
+   "form": "Edwin",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Gordon",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Malcolm",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Warren",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Duncan",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Clifford",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Rupert",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Harlan",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Everett",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": "Eleve kettőzött t: Everett-tel és Everett-től."
+  },
+  {
+   "form": "Hester",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Maud",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Winifred",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Muriel",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Harriet",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Rosalind",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Marion",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Gwendolen",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Cordelia",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Meredith",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": "A szó végi th kiejtett hangja [t]: Meredithtel, mint Tóthtal."
+  }
+ ],
+ "surnames": [
+  {
+   "form": "Wright",
+   "harmony": "back",
+   "notes": "Kiejtve [rájt]: mély hangrend, és a -val alakja Wrighttal."
+  },
+  {
+   "form": "Ashford",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Barlow",
+   "harmony": "back",
+   "notes": "A szó végi ow magánhangzót jelöl: a toldalék kötőjellel kapcsolódik, mint Glasgow-ban.",
+   "overrides": {
+    "hyphenate": true,
+    "forms": {
+     "SUP": "Barlow-n",
+     "PL": "Barlow-k"
+    }
+   }
+  },
+  {
+   "form": "Hensley",
+   "harmony": "front_unrounded",
+   "notes": "Szó végi y: a toldalék kötőjel nélkül kapcsolódik — Hensleyvel, Hensleyt, Hensleyn.",
+   "overrides": {
+    "acc": "Hensleyt",
+    "ins": "Hensleyvel",
+    "forms": {
+     "SUP": "Hensleyn",
+     "PL": "Hensleyk"
+    }
+   }
+  },
+  {
+   "form": "Norwood",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Whitcomb",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Elverton",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Hartwell",
+   "harmony": "front_unrounded",
+   "notes": "Eleve kettőzött l: Hartwell-lel."
+  },
+  {
+   "form": "Redmond",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Sinclair",
+   "harmony": "front_unrounded",
+   "notes": "Kiejtve [szinklér]: az ai betűkapcsolat magas hangot jelöl — Sinclairnek."
+  },
+  {
+   "form": "Pemberton",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Lockwood",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Marsden",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Fenwick",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Bramwell",
+   "harmony": "front_unrounded",
+   "notes": "Eleve kettőzött l: Bramwell-lel."
+  },
+  {
+   "form": "Osgood",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Rutherford",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Ackroyd",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Prescott",
+   "harmony": "back",
+   "notes": "Eleve kettőzött t: Prescott-tal és Prescott-tól."
+  }
+ ],
+ "org_parts": [
+  "Ashford",
+  "Norwood",
+  "Elverton",
+  "Hartwell",
+  "Redmond",
+  "Pemberton",
+  "Lockwood",
+  "Fenwick",
+  "Bramwell",
+  "Osgood",
+  "Rutherford",
+  "Prescott"
+ ],
+ "org_names": [
+  {
+   "form": "Ashford Kft.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Norwood Zrt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Elverton Bt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Lockwood Kft.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Pemberton Zrt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Redmond Bt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Hartwell Általános Iskola",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Fenwick Kórház",
+   "kind": "institution",
+   "notes": "A -ház tárgyesete kötőhangzós: Kórházat, nem Kórházt.",
+   "overrides": {
+    "acc": "Kórházat"
+   }
+  },
+  {
+   "form": "Osgood Alapítvány",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Bramwell Óvoda",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Rutherford Egyesület",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Marsden Idősek Otthona",
+   "kind": "institution",
+   "notes": ""
+  }
+ ],
+ "place_names": [
+  {
+   "form": "Kingsford",
+   "locative": "ine"
+  },
+  {
+   "form": "Netherton",
+   "locative": "ine"
+  },
+  {
+   "form": "Bramford",
+   "locative": "ine"
+  },
+  {
+   "form": "Longholt",
+   "locative": "ine"
+  },
+  {
+   "form": "Westmoor",
+   "locative": "ine"
+  },
+  {
+   "form": "Oakstead",
+   "locative": "ine",
+   "overrides": {
+    "harmony": "front_unrounded"
+   }
+  },
+  {
+   "form": "Marlbrook",
+   "locative": "ine"
+  },
+  {
+   "form": "Fenwold",
+   "locative": "ine"
+  }
+ ]
+}

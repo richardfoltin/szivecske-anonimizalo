@@ -1,0 +1,349 @@
+{
+ "id": "novenyek_en",
+ "lang": "en",
+ "family": "novenyek",
+ "name_hu": "Növények – angol nevek",
+ "description_hu": "A „Növények” készlet angol névsora. Az utónevek angol fa-, fűszer- és virágnevek (Hazel, Willow, Juniper, Saffron), a vezetéknevek belőlük épített, angolosan hangzó összetételek (Willowbrook, Nettleford, Birchwood). Magyar iratba való: minden név magyar toldalékot kap, a KIEJTÉSE szerint — Birchcsel, Hollyval, Willow-val.",
+ "license_note": "Az utónevek angol köznyelvi szavak és anyakönyvezhető angol utónevek, a vezetéknevek és a helységnevek saját képzésű összetételek az angol névadás szokásos utótagjaiból (-ford, -wood, -wick, -moor). Egyik sem valós, azonosítható személy neve, és egyik sem védjegy. A cégformák (Kft., Zrt., Bt.) és az intézménymegjelölések magyarok, mert a pszeudonim magyar iratba kerül. A ragozási kivételeket — kiejtés szerinti hangrend, néma véghangzó, kötőjeles kapcsolás — alakonként ember ellenőrizte a program ragozó motorjával.",
+ "given_names": [
+  {
+   "form": "Sorrel",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Juniper",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Alder",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Hawthorn",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Elm",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Cedar",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Linden",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Aspen",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Fennel",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Birch",
+   "gender": "M",
+   "harmony": "front_rounded",
+   "notes": "Kiejtve [börcs]: ajakkerekítéses magas hangrend, és a ch [cs] — Birchcsel, Birchöt, Birchhöz.",
+   "overrides": {
+    "ins": "Birchcsel"
+   }
+  },
+  {
+   "form": "Willow",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "A szó végi ow magánhangzót jelöl: a toldalék kötőjellel kapcsolódik, mint Glasgow-ban.",
+   "overrides": {
+    "hyphenate": true,
+    "forms": {
+     "SUP": "Willow-n",
+     "PL": "Willow-k"
+    }
+   }
+  },
+  {
+   "form": "Hazel",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Heather",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Holly",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "Szó végi y: a toldalék kötőjel nélkül kapcsolódik — Hollyval, Hollyt, Hollyn.",
+   "overrides": {
+    "acc": "Hollyt",
+    "ins": "Hollyval",
+    "forms": {
+     "SUP": "Hollyn",
+     "PL": "Hollyk"
+    }
+   }
+  },
+  {
+   "form": "Marigold",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Clover",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Laurel",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Saffron",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Violet",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Wisteria",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  }
+ ],
+ "surnames": [
+  {
+   "form": "Thornfield",
+   "harmony": "back",
+   "notes": "Kiejtve [tornfíld]: az í semleges, a mély o dönt — Thornfieldnak."
+  },
+  {
+   "form": "Willowbrook",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Elmsford",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Cedarhill",
+   "harmony": "back",
+   "notes": "Eleve kettőzött l: Cedarhill-lal."
+  },
+  {
+   "form": "Clovermead",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Saffronwell",
+   "harmony": "front_unrounded",
+   "notes": "Eleve kettőzött l: Saffronwell-lel."
+  },
+  {
+   "form": "Heatherfield",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Laurelford",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Bramblewood",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Thistleton",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Nettleford",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Sorrelbrook",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Alderwick",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Aspenmoor",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Birchwood",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Hawthornden",
+   "harmony": "front_unrounded",
+   "notes": ""
+  }
+ ],
+ "org_parts": [
+  "Willowbrook",
+  "Thornfield",
+  "Cedarhill",
+  "Clovermead",
+  "Saffronwell",
+  "Laurelford",
+  "Bramblewood",
+  "Nettleford",
+  "Sorrelbrook",
+  "Aspenmoor",
+  "Birchwood",
+  "Thistleton"
+ ],
+ "org_names": [
+  {
+   "form": "Willowbrook Kft.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Cedarhill Zrt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Laurelford Bt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Saffronwell Kft.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Bramblewood Zrt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Aspenmoor Bt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Clovermead Általános Iskola",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Thornfield Kórház",
+   "kind": "institution",
+   "notes": "A -ház tárgyesete kötőhangzós: Kórházat, nem Kórházt.",
+   "overrides": {
+    "acc": "Kórházat"
+   }
+  },
+  {
+   "form": "Birchwood Alapítvány",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Nettleford Óvoda",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Sorrelbrook Egyesület",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Thistleton Szakrendelő",
+   "kind": "institution",
+   "notes": ""
+  }
+ ],
+ "place_names": [
+  {
+   "form": "Alderford",
+   "locative": "ine"
+  },
+  {
+   "form": "Willowstead",
+   "locative": "ine",
+   "overrides": {
+    "harmony": "front_unrounded"
+   }
+  },
+  {
+   "form": "Cedarwick",
+   "locative": "ine"
+  },
+  {
+   "form": "Nettlemoor",
+   "locative": "ine"
+  },
+  {
+   "form": "Thistleford",
+   "locative": "ine"
+  },
+  {
+   "form": "Saffronholt",
+   "locative": "ine"
+  },
+  {
+   "form": "Heatherwick",
+   "locative": "ine"
+  },
+  {
+   "form": "Bramblestead",
+   "locative": "ine",
+   "overrides": {
+    "harmony": "front_unrounded"
+   }
+  }
+ ]
+}

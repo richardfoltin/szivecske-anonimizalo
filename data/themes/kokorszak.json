@@ -1,0 +1,352 @@
+{
+ "id": "kokorszak",
+ "lang": "hu",
+ "family": "kokorszak",
+ "name_hu": "Kőkorszak",
+ "description_hu": "A „Frédi és Béni, avagy a két kőkorszaki szaki” szereplőinek HIVATALOS magyar szinkronnevei: Kovakövi Frédi, Kavicsi Béni, Kőkobaki, Márga, Bazalt, Borzadály. A nevek az MTV 1969-es (magyar szöveg: Romhányi József) és a 2004–2006-os (Speier Dávid) sorozatszinkronjából valók; az 1994-es élőszereplős film („Flintstone Frédi”, „Dorongi Béni”) és a Kőkorszaki buli eltérő névkészletéből szándékosan nincs benne semmi, mert ott más a vezetéknév. 16 vezetéknév × 23 utónév = 368 teljes névpár, ezért egy sokszereplős iratban sem kell számozott utótaghoz nyúlni. Minden név magyar toldalékot kap; a hangrend és a rendhagyó alakok (Kőfejet, Stupidill-lal, Borzadállyal, Daisyvel) előre ki vannak töltve, futásidőben nincs találgatás.",
+ "license_note": "A NEVEK VÉDJEGYZETT MŰBŐL SZÁRMAZNAK — ez nem tiltás, hanem tény, hogy később se érje meglepetés azt, aki a csomagot továbbadja. A The Flintstones (magyarul „Frédi és Béni, avagy a két kőkorszaki szaki”) a Hanna-Barbera, ma a Warner Bros. Discovery műve; a cím, a szereplőnevek és a figurák védjegy- és szerzői jogi oltalom alatt állnak, a magyar szöveg Romhányi József, illetve Speier Dávid műfordítói teljesítménye. Saját, belső anonimizáláshoz ez a névhasználat rendszerint nem kifogásolható; nyilvánosan terjesztett vagy értékesített termékben a jogosult engedélye nélkül igen. Ha ez kockázat, a másik három szállított készlet (Ásványok, Növények, Semleges magyar) egyetlen védett nevet sem tartalmaz. Amit a forráskutatás BIZONYTALANNAK jelölt — a Kőkalap- és Borzadály-család egyes tagjainak magyar neve, a város magyar neve („Alapkő”, „Kőlapály”), a cégnevek magyar alakja —, az szándékosan kimaradt. A cég- és intézménynevek megkülönböztető előtagja hivatalos szereplőnév; az egyetlen adatolt magyar szervezetnév az „Ökör-kör” (két magyar epizódcímből). A cégforma (Kft., Zrt., Bt.) és az intézménymegjelölés magyar, mert az álnév magyar iratba kerül. A helységnevek közül csak a „Bedrock” adatolt, a többi a hivatalos szereplőnevekből képzett, kitalált alak. FIGYELEM: az utónevek java része (Vilma, Irma, Béla, Dénes, Oszkár, Anna) hétköznapi magyar keresztnév — a régi, kitalált készlettel ellentétben ez a csomag nem garantálja, hogy az álnév első pillantásra felismerhetően kitalált.",
+ "given_names": [
+  {
+   "form": "Frédi",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": "Fred Flintstone. Csupa semleges magánhangzó (é, i): magas, ajakréses — Frédivel, Frédinek, Frédihez."
+  },
+  {
+   "form": "Béni",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": "Barney Rubble. Mint a Frédi: Bénivel, Béninek."
+  },
+  {
+   "form": "Benő",
+   "gender": "M",
+   "harmony": "front_rounded",
+   "notes": "Bamm-Bamm Rubble. A szóvégi ő ajakkerekítéses: Benőhöz és Benőn, nem Benőhez."
+  },
+  {
+   "form": "Csöpi",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": "Kőfej Csöpi (Joe Rockhead), 1. szinkron. Az ö ellenére ajakréses, mert az utolsó magánhangzó i: Csöpihez, nem Csöpihöz."
+  },
+  {
+   "form": "Orbán",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "Fenőkövi Orbán (Joe Rockhead), 3. szinkron."
+  },
+  {
+   "form": "Oszkár",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "Az 1. szinkron Oszkárja (Arnold, az újságkihordó), egyben Maszkai Oszkár."
+  },
+  {
+   "form": "Arnold",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "Ugyanaz a figura a 3. szinkronban. A d után kötőhangzó kell: Arnoldot."
+  },
+  {
+   "form": "Gedeon",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "Kő-gazdag Gedeon (Melville J. Muchrocks). Három szótag, n végződés: Gedeont, kötőhangzó nélkül."
+  },
+  {
+   "form": "Edgár",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "Stupidill Edgár (Mr. Boulder), 1. szinkron."
+  },
+  {
+   "form": "Béla",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "Bazalt Béla (Mr. Boulder), 3. szinkron. Az é semleges, a mély a dönt: Bélának, Bélával."
+  },
+  {
+   "form": "Dénes",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": "Véres Dénes (Big Louie). Az s hasonul és kettőződik: Dénessel."
+  },
+  {
+   "form": "Leó",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "Kiszúrni Leó (Leo Ferocious). Magánhangzóra végződik: Leóval, León."
+  },
+  {
+   "form": "Jeromos",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "Tumbleweed Hardrock magyar neve. Jeromossal, Jeromost."
+  },
+  {
+   "form": "Vilma",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "Wilma Flintstone. A szóvégi rövid a megnyúlik: Vilmának, Vilmával, Vilmát."
+  },
+  {
+   "form": "Enikő",
+   "gender": "F",
+   "harmony": "front_rounded",
+   "notes": "Pebbles Flintstone. Ajakkerekítéses magas: Enikőhöz, Enikőn."
+  },
+  {
+   "form": "Irma",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "Betty Rubble. Az i semleges, a mély a dönt: Irmának, Irmával."
+  },
+  {
+   "form": "Lujza",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "Kőkobaki Lujza (Mrs. Slate), 1. szinkron; egyben Dagmar magyar neve."
+  },
+  {
+   "form": "Anna",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "Márga Anna (Ann-Margrock). Annának, Annával, Annát."
+  },
+  {
+   "form": "Méri",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": "Mary Lou Jim magyar neve. Csupa semleges magánhangzó: Mérivel, Mérinek."
+  },
+  {
+   "form": "Zsazsa",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "Zaza magyar neve. Zsazsával, Zsazsát."
+  },
+  {
+   "form": "Edna",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "A magyar szinkronban is Edna. Az e ellenére mély, mert az utolsó magánhangzó a: Ednának, Ednával."
+  },
+  {
+   "form": "Daisy",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": "A magyar szinkron sem fordította le; kiejtve [dézi]. A szó végi y magánhangzót jelöl: a toldalék kötőjel nélkül, hasonulás nélkül kapcsolódik — Daisyvel, Daisyt, Daisyn.",
+   "overrides": {
+    "acc": "Daisyt",
+    "ins": "Daisyvel",
+    "forms": {
+     "SUP": "Daisyn",
+     "PL": "Daisyk"
+    }
+   }
+  },
+  {
+   "form": "Gwen",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": "A magyar szinkron sem fordította le. Egytagú, n végű: a tárgyeset kötőhangzó nélküli, Gwent — mint Bent.",
+   "overrides": {
+    "acc": "Gwent"
+   }
+  }
+ ],
+ "surnames": [
+  {
+   "form": "Kovakövi",
+   "harmony": "front_unrounded",
+   "notes": "Flintstone. Vegyes hangrendű, de az utolsó magánhangzó i: ajakréses magas toldalék — Kovakövinek, Kovakövivel, Kovakövihez."
+  },
+  {
+   "form": "Kavicsi",
+   "harmony": "back",
+   "notes": "Rubble. A két i semleges, a mély a dönt: Kavicsinak, Kavicsival."
+  },
+  {
+   "form": "Kőkobaki",
+   "harmony": "back",
+   "notes": "Slate. A mély a dönt: Kőkobakinak, Kőkobakival."
+  },
+  {
+   "form": "Kőfej",
+   "harmony": "front_unrounded",
+   "notes": "Kőfej Csöpi (Joe Rockhead), 1. szinkron. A „fej” tárgyesete kötőhangzós — Kőfejet, nem Kőfejt —, ezt a szabály nem tudja: a j után a motor alapból elhagyná a kötőhangzót.",
+   "overrides": {
+    "acc": "Kőfejet"
+   }
+  },
+  {
+   "form": "Fenőkövi",
+   "harmony": "front_unrounded",
+   "notes": "Ugyanaz a figura a 3. szinkronban. Az utolsó magánhangzó i: Fenőkövinek, Fenőkövivel."
+  },
+  {
+   "form": "Sziklai",
+   "harmony": "back",
+   "notes": "Sziklai Szilárd (Bobby Rockley) vezetékneve. Sziklainak, Sziklaival."
+  },
+  {
+   "form": "Márga",
+   "harmony": "back",
+   "notes": "Mr. Granite, illetve Márga Anna (Ann-Margrock). A szóvégi rövid a megnyúlik: Márgának, Márgát."
+  },
+  {
+   "form": "Maszkai",
+   "harmony": "back",
+   "notes": "Maszkai Oszkár (Mortimer Stoneface)."
+  },
+  {
+   "form": "Bazalt",
+   "harmony": "back",
+   "notes": "Bazalt Béla (Mr. Boulder), 3. szinkron. A t után kötőhangzó: Bazaltot; a t kettőződik: Bazalttal."
+  },
+  {
+   "form": "Keménykövi",
+   "harmony": "front_unrounded",
+   "notes": "Rocky Stone, 1. szinkron. Az utolsó magánhangzó i: Keménykövinek."
+  },
+  {
+   "form": "Szikla",
+   "harmony": "back",
+   "notes": "Ugyanaz a figura a 3. szinkronban. Sziklának, Sziklával, Sziklát."
+  },
+  {
+   "form": "Epekövi",
+   "harmony": "front_unrounded",
+   "notes": "Mr. Loudrock."
+  },
+  {
+   "form": "Aranyrögi",
+   "harmony": "front_unrounded",
+   "notes": "Mr. Goldbrick. Az ö ellenére ajakréses, mert az utolsó magánhangzó i: Aranyröginek, nem Aranyrögihöz."
+  },
+  {
+   "form": "Kőkalap",
+   "harmony": "back",
+   "notes": "A Hatrock család magyar neve (HU epizódcím: „Kőkalap és Borzadály”). Kőkalapot, Kőkalappal."
+  },
+  {
+   "form": "Borzadály",
+   "harmony": "back",
+   "notes": "A Gruesome család magyar neve (HU epizódcím: „Borzadályék”). A kétjegyű ly hasonul és kettőződik: Borzadállyal; a tárgyeset kötőhangzó nélküli: Borzadályt."
+  },
+  {
+   "form": "Stupidill",
+   "harmony": "back",
+   "notes": "Stupidill Edgár (Mr. Boulder), 1. szinkron. Eleve kettőzött l: a -val alakja kötőjeles, Stupidill-lal (AkH. 12. 95.)."
+  }
+ ],
+ "org_parts": [
+  "Kovakövi",
+  "Kavicsi",
+  "Kőkobaki",
+  "Kőkalap",
+  "Bazalt",
+  "Márga",
+  "Szikla",
+  "Fenőkövi",
+  "Epekövi",
+  "Aranyrögi",
+  "Kőfej",
+  "Sziklai"
+ ],
+ "org_names": [
+  {
+   "form": "Kőkobaki Kft.",
+   "kind": "company",
+   "notes": "Frédi munkahelye a sorozatban Kőkobaki úr kőbányája; hivatalos magyar CÉGNEVET a szinkron nem mond, ezért a szereplőnév + magyar cégforma."
+  },
+  {
+   "form": "Kavicsi Zrt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Kovakövi Bt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Bazalt Kft.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Márga Zrt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Kőkalap Bt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Ökör-kör Egyesület",
+   "kind": "institution",
+   "notes": "Az EGYETLEN adatolt magyar szervezetnév a sorozatból: a Loyal Order of Water Buffaloes magyarul Ökör-kör (HU epizódcímek: „Hiba az Ökör-kör körül”, „Ökörköri körkép”). A rag az utolsó névelemre kerül: Ökör-kör Egyesületnek, Ökör-kör Egyesületet."
+  },
+  {
+   "form": "Kovakövi Általános Iskola",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Sziklai Kórház",
+   "kind": "institution",
+   "notes": "A -ház tárgyesete kötőhangzós: Kórházat, nem Kórházt.",
+   "overrides": {
+    "acc": "Kórházat"
+   }
+  },
+  {
+   "form": "Aranyrögi Alapítvány",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Epekövi Óvoda",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Fenőkövi Gondozóház",
+   "kind": "institution",
+   "notes": "A -ház tárgyesete kötőhangzós: Gondozóházat.",
+   "overrides": {
+    "acc": "Gondozóházat"
+   }
+  }
+ ],
+ "place_names": [
+  {
+   "form": "Bedrock",
+   "locative": "ine"
+  },
+  {
+   "form": "Kovakőfalva",
+   "locative": "sup"
+  },
+  {
+   "form": "Kavicsfalva",
+   "locative": "sup"
+  },
+  {
+   "form": "Bazaltfalva",
+   "locative": "sup"
+  },
+  {
+   "form": "Márgaszeg",
+   "locative": "sup"
+  },
+  {
+   "form": "Sziklavár",
+   "locative": "sup"
+  }
+ ]
+}

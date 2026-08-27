@@ -1,0 +1,827 @@
+<title>Szivecske Anonimizáló</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+:root{
+  --ground:#F1F2F5;
+  --surface:#FFFFFF;
+  --surface-2:#E7EAEF;
+  --ink:#16181D;
+  --ink-soft:#414755;
+  --muted:#69707F;
+  --line:#D5D9E1;
+  --line-soft:#E4E7EC;
+  --accent:#8E1F2F;
+  --accent-ink:#8E1F2F;
+  --accent-soft:#F6E4E6;
+  --ok:#28584A;
+  --ok-soft:#E1EDE8;
+  --warn:#845608;
+  --warn-soft:#F6ECD9;
+  --bar:#16181D;
+  --bar-ink:#FFFFFF;
+  --shadow:0 1px 2px rgba(20,24,32,.05), 0 8px 24px -12px rgba(20,24,32,.16);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#121419;
+    --surface:#1A1D23;
+    --surface-2:#232730;
+    --ink:#E8EAEF;
+    --ink-soft:#B8BEC9;
+    --muted:#8C94A3;
+    --line:#2F343E;
+    --line-soft:#262B33;
+    --accent:#E4707E;
+    --accent-ink:#EE8894;
+    --accent-soft:#3A2027;
+    --ok:#84C7AD;
+    --ok-soft:#1B2E29;
+    --warn:#DFAC55;
+    --warn-soft:#302719;
+    --bar:#E8EAEF;
+    --bar-ink:#121419;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#121419;
+  --surface:#1A1D23;
+  --surface-2:#232730;
+  --ink:#E8EAEF;
+  --ink-soft:#B8BEC9;
+  --muted:#8C94A3;
+  --line:#2F343E;
+  --line-soft:#262B33;
+  --accent:#E4707E;
+  --accent-ink:#EE8894;
+  --accent-soft:#3A2027;
+  --ok:#84C7AD;
+  --ok-soft:#1B2E29;
+  --warn:#DFAC55;
+  --warn-soft:#302719;
+  --bar:#E8EAEF;
+  --bar-ink:#121419;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:"IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size:16.5px;
+  line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1120px;margin:0 auto;padding:0 28px 96px;}
+.col{max-width:70ch;}
+
+/* ---------- masthead ---------- */
+header.top{
+  border-bottom:1px solid var(--line);
+  padding:44px 0 34px;
+  margin-bottom:44px;
+}
+.eyebrow{
+  display:inline-block;
+  font-family:"IBM Plex Mono", monospace;
+  font-size:11.5px;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  background:var(--bar);
+  color:var(--bar-ink);
+  padding:4px 9px;
+  margin-bottom:20px;
+}
+h1{
+  font-family:"Zilla Slab", Georgia, serif;
+  font-weight:700;
+  font-size:clamp(34px, 5.4vw, 54px);
+  line-height:1.06;
+  letter-spacing:-.015em;
+  margin:0 0 16px;
+  text-wrap:balance;
+}
+.dek{
+  font-size:19px;
+  line-height:1.55;
+  color:var(--ink-soft);
+  max-width:62ch;
+  margin:0 0 26px;
+}
+.meta{
+  display:flex;flex-wrap:wrap;gap:8px 26px;
+  font-family:"IBM Plex Mono", monospace;
+  font-size:12.5px;
+  color:var(--muted);
+}
+.meta b{color:var(--ink-soft);font-weight:500;}
+
+/* ---------- demo ---------- */
+.demo{
+  background:var(--surface);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+  padding:26px 28px 22px;
+  margin:38px 0 8px;
+}
+.demo-head{
+  display:flex;justify-content:space-between;align-items:center;gap:16px;
+  flex-wrap:wrap;
+  margin-bottom:18px;
+}
+.demo-label{
+  font-family:"IBM Plex Mono", monospace;
+  font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+}
+.demo-text{
+  font-family:"Zilla Slab", Georgia, serif;
+  font-size:clamp(17px,2.2vw,21px);
+  line-height:1.7;
+  margin:0;
+}
+mark.swap{
+  background:var(--accent-soft);
+  color:var(--accent-ink);
+  padding:1px 3px;
+  border-bottom:2px solid var(--accent);
+  font-weight:600;
+}
+mark.keep{
+  background:var(--ok-soft);
+  color:var(--ok);
+  padding:1px 3px;
+  border-bottom:2px solid var(--ok);
+  font-weight:600;
+}
+button.toggle{
+  font-family:"IBM Plex Mono", monospace;
+  font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+  background:var(--bar);color:var(--bar-ink);
+  border:0;padding:8px 16px;cursor:pointer;
+}
+button.toggle:hover{opacity:.85;}
+button.toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+.demo-note{
+  font-size:13.5px;color:var(--muted);margin:16px 0 0;
+  padding-top:14px;border-top:1px solid var(--line-soft);
+}
+.demo-note b{color:var(--ink-soft);font-weight:600;}
+
+/* ---------- verdict ---------- */
+.verdict{
+  border-left:4px solid var(--accent);
+  background:var(--surface);
+  padding:24px 26px;
+  margin:44px 0;
+  box-shadow:var(--shadow);
+}
+.verdict h2{margin-top:0;}
+.verdict p:last-child{margin-bottom:0;}
+
+/* ---------- sections ---------- */
+section{margin:64px 0 0;scroll-margin-top:24px;}
+.snum{
+  font-family:"IBM Plex Mono", monospace;
+  font-size:12px;letter-spacing:.16em;
+  color:var(--accent-ink);
+  display:block;margin-bottom:8px;
+}
+h2{
+  font-family:"Zilla Slab", Georgia, serif;
+  font-weight:600;
+  font-size:clamp(24px,3.2vw,31px);
+  line-height:1.18;
+  letter-spacing:-.01em;
+  margin:0 0 18px;
+  text-wrap:balance;
+}
+h3{
+  font-family:"Zilla Slab", Georgia, serif;
+  font-weight:600;
+  font-size:19px;
+  margin:34px 0 10px;
+}
+h4{
+  font-family:"IBM Plex Sans", sans-serif;
+  font-weight:600;font-size:15px;
+  margin:24px 0 8px;
+  color:var(--ink);
+}
+p{margin:0 0 15px;max-width:70ch;}
+ul,ol{margin:0 0 16px;padding-left:22px;max-width:70ch;}
+li{margin-bottom:7px;}
+li::marker{color:var(--muted);}
+strong{font-weight:600;}
+a{color:var(--accent-ink);text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1px;}
+code, .mono{
+  font-family:"IBM Plex Mono", monospace;
+  font-size:.88em;
+  background:var(--surface-2);
+  padding:1px 5px;
+}
+
+/* ---------- table ---------- */
+.tablewrap{overflow-x:auto;margin:24px 0 8px;border:1px solid var(--line);background:var(--surface);}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:14.5px;}
+th{
+  text-align:left;
+  font-family:"IBM Plex Mono", monospace;
+  font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-weight:500;
+  padding:12px 16px;
+  border-bottom:1px solid var(--line);
+  white-space:nowrap;
+  background:var(--surface-2);
+}
+td{padding:13px 16px;border-bottom:1px solid var(--line-soft);vertical-align:top;line-height:1.5;}
+tr:last-child td{border-bottom:0;}
+td.name{font-weight:600;white-space:nowrap;}
+td.lic{font-family:"IBM Plex Mono", monospace;font-size:12.5px;color:var(--ink-soft);white-space:nowrap;}
+.chip{
+  display:inline-block;
+  font-family:"IBM Plex Mono", monospace;
+  font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+  padding:3px 8px;white-space:nowrap;font-weight:500;
+}
+.chip.no{background:var(--accent-soft);color:var(--accent-ink);}
+.chip.maybe{background:var(--warn-soft);color:var(--warn);}
+.chip.yes{background:var(--ok-soft);color:var(--ok);}
+
+/* ---------- layer stack ---------- */
+.stack{display:flex;flex-direction:column;gap:10px;margin:26px 0 10px;}
+.layer{
+  display:grid;grid-template-columns:64px 1fr;gap:0;
+  border:1px solid var(--line);background:var(--surface);
+}
+.layer .lid{
+  background:var(--bar);color:var(--bar-ink);
+  font-family:"IBM Plex Mono", monospace;font-size:13px;font-weight:500;
+  display:flex;align-items:center;justify-content:center;
+}
+.layer .lbody{padding:16px 20px;}
+.layer h4{margin:0 0 5px;font-size:15.5px;}
+.layer p{margin:0;font-size:14.5px;color:var(--ink-soft);max-width:none;}
+.layer .lmeta{
+  font-family:"IBM Plex Mono", monospace;font-size:12px;color:var(--muted);
+  margin-top:8px;display:block;
+}
+
+/* ---------- feature grid ---------- */
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:2px;background:var(--line);border:1px solid var(--line);margin:24px 0 8px;}
+.fcard{background:var(--surface);padding:18px 20px 16px;}
+.fcard h4{margin:0 0 10px;display:flex;align-items:center;gap:9px;font-size:14px;letter-spacing:.02em;}
+.fcard ul{margin:0;padding-left:18px;font-size:14px;max-width:none;}
+.fcard li{margin-bottom:5px;line-height:1.45;color:var(--ink-soft);}
+.v1{background:var(--ok-soft);color:var(--ok);font-family:"IBM Plex Mono",monospace;font-size:10px;padding:2px 6px;letter-spacing:.08em;}
+.v2{background:var(--surface-2);color:var(--muted);font-family:"IBM Plex Mono",monospace;font-size:10px;padding:2px 6px;letter-spacing:.08em;}
+
+/* ---------- callouts ---------- */
+.call{
+  background:var(--surface);border:1px solid var(--line);
+  border-left:3px solid var(--warn);
+  padding:16px 20px;margin:22px 0;
+}
+.call.hard{border-left-color:var(--accent);}
+.call.good{border-left-color:var(--ok);}
+.call p{margin:0;font-size:15px;max-width:none;}
+.call p + p{margin-top:10px;}
+.call .ctag{
+  font-family:"IBM Plex Mono", monospace;font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--warn);display:block;margin-bottom:6px;font-weight:500;
+}
+.call.hard .ctag{color:var(--accent-ink);}
+.call.good .ctag{color:var(--ok);}
+
+/* ---------- numbers ---------- */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:2px;background:var(--line);border:1px solid var(--line);margin:26px 0;}
+.stat{background:var(--surface);padding:18px 20px;}
+.stat .n{
+  font-family:"Zilla Slab", Georgia, serif;font-weight:700;
+  font-size:30px;line-height:1.1;display:block;
+  font-variant-numeric:tabular-nums;
+  color:var(--accent-ink);
+}
+.stat .l{font-size:13px;color:var(--muted);margin-top:5px;display:block;line-height:1.4;}
+
+/* ---------- steps ---------- */
+ol.steps{list-style:none;padding:0;counter-reset:s;max-width:none;}
+ol.steps > li{
+  counter-increment:s;
+  display:grid;grid-template-columns:44px 1fr;gap:16px;
+  padding:18px 0;border-bottom:1px solid var(--line-soft);
+  margin:0;max-width:none;
+}
+ol.steps > li:last-child{border-bottom:0;}
+ol.steps > li::before{
+  content:counter(s);
+  font-family:"IBM Plex Mono", monospace;font-size:13px;
+  color:var(--bar-ink);background:var(--bar);
+  width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+  margin-top:2px;
+}
+ol.steps h4{margin:0 0 5px;font-size:16px;}
+ol.steps p{margin:0;font-size:14.5px;color:var(--ink-soft);}
+
+footer{
+  margin-top:72px;padding-top:26px;border-top:1px solid var(--line);
+  font-size:13.5px;color:var(--muted);
+}
+footer p{max-width:70ch;}
+</style>
+
+<div class="wrap">
+
+<header class="top">
+  <span class="eyebrow">Felmérés &middot; építsük vagy vegyük át</span>
+  <h1>Szivecske Anonimizáló</h1>
+  <p class="dek">Offline, magyar nyelvű dokumentum-álnevesítő ügyvédi munkához. Mi létezik ma, mit érdemes átvenni, melyik modell fut el egy IdeaPadon — és melyik három dolog buktatja meg a projektet, ha most nem döntünk róla.</p>
+  <div class="meta">
+    <span><b>2026. augusztus 25.</b></span>
+    <span>14 kutatási ügynök &middot; 895 forráslekérés</span>
+    <span>Cél: PDF + DOCX, magyar &amp; angol, formátumhű kimenet</span>
+  </div>
+</header>
+
+<div class="demo">
+  <div class="demo-head">
+    <span class="demo-label" id="demoLabel">Eredeti szövegrészlet</span>
+    <button class="toggle" id="demoBtn" type="button">Álnevesítés &rarr;</button>
+  </div>
+  <p class="demo-text" id="demoText"></p>
+  <p class="demo-note" id="demoNote"></p>
+</div>
+
+<div class="verdict">
+  <h2>A rövid válasz</h2>
+  <p><strong>Nincs kész megoldás, amit csak be kellene rántani.</strong> Nem létezik magyar nyelvű, nyílt forrású jogi anonimizáló. A három legközelebbi rokon projekt közül — egy olasz, egy brazil és egy angol — mindhármat elutasítottam: a nyelvi rész, ami a munka 85%-a, egyikből sem hozható át.</p>
+  <p>Viszont a projekt <strong>nem is nulláról indul</strong>: a dokumentumkezelés, a megjelenítés, a futtatókörnyezet és a szabályalapú detektálás mind kész, engedékeny licencű darabokból összerakható. Amit tényleg meg kell írni: a magyar réteg.</p>
+  <p>És egy fontos irányváltás jött ki a kutatásból, amire eredetileg nem gondoltunk — a <a href="#s3">3. pontban</a> részletezem. Röviden: <strong>ne a program találja ki, kiket kell anonimizálni.</strong> Az ügyvéd tudja a neveket. Ha ő adja meg őket, a feladat „találd meg a magyar szövegben az összes embert” (ma mérhetően rossz) helyett „találd meg ennek a 8 névnek az összes ragozott alakját” (közel hibátlan és tesztelhető) lesz.</p>
+</div>
+
+<!-- ══════════════ 1 ══════════════ -->
+<section id="s1">
+  <span class="snum">01 &mdash; PIACKÉP</span>
+  <h2>Mi létezik ma, és miért nem elég</h2>
+
+  <p>Végignéztem a nyílt forrású projekteket, a kereskedelmi jogi redaction-szoftvereket és az európai bírósági anonimizáló rendszereket. A lényeg: a kategória kereskedelmileg <em>már kommoditizált</em> — de senki nem tud magyarul.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>Eszköz</th><th>Mi ez</th><th>Licenc</th><th>Magyar</th><th>Ítélet</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="name">Presidio</td>
+          <td>A de facto PII-detektáló könyvtár. 2026-ban kikerült a Microsoft alól a közösségi <span class="mono">data-privacy-stack</span> szervezetbe, 10,6k csillag, aktív.</td>
+          <td class="lic">MIT</td>
+          <td>nincs</td>
+          <td><span class="chip maybe">részben</span></td>
+        </tr>
+        <tr>
+          <td class="name">rizzo-pii</td>
+          <td>Olasz. Pontosan a mi termékformánk: Tauri asztali app, 0,3B-s modell CPU-n, valódi PDF-redaction, visszafejthető szótár. 817 csillag.</td>
+          <td class="lic">MIT / <b>AGPL bináris</b></td>
+          <td>nincs</td>
+          <td><span class="chip no">elvetve</span></td>
+        </tr>
+        <tr>
+          <td class="name">TecJustiça Sigilo</td>
+          <td>Brazil. Electron + Presidio + jogi BERT, 727 MB-os Windows telepítő. Kódban <span class="mono">supported_languages=["pt"]</span>.</td>
+          <td class="lic">MIT</td>
+          <td>nincs</td>
+          <td><span class="chip no">elvetve</span></td>
+        </tr>
+        <tr>
+          <td class="name">doc_redaction</td>
+          <td>A leggazdagabb formátumtámogatás (PDF/DOCX/XLSX/kép), kézi review UI. 2026-ban AWS felé sodródik.</td>
+          <td class="lic">AGPL-3.0</td>
+          <td>nincs</td>
+          <td><span class="chip no">elvetve</span></td>
+        </tr>
+        <tr>
+          <td class="name">Docling</td>
+          <td>IBM. Dokumentum-beolvasás, elrendezés-felismerés, helyes olvasási sorrend. 65k csillag, napi commitok.</td>
+          <td class="lic">MIT</td>
+          <td>nyelvfüggetlen</td>
+          <td><span class="chip yes">átvehető</span></td>
+        </tr>
+        <tr>
+          <td class="name">huSpaCy</td>
+          <td>Az egyetlen komoly magyar NLP pipeline. NER F1 0,917. Egy fenntartó, a jó modell 2024 óta befagyva.</td>
+          <td class="lic">Apache / <b>CC-BY-SA</b></td>
+          <td>ez a lényege</td>
+          <td><span class="chip maybe">szűken</span></td>
+        </tr>
+        <tr>
+          <td class="name">CamoText</td>
+          <td>Kereskedelmi. Offline Windows/macOS anonimizáló, PDF+DOCX. <strong>59–79 $ egyszeri.</strong></td>
+          <td class="lic">zárt</td>
+          <td>nincs</td>
+          <td><span class="chip maybe">versenytárs</span></td>
+        </tr>
+        <tr>
+          <td class="name">Occlira</td>
+          <td>Kereskedelmi. Offline, 7 nyelv, DOCX/PDF/XLSX/EML/CSV + hang + arcfelismerés, emberi review, visszafejthető. <strong>149 € örökös.</strong></td>
+          <td class="lic">zárt</td>
+          <td>nincs</td>
+          <td><span class="chip maybe">versenytárs</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="call">
+    <span class="ctag">Amit ez a táblázat üzen</span>
+    <p>Az „offline fut, nem megy felhőbe” <strong>nem különbség</strong>, hanem alapelvárás — 59 dollárért megvehető. A mi értékünk három dolog lehet, és csak ez a három: <strong>helyes magyar nyelv</strong> (ragozás), <strong>a magyar jogi konvenciók ismerete</strong> (OBH-mód, ügyszámok, TAJ, cégjegyzékszám), és a <strong>szereplap-alapú átnézés</strong>, ami gyorsabb, mint kézzel csinálni.</p>
+  </div>
+</section>
+
+<!-- ══════════════ 2 ══════════════ -->
+<section id="s2">
+  <span class="snum">02 &mdash; A MAGYAR FAL</span>
+  <h2>Négy magyar probléma, amit senki nem oldott meg</h2>
+
+  <div class="stats">
+    <div class="stat"><span class="n">0,63</span><span class="l">A legjobb szabadon használható PII-modell magyar pontossága (cee-pii, micro-F1)</span></div>
+    <div class="stat"><span class="n">84,5%</span><span class="l">A publikált magyar nevragozó modell pontossága nem alanyesetben</span></div>
+    <div class="stat"><span class="n">3,13</span><span class="l">Token per szó magyarul — az angol ~1,3 helyett. Minden LLM 2–3&times; lassabb</span></div>
+    <div class="stat"><span class="n">0</span><span class="l">Magyar OCR / dokumentum-benchmark, amire hivatkozni lehetne</span></div>
+  </div>
+
+  <h3>1. A ragozás</h3>
+  <p>„Kovács Jánosnak” → a csere nem lehet „Kőszikla Fréd-nak”. Kell a helyes toldalék, magánhangzó-harmóniával és hasonulással: <span class="mono">-nak/-nek</span>, <span class="mono">-val/-vel</span> → <em>Fréddel</em>, <em>Kissel</em>, <em>Szabolccsal</em>. A publikált magyar morfológiai generátor <strong>minden hatodik nem-alanyesetű alakot elront</strong> — ez egy ügyvédi iratban azonnal látszik, és a bizalom egyből elmegy.</p>
+  <div class="call good">
+    <span class="ctag">A megoldás</span>
+    <p><strong>Ne futásidőben ragozzunk.</strong> Mivel mi választjuk az álneveket, minden témacsomag minden nevéhez <em>előre legyártott, emberrel ellenőrzött</em> ragozási táblát szállítunk (~25 alak névenként). 200 név × 25 alak = 5000 sztring, egy adatfájl. A futásidejű pontosság így <strong>konstrukció szerint 100%</strong>, modellfuttatás nélkül.</p>
+  </div>
+
+  <h3>2. A vezetéknév = köznév ütközés</h3>
+  <p>Nagy, Kis, Szabó, Molnár, Halász, Fehér, Fekete, Farkas, Király, Papp, Rózsa, Virág, Boros, Sós. Mondat elején a nagybetű nem árulkodik semmiről, a jogi szöveg meg tele van mondatkezdéssel. Ha a „nagy” melléknevet lecseréljük egy álnévre, tönkretettük a szöveget. Ez mindkét irányban hibázik, és külön szótárat + kontextusfeltételeket igényel.</p>
+
+  <h3>3. A <span class="mono">-né</span>, a monogram és a névsorrend</h3>
+  <p>„Kovácsné Szabó Anna” három dolgot tartalmaz: a férj vezetéknevét, a saját leánykori nevét és a keresztnevét. „Kovács Jánosné” <em>más jogi személy</em>, mint „Kovács János”, de morfológiailag belőle képződik — a naiv összevonás összemossa őket, a naiv szétválasztás elveszíti a kapcsolatot, amit az álnévben is meg kell tartani. Ehhez jön a „K. J.”, a „dr.”, az „ifj.”, az „özv.” és a „Kovácsék”.</p>
+
+  <h3>4. A licenc</h3>
+  <p>A legjobb magyar komponensek jogilag nem használhatók pénzért árult termékben: <span class="mono">emMorph</span> (a legjobb morfológiai elemző) nem-kereskedelmi, a 30 címkés magyar NER GPL, a PULI és a Racka modellek nem-kereskedelmiek. Sőt: a huSpaCy modelljei mögötti Szeged-korpusz <strong>CC BY-NC-SA</strong>, miközben a modell CC-BY-SA-ként jelenik meg — ezt a láncot ügyvéddel kell tisztázni, mielőtt ráépítünk. Ami tisztán használható: huBERT (Apache-2.0), <span class="mono">akdeniz27/bert-base-hungarian-cased-ner</span> (MIT), NerKor és MAPA korpuszok, Hunspell + magyarispell.</p>
+</section>
+
+<!-- ══════════════ 3 ══════════════ -->
+<section id="s3">
+  <span class="snum">03 &mdash; AZ IRÁNYVÁLTÁS</span>
+  <h2>Ne a gép találja ki, kit kell anonimizálni</h2>
+
+  <p>Ez a felmérés legfontosabb eredménye, és szembemegy azzal, ahogy minden létező eszköz működik.</p>
+
+  <p>Minden vizsgált termék ugyanazt csinálja: „nyisd meg a dokumentumot, majd én megkeresem benne az összes érzékeny adatot”. Magyarul ez ma <strong>mérhetően nem működik jól</strong> — a legjobb szabadon elérhető modell 0,63-as pontsággal dolgozik, azaz nagyjából minden harmadik dolgot elront. Egy ügyvédi irodában egyetlen kimaradt ügyfélnév GDPR-incidens.</p>
+
+  <p>De egy ügyvédi irodában <strong>ismertek a felek.</strong> A perben szereplő neveket senkinek nem kell kitalálni. Ha a program első lépésként megkérdezi — vagy a beadvány fejlécéből felajánlja —, hogy kiket kell cserélni, akkor a feladat átalakul:</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Feladat</th><th>Mérhető pontosság</th><th>Mit ígérhetünk</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>„Találd meg a magyar jogi szövegben az összes személyt”</td>
+          <td>~0,63 F1</td>
+          <td>Semmit. Nem garantálható.</td>
+        </tr>
+        <tr>
+          <td>„Találd meg ennek a 8 névnek az összes ragozott, birtokos, <span class="mono">-né</span>, <span class="mono">-ék</span>, monogramos és rövidített alakját”</td>
+          <td>közel 100%, tesztelhető</td>
+          <td>„Minden előfordulást lecseréltünk, amit megadtál.”</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>A gépi felismerés így nem eltűnik, hanem <strong>második körré</strong> válik, más kérdéssel: „<em>ezeken kívül</em> találtunk még 12 nevet, amit nem adtál meg — nézd át”. Ez egy átnézési lista, nem egy ígéret. És pontosan ezért védhető: a termék garanciája nem az, hogy „mindent megtaláltunk” (amit nem tudunk betartani), hanem hogy „amit megadtál, azt hiánytalanul lecseréltük” (amit be tudunk).</p>
+
+  <div class="call hard">
+    <span class="ctag">A valódi versenytárs</span>
+    <p>Nem az Occlira. Hanem <strong>egy jogi asszisztens, aki Wordben hatszor lenyomja a Ctrl+H-t</strong>: három perc, ingyen, és a szótöveken 100% pontos. Ha a mi átnézési képernyőnkön egy 50 oldalas beadvány 400 találatát végig kell kattintani, az húsz perc — vagyis <em>lassabbak vagyunk a kézi módszernél</em>, bármilyen jó a modell. Az átnézés sebessége a termék legfontosabb mérőszáma, a pontosság előtt. Célszám: <strong>50 oldal 5 perc alatt</strong>, csoportszintű (nem előfordulásonkénti) döntésekkel, előfordulásszám szerint rendezve, egybillentyűs elfogadással.</p>
+  </div>
+</section>
+
+<!-- ══════════════ 4 ══════════════ -->
+<section id="s4">
+  <span class="snum">04 &mdash; MOTOR</span>
+  <h2>Milyen modell fusson a laptopon</h2>
+
+  <p>A kérdés nem az, hogy „melyik LLM”. Egy nagy nyelvi modell, ami minden oldalt elolvas, magyarul kb. <strong>8 oldal/perc</strong> — használhatatlan, és hallucinál. A helyes felépítés négy réteg, ahol a nagy modell a legkisebb szerepet kapja:</p>
+
+  <div class="stack">
+    <div class="layer">
+      <div class="lid">0</div>
+      <div class="lbody">
+        <h4>Megadott nevek — morfológiai illesztő</h4>
+        <p>A felhasználó által beírt/beillesztett felek minden alakjának megkeresése: ragok, birtokos, <span class="mono">-né</span>, <span class="mono">-ék</span>, monogram, „dr.”, sorrendcsere, elválasztás sortöréssel.</p>
+        <span class="lmeta">saját kód &middot; nincs modell &middot; azonnali &middot; ~100%</span>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="lid">1</div>
+      <div class="lbody">
+        <h4>Szabályok és ellenőrzőösszegek</h4>
+        <p>Adóazonosító jel, TAJ, cégjegyzékszám, IBAN, bankszámla, telefon, e-mail, irányítószám, helyrajzi szám, ügyszám (<span class="mono">Pf.20.123/2026/5.</span>), dátum- és összegformátumok. Check-digit ellenőrzéssel, így alig ad hamis találatot.</p>
+        <span class="lmeta">saját kód &middot; nincs modell &middot; azonnali &middot; ~100% precizitás</span>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="lid">2</div>
+      <div class="lbody">
+        <h4>Magyar NER — huBERT-alapú, ONNX INT8</h4>
+        <p>A „mit nem adtál meg” kör. Indulásnak a MIT-licencű magyar huBERT NER; hosszabb távon saját finomhangolás a NerKor + MAPA korpuszokon, hogy a DÁTUM / ÖSSZEG / AZONOSÍTÓ / JOGSZABÁLY címkék is meglegyenek.</p>
+        <span class="lmeta">~110 MB &middot; CPU/NPU &middot; minden oldalon lefut &middot; bizonytalansággal együtt</span>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="lid">3</div>
+      <div class="lbody">
+        <h4>Kis LLM — csak a kétes eseteken</h4>
+        <p>Opcionális. Qwen3.5 2B, 4 bites kvantálás, llama.cpp Vulkan az integrált videokártyán. Kizárólag arra, hogy a 2. réteg bizonytalan találatait eldöntse és az összetartozó említéseket összekapcsolja. Soha nem olvas végig dokumentumot, és soha nem javasol új találatot.</p>
+        <span class="lmeta">~1,5 GB &middot; iGPU &middot; az oldalak ~15%-án &middot; kikapcsolható</span>
+      </div>
+    </div>
+    <div class="layer">
+      <div class="lid">4</div>
+      <div class="lbody">
+        <h4>Ellenőrző kör a kész fájlon</h4>
+        <p>A kimenetet egy <em>másik</em> könyvtárral újraolvassuk, és leellenőrizzük, hogy egyetlen eredeti név sem maradt benne — sehol: szövegben, metaadatban, jegyzetben, űrlapmezőben, ZIP-részekben. Ha maradt, az exportot letiltjuk.</p>
+        <span class="lmeta">saját kód &middot; kötelező &middot; ez a termék legfontosabb funkciója</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="call">
+    <span class="ctag">NPU, iGPU, laptop</span>
+    <p>Az „új Lenovo IdeaPad” tipikusan integrált grafikát és 16 GB RAM-ot jelent, változó, hogy van-e benne NPU. A mért adatok szerint az <strong>NPU generatív modellhez nem éri meg</strong> (lassabb, mint az iGPU, és a betöltése akár másfél percig tart), de a 2. réteg BERT-méretű kódolójához pont ideális. Ezért: minden réteg <strong>CPU-n is elfut</strong>, a gyorsítás opcionális ráadás. A minimális élmény a CPU — az NPU/iGPU sosem előfeltétel. Amint tudjuk a pontos géptípust, meg lehet mérni.</p>
+  </div>
+</section>
+
+<!-- ══════════════ 5 ══════════════ -->
+<section id="s5">
+  <span class="snum">05 &mdash; JOGI KERET</span>
+  <h2>Amit a jog kikényszerít a szoftverből</h2>
+
+  <p>Nem stílus kérdése — ezek hard requirementek, amiket a kutatás forrásokkal alátámasztott.</p>
+
+  <div class="call hard">
+    <span class="ctag">Soha ne rajzoljunk fekete csíkot</span>
+    <p>Egy 2023-as kutatás (PETS) kimutatta, hogy a PDF-ben kifeketített szöveg <strong>visszafejthető a betűk mikro-elcsúszásából</strong>: egy Wordből készült PDF-nél egy vezeték- és keresztnév 19,6 bitjéből 15,9 kiszivárog, és a névkitakarások <strong>38%-a feltörhető</strong>. A raszterizálás sem old meg mindent. A védhető megoldás pont az, amit mi csinálunk: <em>más szöveget írunk a helyére</em>. Következmény viszont: nem szabad a régi szöveg szélességére „belőni” az álnevet, mert azzal visszahozzuk ugyanazt az ujjlenyomatot. <strong>Az egész sort újra kell szedni</strong>, és el kell fogadni, hogy a sortörések elcsúszhatnak.</p>
+  </div>
+
+  <div class="call hard">
+    <span class="ctag">Álnevesítés, nem anonimizálás</span>
+    <p>Amíg létezik a visszafejtő kulcsfájl, a kimenet a GDPR szerint <strong>továbbra is személyes adat</strong>. A kulcsfájl maga „pszeudonimizálási titok”: külön kell tárolni, saját jelszóval titkosítva, sosem a dokumentum mellé, sosem a metaadatba. A felületen a szó legyen <strong>„álnevesítés”</strong>, és külön, tudatos gomb legyen a „kulcs megsemmisítése”, ami átviszi a munkát valódi anonimizálásba. (Ezért volt jó döntés a dokumentumonkénti kapcsoló.)</p>
+  </div>
+
+  <div class="call">
+    <span class="ctag">Magyar bírósági konvenció — ez egy külön üzemmód</span>
+    <p>A magyar bíróságok <strong>nem használnak álneveket.</strong> A Bszi. és a 4/2021. OBH utasítás szerint a nevek helyére az <em>eljárási szerep</em> kerül („I. r. alperes”, „tanú”, „felperes”), a védett adatok helyére pedig az <em>adatfajta neve</em> („[lakcím]”). Sőt, van egy <strong>kötelező meghagyási lista</strong> is: a hivatalos minőségben eljáró közszereplők, az eljáró ügyvéd és védő, az egyesületek neve <em>bent kell maradjon</em> — egy általános „minden nevet cserélj” logika jogsértő kimenetet gyárt. Ezért a programnak két üzemmódja kell legyen: <strong>„Hivatalos (OBH)”</strong> a bíróságra menő iratokhoz, és <strong>„Fedőnevek”</strong> a belső/megosztásra szánt anyagokhoz. A második exportjánál figyelmeztetés jár.</p>
+  </div>
+
+  <div class="call">
+    <span class="ctag">Amit nem szabad állítani</span>
+    <p>Két gyakori tévedést a kutatás megcáfolt. (a) A magyar kamarai szabályozás <strong>nem tiltja</strong> a felhő-AI-t ügyvédeknek — adatfeldolgozónak tekinti, ügyfél-hozzájárulás nélkül. A helyi futtatás óriási előny (megszűnik az adatfeldolgozói szerződés, az altrafeldolgozó, az adattovábbítás és az audit teljes papírmunkája), de nem szabad úgy eladni, mintha a felhő tilos lenne. (b) A nevek eltávolítása önmagában nem anonimizál: ritka dátumok, egyedi összegek, szokatlan munkakörök alapján a szöveg visszaazonosítható marad. Kell egy „egyedi tények” figyelmeztetés és egy maradványkockázat-riport.</p>
+  </div>
+</section>
+
+<!-- ══════════════ 6 ══════════════ -->
+<section id="s6">
+  <span class="snum">06 &mdash; FUNKCIÓK</span>
+  <h2>A teljes funkciólista</h2>
+
+  <p>A kereskedelmi jogi redaction-szoftverek (Acrobat Pro, Relativity, Everlaw, Objective Redact, Private AI, Tonic, Google DLP) funkcióit összefésülve. <span class="v1">V1</span> = az első verzióba, <span class="v2">KÉSŐBB</span> = tudatosan halasztva.</p>
+
+  <div class="fgrid">
+    <div class="fcard">
+      <h4>Felismerés <span class="v1">V1</span></h4>
+      <ul>
+        <li>Megadott felek + minden ragozott alakjuk</li>
+        <li>Személynév, titulus (dr., ifj., özv.), <span class="mono">-né</span>, leánykori név, monogram</li>
+        <li>Szervezet + cégforma (Kft., Zrt., Bt.) megtartva</li>
+        <li>Cím: utca, település, megye, irányítószám</li>
+        <li>Dátum, időtartam, születési idő</li>
+        <li>E-mail, telefon, URL</li>
+        <li>Pénzösszeg, bankszámla, IBAN</li>
+        <li>Adóazonosító, adószám, TAJ, cégjegyzékszám, helyrajzi szám — ellenőrzőösszeggel</li>
+        <li>Ügyszám, bírósági határozatszám</li>
+        <li>Anyja neve (magyar specialitás, sehol nincs benne)</li>
+        <li>Saját szótár, saját regex, „soha ne cseréld” lista</li>
+        <li>Megbízhatósági érték találatonként</li>
+      </ul>
+    </div>
+    <div class="fcard">
+      <h4>Szereplap — átnézés <span class="v1">V1</span></h4>
+      <ul>
+        <li>Kétpaneles nézet: dokumentum + szereplap tábla</li>
+        <li>Oszlopok: Eredeti / Csereszöveg / Típus / Nem / Előfordulás / Megbízhatóság / Állapot</li>
+        <li>Sorra kattintva minden előfordulás kiemelve</li>
+        <li>Csereszöveg helyben szerkeszthető</li>
+        <li>„Ez ugyanaz a személy” összevonás / szétválasztás</li>
+        <li>„Ne cseréld” kizárás, „Új név sorsolása”</li>
+        <li>Előfordulásszám szerinti rendezés</li>
+        <li>Bizonytalan találatok külön fülön</li>
+        <li>Teljes billentyűzetes átnézés</li>
+        <li>Típusonkénti színkód</li>
+        <li>Kézi kijelölés: „ezt is cseréld”</li>
+        <li>Export tiltva, amíg van eldöntetlen tétel</li>
+      </ul>
+    </div>
+    <div class="fcard">
+      <h4>Csere-stratégiák <span class="v1">V1</span></h4>
+      <ul>
+        <li>Témás álnév, előre ragozva, következetesen</li>
+        <li>Eljárási szerep („I. r. alperes”) — OBH-mód</li>
+        <li>Adatfajta neve („[lakcím]”)</li>
+        <li>Számozott címke („[NÉV-1]”)</li>
+        <li>Nem-egyeztetés, hosszra illesztés</li>
+        <li>Cégforma és rövidítés együtt kezelve (MFB → KFB)</li>
+        <li>Dátumeltolás: egy titkos eltolás ügyenként, intervallumok megmaradnak</li>
+        <li>Összegek alapból <strong>változatlanul</strong> (különben nem áll össze a végösszeg)</li>
+        <li>Ütközésvédelem: két személy sosem kap azonos álnevet</li>
+        <li>Ügy-szintű memória: a beadvány és a mellékletek ugyanazt az álnevet kapják</li>
+      </ul>
+    </div>
+    <div class="fcard">
+      <h4>Kimenet és integritás <span class="v1">V1</span></h4>
+      <ul>
+        <li>Valódi törlés — nem rárajzolt téglalap</li>
+        <li>PDF-tisztítás: metaadat, XMP, könyvjelző, jegyzet, űrlapmező, csatolmány, JavaScript, rejtett rétegek, korábbi mentések</li>
+        <li>DOCX-tisztítás: változáskövetés, megjegyzések, lábjegyzet, élőfej/élőláb, szövegdoboz (mindkét ágon!), beágyazott fájlok, dokumentumtulajdonságok</li>
+        <li>Formátum, betűtípus, tördelés megtartása</li>
+        <li>Digitális aláírás sérülésére figyelmeztetés</li>
+        <li>Mindig új fájl, az eredeti soha nem íródik felül</li>
+        <li><strong>Kötelező ellenőrző kör a kimeneten</strong></li>
+      </ul>
+    </div>
+    <div class="fcard">
+      <h4>Munkafolyamat <span class="v1">V1</span></h4>
+      <ul>
+        <li>Titkosított kulcsfájl (jelszó + Windows Hello)</li>
+        <li>Visszafejtés funkció</li>
+        <li>„Kulcs megsemmisítése” — végleges anonimizálás</li>
+        <li>Anonimizálási jegyzőkönyv exportkor: mit, mennyit, milyen típusból, mi maradt bent és miért, milyen modellel</li>
+        <li>Profilok ügytípusonként</li>
+        <li>Visszavonás / újra</li>
+        <li>Előtte-utána összevetés</li>
+      </ul>
+    </div>
+    <div class="fcard">
+      <h4>Következő körben <span class="v2">KÉSŐBB</span></h4>
+      <ul>
+        <li>Szkennelt PDF + OCR (magyar ékezetekkel), kétmotoros egyeztetéssel</li>
+        <li>XLSX (rejtett lapok, képletek, pivot-gyorsítótár)</li>
+        <li>E-mail: EML / MSG — aláírásblokk, idézett szálak, fejlécek</li>
+        <li>Kötegelt mappafeldolgozás</li>
+        <li>Négy szem elve: külön jóváhagyó</li>
+        <li>Képen belüli kitakarás, arcfelismerés</li>
+        <li>k-anonimitás / maradványkockázat pontozás</li>
+        <li>Saját mérőkészlet az irodán belül, ami csak összesített számokat ad ki</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="call">
+    <span class="ctag">A „Flintstones” téma — egy jogi apróság</span>
+    <p>A nevek maguk nem szerzői jogvédettek, de a <em>FLINTSTONES</em> bejegyzett védjegy (Warner Bros. Discovery), és egy fizetős termékben a márkázott témacsomag védjegyhasználat. A megoldás egyszerű és ugyanazt adja: szállítunk közkincs témákat (<em>Kövek és ásványok, Növények, Csillagok, Görög mitológia, Szín + állat, Semleges magyar nevek, Sorszámozott</em>), és mellé egy <strong>„Saját téma” importálót</strong> — a felhasználó bemásolja a saját listáját, és onnantól pont azt kapja, amit kért. A ragozási táblát az importált nevekhez automatikusan generáljuk, ellenőrzésre felkínálva.</p>
+  </div>
+</section>
+
+<!-- ══════════════ 7 ══════════════ -->
+<section id="s7">
+  <span class="snum">07 &mdash; ARCHITEKTÚRA</span>
+  <h2>Miből épüljön</h2>
+
+  <p>A két legnehezebb felületi elem — a PDF-nézet valódi szövegkijelöléssel és kiemelő téglalapokkal, illetve a formázott DOCX-előnézet — mindkettőnek pontosan <strong>egy</strong> érett, ingyenes megvalósítása van, és mindkettő JavaScript: a Mozilla <span class="mono">pdf.js</span> és a <span class="mono">docx-preview</span>. Ezeket nem érdemes újraírni. A te stacked (Node/TypeScript, Python) ehhez egyébként is közelebb van, mint a .NET.</p>
+
+  <h4>Javaslat</h4>
+  <ul>
+    <li><strong>Váz:</strong> Electron + React + TypeScript — Word-szerű szalag, oldalpanelek, telepítő, automatikus frissítés.</li>
+    <li><strong>PDF nézet:</strong> pdf.js szövegréteggel; a kiemelés a PDFium karakterenkénti koordinátáira épül, nem a nézegető annotációira — így a UI-váltás nem viszi magával a logikát.</li>
+    <li><strong>DOCX nézet:</strong> docx-preview (csak megjelenítés), az átírás közvetlenül az OOXML-en.</li>
+    <li><strong>Modell:</strong> ONNX Runtime Node-ból — nincs beágyazott Python, nincs localhost port, amitől a vírusirtó ideges lesz. Az LLM réteghez <span class="mono">node-llama-cpp</span> (kész Windows Vulkan binárisokkal).</li>
+    <li><strong>DOCX átírás:</strong> ZIP + XML közvetlenül. A klasszikus csapda, hogy a nevek több <span class="mono">&lt;w:r&gt;</span> futamra vannak szétvágva — előbb össze kell vonni az azonos formázású szomszédos futamokat.</li>
+    <li><strong>Üzleti logika külön rétegben:</strong> egy entitáslista (forrás-pozíció, oldal/futam koordináta, típus, álnév, kézi felülbírálás, megbízhatóság). A nézet és a szereplap ugyanennek a listának két nézete.</li>
+  </ul>
+
+  <div class="call hard">
+    <span class="ctag">Ez az egyetlen nyitott technikai kérdés</span>
+    <p>A PDF-ből a <em>valódi</em> szövegtörlés (nem rárajzolás) érett könyvtárral csak két helyen létezik, és mindkettő <strong>AGPL vagy fizetős</strong>: PyMuPDF (Artifex) és iText. Egy zárt, ügyvédi irodáknak árult termékben az AGPL kizárt. Három út van, és ezt a legelső spike-nak el kell döntenie:</p>
+    <p><strong>(a)</strong> Árajánlat az Artifextől / iTexttől. <strong>(b)</strong> PDFium (BSD-3, ingyenes) szerkesztő API-ja — <span class="mono">FPDFPage_RemoveObject</span> + új szövegobjektum + <span class="mono">GenerateContent</span>. Papíron pont ezt tudja, de senki nem használja így, ezért mérni kell. <strong>(c)</strong> Saját megoldás pikepdf/qpdf-re (engedékeny licenc, de hónapok).</p>
+  </div>
+</section>
+
+<!-- ══════════════ 8 ══════════════ -->
+<section id="s8">
+  <span class="snum">08 &mdash; KOCKÁZAT</span>
+  <h2>Amitől ez a projekt megbukhat</h2>
+
+  <ol>
+    <li><strong>Az átnézés lassabb lesz, mint kézzel.</strong> Ez a legvalószínűbb bukási ok, és nem technikai. Mérni kell perc/dokumentumban, és ez legyen a fő mérőszám.</li>
+    <li><strong>Nem lehet valódi iratokon mérni.</strong> Az iroda nem adhatja ki az ügyfélaktákat egy szoftverfejlesztőnek — pont az a titoktartás tiltja, amit a termék véd. Marad a szintetikus szöveg és a <em>már anonimizált</em> közzétett határozatok, amikből épp a keresett neveket vették ki. Megoldás: a mérőeszköz fusson az irodán belül, és csak összesített számokat adjon ki.</li>
+    <li><strong>Licencszennyezés.</strong> A legjobb magyar komponensek nem-kereskedelmiek vagy GPL-esek, a legkényelmesebb PDF-könyvtár AGPL. Egy prototípusban véletlenül bent maradnak, és utána már drága kiszedni. Licenckapu kell a beemeléskor, nem a kiadás előtt.</li>
+    <li><strong>Egyfenntartós függőségek.</strong> A stack szinte minden magyar és dokumentumkezelő eleme egyetlen ember hobbiprojektje. Amit használunk, azt be kell fagyasztva a repóba másolni.</li>
+    <li><strong>A telepítő mérete.</strong> A hasonló termékek 700 MB – 1,25 GB-osak. Ez egy nem-technikai felhasználónak sok. A modellt érdemes külön csomagban szállítani, és a kis (14–60 MB-os) modellosztályt komolyan megvizsgálni.</li>
+  </ol>
+</section>
+
+<!-- ══════════════ 9 ══════════════ -->
+<section id="s9">
+  <span class="snum">09 &mdash; KÖVETKEZŐ LÉPÉS</span>
+  <h2>Két spike, mielőtt bármi más</h2>
+
+  <p>Egyik sem igényel modelltanítást, felületet vagy licencdöntést. Együtt eldöntik, hogy a termék működőképes-e.</p>
+
+  <ol class="steps">
+    <li>
+      <div>
+        <h4>Magyar név-illesztés és ragozás</h4>
+        <p>10 oldal valósághű magyar jogi szöveg (keresetlevél, ítélet, szerződés), 8 kézzel megadott névvel. Megkeresni mind a 8 név <em>összes</em> felszíni alakját, és lecserélni egy kézzel kiragozott álnévkészletre. Utána: egy magyar anyanyelvű olvassa el, és jelölje be a kimaradt előfordulásokat és a nyelvtani hibákat.<br><strong>Döntési szabály:</strong> ha a lefedettség nem gyakorlatilag 100%, és a szöveg nem olvasható tiszta magyarként, akkor semmilyen modell, PDF-motor vagy felület nem menti meg a terméket.</p>
+      </div>
+    </li>
+    <li>
+      <div>
+        <h4>PDF újraszedés és ellenőrzés</h4>
+        <p>Egy valódi magyar jogi PDF, karakterenkénti dobozok kinyerése, egy név betűinek <em>fizikai</em> törlése a tartalomfolyamból, a teljes sor újraszedése egy hosszabb, <span class="mono">ő</span>-t és <span class="mono">ű</span>-t tartalmazó álnévvel — végül a szöveg visszaolvasása egy <em>másik</em> könyvtárral, és annak igazolása, hogy az eredeti sztring eltűnt.<br>Ez egy nap alatt kipróbálja mindhárom PDF-buktatót: a magyar ékezetek hiányát a beágyazott betűkészletekben, a szélesség/újratördelés problémát, és hogy a „kitakarás” tényleg törölt-e bármit.</p>
+      </div>
+    </li>
+  </ol>
+
+  <div class="call good">
+    <span class="ctag">Amit közben el kell dönteni</span>
+    <p>A PDF-motor licencútja (Artifex-ajánlat / PDFium / saját), és hogy a huSpaCy-lánc CC-BY-NC-SA problémáját megkerüljük-e egyszerűen azzal, hogy csak MIT/Apache komponensekre építünk. Az utóbbi valószínűleg olcsóbb, mint egy jogi vélemény.</p>
+  </div>
+</section>
+
+<footer>
+  <p>A felmérés 14 párhuzamos kutatóügynök munkája: 8 tematikus szál, 5 ellenőrző kör a legígéretesebb jelölteken (amiből 3-at el is utasított), és egy hiánykereső kritika, ami a fenti irányváltást megtalálta. Minden állítás mögött ellenőrzött forrás áll; ahol nem sikerült megerősíteni, az a részletes jegyzőkönyvben külön meg van jelölve.</p>
+  <p>A dokumentumban szereplő nevek — Kovács János, Kőszikla Fréd — kitaláltak, és példaként szolgálnak.</p>
+</footer>
+
+</div>
+
+<script>
+(function(){
+  var original = [
+    'A felperes ',
+    {t:'Kovács János',c:'swap'},
+    ' 2024. március 12-én kölcsönszerződést kötött ',
+    {t:'alperessel',c:'keep'},
+    '. ',
+    {t:'Kovács Jánosnak',c:'swap'},
+    ' a szerződés szerint 4 800 000 Ft-ot kellett visszafizetnie. ',
+    {t:'Kovács Jánosné',c:'swap'},
+    ' mint kezes egyetemlegesen felelt, és ',
+    {t:'Kovács Jánossal',c:'swap'},
+    ' együtt írta alá az okiratot ',
+    {t:'Szolnokon',c:'swap'},
+    '.'
+  ];
+  var swapped = [
+    'A felperes ',
+    {t:'Kőszikla Fréd',c:'swap'},
+    ' 2024. március 12-én kölcsönszerződést kötött ',
+    {t:'alperessel',c:'keep'},
+    '. ',
+    {t:'Kőszikla Frédnek',c:'swap'},
+    ' a szerződés szerint 4 800 000 Ft-ot kellett visszafizetnie. ',
+    {t:'Kőszikla Frédné',c:'swap'},
+    ' mint kezes egyetemlegesen felelt, és ',
+    {t:'Kőszikla Fréddel',c:'swap'},
+    ' együtt írta alá az okiratot ',
+    {t:'Kavicsfalván',c:'swap'},
+    '.'
+  ];
+  var notes = [
+    'Ugyanaz a személy <b>négy különböző alakban</b>: alanyeset, <span class="mono">-nak</span>, <span class="mono">-né</span>, <span class="mono">-val</span>. Egy sima keresés-csere csak az elsőt találná meg. Zölddel az, ami <b>bent kell maradjon</b>: az eljárási szerep nem személyes adat.',
+    'A csere követi a ragot és a hasonulást — <b>Fréddel</b>, nem „Fréd-val”. A <span class="mono">-né</span> alak külön jogi személy, de a férj álnevéből képződik. Az összeg és a dátum alapból változatlan, mert az összegek átírása szétveri a végösszegeket.'
+  ];
+  var el = document.getElementById('demoText');
+  var lbl = document.getElementById('demoLabel');
+  var btn = document.getElementById('demoBtn');
+  var note = document.getElementById('demoNote');
+  var on = false;
+
+  function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+  function render(parts){
+    el.innerHTML = parts.map(function(p){
+      return (typeof p === 'string') ? esc(p) : '<mark class="'+p.c+'">'+esc(p.t)+'</mark>';
+    }).join('');
+  }
+  function paint(){
+    render(on ? swapped : original);
+    lbl.textContent = on ? 'Álnevesített változat — „Kőkorszak” téma' : 'Eredeti szövegrészlet';
+    btn.innerHTML = on ? '← Eredeti' : 'Álnevesítés →';
+    note.innerHTML = notes[on ? 1 : 0];
+  }
+  btn.addEventListener('click', function(){ on = !on; paint(); });
+  paint();
+})();
+</script>

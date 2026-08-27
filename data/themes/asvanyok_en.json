@@ -1,0 +1,370 @@
+{
+ "id": "asvanyok_en",
+ "lang": "en",
+ "family": "asvanyok",
+ "name_hu": "Kövek és ásványok – angol nevek",
+ "description_hu": "A „Kövek és ásványok” készlet angol névsora. Az utónevek angol ásvány- és drágakőnevek (Flint, Jasper, Amber, Jade), a vezetéknevek belőlük épített, angolosan hangzó összetételek (Flintwood, Cragmoor, Stonehill). Magyar iratba való: minden név magyar toldalékot kap, a KIEJTÉSE szerint — Flinttel, Onyxszal, Jade-del, Willow-val.",
+ "license_note": "Az utónevek angol köznyelvi szavak és anyakönyvezhető angol utónevek, a vezetéknevek és a helységnevek saját képzésű összetételek az angol névadás szokásos utótagjaiból (-ford, -wood, -wick, -moor). Egyik sem valós, azonosítható személy neve, és egyik sem védjegy. A cégformák (Kft., Zrt., Bt.) és az intézménymegjelölések magyarok, mert a pszeudonim magyar iratba kerül. A ragozási kivételeket — kiejtés szerinti hangrend, néma véghangzó, kötőjeles kapcsolás — alakonként ember ellenőrizte a program ragozó motorjával.",
+ "given_names": [
+  {
+   "form": "Flint",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Jasper",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Garnet",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Onyx",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "Az x [ksz] hangértékű: a -val alakja Onyxszal."
+  },
+  {
+   "form": "Sterling",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Cobalt",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Crag",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Cliff",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": "Eleve kettőzött f: a -val alakja kötőjeles, Cliff-fel (AkH. 12. 95.)."
+  },
+  {
+   "form": "Zircon",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Slate",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": "Néma szó végi e, a kiejtett véghang [t]: Slate-tel, Slate-et.",
+   "overrides": {
+    "hyphenate": true,
+    "ins": "Slate-tel",
+    "acc": "Slate-et"
+   }
+  },
+  {
+   "form": "Amber",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Emerald",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Amethyst",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Opal",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Topaz",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Cinnabar",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Beryl",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": "Az y itt magánhangzót jelöl, a szó kéttagú: a tárgyeset kötőhangzó nélküli, Berylt.",
+   "overrides": {
+    "acc": "Berylt"
+   }
+  },
+  {
+   "form": "Pearl",
+   "gender": "F",
+   "harmony": "front_rounded",
+   "notes": "Kiejtve [pőrl]: ajakkerekítéses magas hangrend, ezért Pearlhöz és Pearlön."
+  },
+  {
+   "form": "Ruby",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "Szó végi y: a toldalék kötőjel nélkül, közvetlenül kapcsolódik — Rubyval, Rubyt, Rubyn.",
+   "overrides": {
+    "acc": "Rubyt",
+    "ins": "Rubyval",
+    "forms": {
+     "SUP": "Rubyn",
+     "PL": "Rubyk"
+    }
+   }
+  },
+  {
+   "form": "Jade",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": "Néma szó végi e, a kiejtett véghang [d]: Jade-del, Jade-et.",
+   "overrides": {
+    "hyphenate": true,
+    "ins": "Jade-del",
+    "acc": "Jade-et"
+   }
+  }
+ ],
+ "surnames": [
+  {
+   "form": "Flintwood",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Stonebrook",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Quarrington",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Ashcroft",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Cragmoor",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Amberton",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Jasperfield",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Pebbleton",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Feldspar",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Chalkwell",
+   "harmony": "front_unrounded",
+   "notes": "Eleve kettőzött l: a -val alakja kötőjeles, Chalkwell-lel."
+  },
+  {
+   "form": "Marbleton",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Whitlock",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Brightwater",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Slater",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Graniteford",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Stonehill",
+   "harmony": "back",
+   "notes": "Kiejtve [sztónhill]: a néma e nem számít, az í semleges — a mély ó dönt, Stonehillnak."
+  },
+  {
+   "form": "Ridgeway",
+   "harmony": "front_unrounded",
+   "notes": "Kiejtve [ridzsvéj]: a véghang [j], ezért Ridgewayjel és Ridgewayt.",
+   "overrides": {
+    "acc": "Ridgewayt",
+    "ins": "Ridgewayjel"
+   }
+  },
+  {
+   "form": "Willow",
+   "harmony": "back",
+   "notes": "A szó végi ow magánhangzót jelöl: a toldalék kötőjellel kapcsolódik, mint Glasgow-ban.",
+   "overrides": {
+    "hyphenate": true,
+    "forms": {
+     "SUP": "Willow-n",
+     "PL": "Willow-k"
+    }
+   }
+  }
+ ],
+ "org_parts": [
+  "Flintwood",
+  "Cragmoor",
+  "Stonebrook",
+  "Quarrington",
+  "Ashcroft",
+  "Feldspar",
+  "Whitlock",
+  "Marbleton",
+  "Pebbleton",
+  "Brightwater",
+  "Graniteford",
+  "Chalkwell"
+ ],
+ "org_names": [
+  {
+   "form": "Flintwood Kft.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Cragmoor Zrt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Stonebrook Bt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Whitlock Kft.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Feldspar Zrt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Ashcroft Bt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Quarrington Általános Iskola",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Marbleton Kórház",
+   "kind": "institution",
+   "notes": "A -ház tárgyesete kötőhangzós: Kórházat, nem Kórházt.",
+   "overrides": {
+    "acc": "Kórházat"
+   }
+  },
+  {
+   "form": "Brightwater Alapítvány",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Pebbleton Óvoda",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Graniteford Egyesület",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Chalkwell Szakrendelő",
+   "kind": "institution",
+   "notes": ""
+  }
+ ],
+ "place_names": [
+  {
+   "form": "Flintford",
+   "locative": "ine"
+  },
+  {
+   "form": "Quarryton",
+   "locative": "ine"
+  },
+  {
+   "form": "Whitmoor",
+   "locative": "ine"
+  },
+  {
+   "form": "Marlstead",
+   "locative": "ine",
+   "overrides": {
+    "harmony": "front_unrounded"
+   }
+  },
+  {
+   "form": "Pebblewick",
+   "locative": "ine"
+  },
+  {
+   "form": "Garnetwick",
+   "locative": "ine"
+  },
+  {
+   "form": "Cragholt",
+   "locative": "ine"
+  },
+  {
+   "form": "Chalkford",
+   "locative": "ine"
+  }
+ ]
+}

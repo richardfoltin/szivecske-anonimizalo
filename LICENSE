@@ -1,0 +1,27 @@
+Szivecske Anonimizáló
+Copyright (c) 2026 Foltin Csaba
+Minden jog fenntartva. / All rights reserved.
+
+Ez a mű nem szabad szoftver. A szerző semmilyen engedélyt nem ad a program vagy
+forráskódja használatára, másolására, módosítására, egyesítésére, közzétételére,
+terjesztésére, allicencelésére vagy értékesítésére. Ez a fájl a package.json
+`"license": "UNLICENSED"` bejegyzésének a kifejtése, nem eltérés tőle.
+
+A privát tárolóhoz adott hozzáférés önmagában nem jelent felhasználási engedélyt.
+Ha valakinek jogokat akarunk adni, azt külön, írásban kell megtenni.
+
+A PROGRAM „AHOGY VAN” ÁLLAPOTBAN ÉRHETŐ EL, MINDENFÉLE — KIFEJEZETT VAGY
+VÉLELMEZETT — JÓTÁLLÁS NÉLKÜL. A SZERZŐT NEM TERHELI FELELŐSSÉG A PROGRAM
+HASZNÁLATÁBÓL EREDŐ SEMMILYEN KÁRÉRT. Ez a kikötés jogi iratokat kezelő
+programnál nem formaság: az anonimizálás eredményét minden esetben emberi
+átnézés kell hogy kövesse, mielőtt az irat kikerül.
+
+── Harmadik felektől származó részek ────────────────────────────────────────
+
+A fenti szöveg KIZÁRÓLAG a szerző saját munkájára vonatkozik. A program más
+szerzőktől származó összetevőket is használ és szállít — köztük egy Apache-2.0
+licencű nyelvi modellt és több nyílt forráskódú npm-csomagot —, amelyekre a
+saját licenceik érvényesek, és amelyek feltételeit ez a fájl nem írja felül.
+
+Ezek tételes felsorolása, a szállított és a csak fejlesztéskor használt részek
+szétválasztásával: docs/licencek.md

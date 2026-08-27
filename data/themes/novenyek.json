@@ -1,0 +1,433 @@
+{
+ "id": "novenyek",
+ "lang": "hu",
+ "family": "novenyek",
+ "name_hu": "Növények",
+ "description_hu": "Növénynevekből épített névcsomag: az utónevek fűszer-, cserje- és virágnevek (Zsálya, Boróka, Bors, Kőris, Pipacs), a vezetéknevek pedig magyaros képzésű, létező mintát követő alakok (Kökényes, Somfai, Borókás, Bükkfai). Lágy, semleges hangulatú, ezért hosszú, sok szereplős iratban is kellemesen olvasható, miközben a növény-vezetéknév + növény-utónév párosítás azonnal elárulja, hogy álnévről van szó.",
+ "license_note": "Növény-, fa- és fűszernevek: köznyelvi magyar szavak, nem védettek, nem franchise-eredetűek. A vezetéknevek magunk képezte alakok a szokásos magyar vezetéknévképzőkkel (-s, -i, -falvi, -fai). A Kandelábert szándékosan kihagytuk: nem növény, hanem kandeláber (utcai lámpaoszlop), és a csomagban zavaró lenne. A valóban gyakori növényi eredetű magyar vezetékneveket (Rózsa, Virág, Fenyő) kerültük, hogy a pszeudonim ne ütközzön valós féllel.",
+ "given_names": [
+  {
+   "form": "Ciprus",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Som",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Tárnics",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "cs digráfra végződik: a -val alakja Tárniccsal."
+  },
+  {
+   "form": "Zsurló",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Iszalag",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Zanót",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Mogyoró",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Makk",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "Kettőzött mássalhangzóra végződik: a -val kötőjeles alakú (Makk-kal). Egyébként szabályos: Makknak, Makkot, Makkhoz."
+  },
+  {
+   "form": "Kőris",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": "Vegyes: ő + záró semleges i; magas kerekítetlen toldalékot kap: Kőrisnek, Kőrissel, Kőrishez."
+  },
+  {
+   "form": "Gyömbér",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": "Vegyes magas (ö + é): kerekítetlen toldalékot kap: Gyömbérnek, Gyömbérrel, Gyömbérhez."
+  },
+  {
+   "form": "Kömény",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": "ny digráfra végződik: a -vel alakja Köménnyel (Köménnyel). Vegyes magas hangrend (ö + é), kerekítetlen toldalék: Köményhez."
+  },
+  {
+   "form": "Tölgy",
+   "gender": "M",
+   "harmony": "front_rounded",
+   "notes": "gy digráfra végződik: a -vel alakja Tölggyel (nem Tölgygyel). Tárgyeset: Tölgyet.",
+   "overrides": {
+    "linkVowel": "e"
+   }
+  },
+  {
+   "form": "Zsálya",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Boróka",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Menta",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Levendula",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Rozmaring",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Iringó",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Áfonya",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Verbéna",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "Vegyes hangrendű, a záró a miatt mély toldalékot kap: Verbénának, Verbénával, Verbénához."
+  },
+  {
+   "form": "Pipacs",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "cs digráfra végződik: a -val alakja Pipaccsal."
+  },
+  {
+   "form": "Kikerics",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": "cs digráfra végződik: a -vel alakja Kikericcsel."
+  },
+  {
+   "form": "Gyöngyike",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": "Vegyes magas (ö + e): a záró e miatt kerekítetlen toldalék: Gyöngyikének, Gyöngyikével, Gyöngyikéhez."
+  },
+  {
+   "form": "Gyűszű",
+   "gender": "F",
+   "harmony": "front_rounded",
+   "notes": ""
+  }
+ ],
+ "surnames": [
+  {
+   "form": "Somfa",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Somfai",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Borókás",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Nyírfalvi",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Cserfás",
+   "harmony": "back",
+   "notes": "Vegyes hangrendű (e + á), mély toldalékot kap: Cserfásnak, Cserfással, Cserfáshoz."
+  },
+  {
+   "form": "Bükkfai",
+   "harmony": "back",
+   "notes": "Vegyes hangrendű, az utótag (fa) miatt mély toldalék: Bükkfainak, Bükkfaival, Bükkfaihoz."
+  },
+  {
+   "form": "Kőrisfai",
+   "harmony": "back",
+   "notes": "Vegyes hangrendű, az utótag (fa) miatt mély toldalék: Kőrisfainak, Kőrisfaihoz."
+  },
+  {
+   "form": "Fűzfás",
+   "harmony": "back",
+   "notes": "Vegyes hangrendű, az utótag (fa) miatt mély toldalék: Fűzfásnak, Fűzfással, Fűzfáshoz."
+  },
+  {
+   "form": "Zsályás",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Iszalagos",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Hangás",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Csalánosi",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Zanótos",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Mogyorósi",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Tölgyfalvi",
+   "harmony": "back",
+   "notes": "Vegyes hangrendű összetétel, az utótag (falva) mély hangrendje dönt: Tölgyfalvinak, Tölgyfalvihoz."
+  },
+  {
+   "form": "Levendulás",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Mentafalvi",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Pipacsos",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Áfonyás",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Ciprusi",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Zsurlós",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Kökényes",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Berkenyés",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Rekettyés",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Gyömbéri",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Kikericses",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Kaporkerti",
+   "harmony": "front_unrounded",
+   "notes": "Vegyes hangrendű, az utótag (kert) miatt magas kerekítetlen toldalék: Kaporkertinek, Kaporkertivel, Kaporkertihez."
+  },
+  {
+   "form": "Bükkerdő",
+   "harmony": "front_rounded",
+   "notes": ""
+  },
+  {
+   "form": "Zöldfürtű",
+   "harmony": "front_rounded",
+   "notes": ""
+  }
+ ],
+ "org_parts": [
+  "Kökénykert",
+  "Boróka",
+  "Zsálya",
+  "Levendula",
+  "Menta",
+  "Somfa",
+  "Tölgyfa",
+  "Bükkfa",
+  "Mogyoró",
+  "Kőris",
+  "Iszalag",
+  "Áfonya",
+  "Rozmaring",
+  "Pipacs"
+ ],
+ "org_names": [
+  {
+   "form": "Kökénykert Kft.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Boróka Zrt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Zsályamező Bt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Levendulaliget Kft.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Somfavölgy Zrt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Mogyorósdomb Bt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Kökénykerti Általános Iskola",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Zsályamezei Kórház",
+   "kind": "institution",
+   "notes": "A -ház tárgyesete kötőhangzós: Kórházat, nem Kórházt.",
+   "overrides": {
+    "acc": "Kórházat"
+   }
+  },
+  {
+   "form": "Borókaligeti Óvoda",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Levendulaligeti Alapítvány",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Somfavölgyi Egyesület",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Mogyorósdombi Szakrendelő",
+   "kind": "institution",
+   "notes": ""
+  }
+ ],
+ "place_names": [
+  {
+   "form": "Kökényfalva",
+   "locative": "sup"
+  },
+  {
+   "form": "Borókaháza",
+   "locative": "sup"
+  },
+  {
+   "form": "Zsályaszeg",
+   "locative": "sup"
+  },
+  {
+   "form": "Somfahalom",
+   "locative": "sup",
+   "overrides": {
+    "stemAlt": "Somfahalm"
+   }
+  },
+  {
+   "form": "Tölgyvár",
+   "locative": "sup"
+  },
+  {
+   "form": "Mogyorókövesd",
+   "locative": "sup"
+  },
+  {
+   "form": "Levendulaháza",
+   "locative": "sup"
+  },
+  {
+   "form": "Pipacsszeg",
+   "locative": "sup"
+  },
+  {
+   "form": "Áfonyahalom",
+   "locative": "sup",
+   "overrides": {
+    "stemAlt": "Áfonyahalm"
+   }
+  },
+  {
+   "form": "Berkenyeháza",
+   "locative": "sup"
+  }
+ ]
+}

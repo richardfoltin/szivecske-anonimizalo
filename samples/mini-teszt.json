@@ -1,0 +1,35 @@
+{
+  "filename": "mini-teszt.txt",
+  "kind": "kézi próbaszöveg a folyamat teszteléséhez",
+  "text": "A felperes Kovács János 2025. március 12-én kölcsönszerződést kötött az Aranykalász Kereskedelmi Kft.-vel. Kovács Jánosnak a szerződés szerint 4 800 000 Ft-ot kellett visszafizetnie 2026. március 31-ig.\n\nKovács Jánossal együtt írta alá az okiratot Kovács Jánosné, aki kezesként egyetemlegesen felelt. A tárgyaláson Kovács úr úgy nyilatkozott, hogy Nagy Béla tanú jelen volt az aláíráskor. Nagy Bélát a bíróság 2026. január 8-án hallgatta meg.\n\nNagy a kockázatot vállalta, ezért dr. Kovács Jánost a bíróság kötelezte. Kovácsék a tárgyalás után fellebbezést jelentettek be. K. J. korábban már fordult a bírósághoz.\n\nAz Aranykalász Kft. képviseletében Szabó Erzsébet járt el. Szabó Erzsébettel a felperes 2025 nyarán egyeztetett Szolnokon.\n\nKOVÁCS JÁNOS\nfelperes\n\nAz eljáró bíró dr. Halász Péter volt, a felperes jogi képviselője dr. Tímár Ágnes ügyvéd (KASZ: 36061234).",
+  "parties": [
+    { "canonical": "Kovács János", "type": "PERSON", "role": "felperes", "gender": "M" },
+    { "canonical": "Kovács Jánosné", "type": "PERSON", "role": "I. r. alperes", "gender": "F" },
+    { "canonical": "Nagy Béla", "type": "PERSON", "role": "tanú", "gender": "M" },
+    { "canonical": "Szabó Erzsébet", "type": "PERSON", "role": "II. r. alperes", "gender": "F" },
+    { "canonical": "Aranykalász Kereskedelmi Kft.", "type": "ORG", "role": "alperes", "gender": "N" },
+    { "canonical": "Szolnok", "type": "LOC", "role": "", "gender": "N" }
+  ],
+  "mentions": [
+    { "surface": "Kovács János", "canonical": "Kovács János", "form": "teljes név, alanyeset", "note": "" },
+    { "surface": "Aranykalász Kereskedelmi Kft.-vel", "canonical": "Aranykalász Kereskedelmi Kft.", "form": "szervezet, -val/-vel kötőjellel", "note": "rövidítés után kötőjeles rag" },
+    { "surface": "Kovács Jánosnak", "canonical": "Kovács János", "form": "teljes név, részes eset", "note": "" },
+    { "surface": "Kovács Jánossal", "canonical": "Kovács János", "form": "teljes név, -val/-vel", "note": "s + val → ssal" },
+    { "surface": "Kovács Jánosné", "canonical": "Kovács Jánosné", "form": "asszonynév, alanyeset", "note": "külön jogi személy" },
+    { "surface": "Kovács úr", "canonical": "Kovács János", "form": "vezetéknév + megszólítás", "note": "" },
+    { "surface": "Nagy Béla", "canonical": "Nagy Béla", "form": "teljes név, alanyeset", "note": "a Nagy köznévként is szerepel" },
+    { "surface": "Nagy Bélát", "canonical": "Nagy Béla", "form": "teljes név, tárgyeset", "note": "" },
+    { "surface": "dr. Kovács Jánost", "canonical": "Kovács János", "form": "névelőtag + teljes név, tárgyeset", "note": "" },
+    { "surface": "Kovácsék", "canonical": "Kovács János", "form": "család (-ék)", "note": "" },
+    { "surface": "K. J.", "canonical": "Kovács János", "form": "monogram", "note": "" },
+    { "surface": "Aranykalász Kft.", "canonical": "Aranykalász Kereskedelmi Kft.", "form": "szervezet rövidebb alakja", "note": "a Kereskedelmi elmarad" },
+    { "surface": "Szabó Erzsébet", "canonical": "Szabó Erzsébet", "form": "teljes név, alanyeset", "note": "" },
+    { "surface": "Szabó Erzsébettel", "canonical": "Szabó Erzsébet", "form": "teljes név, -val/-vel", "note": "t + vel → ttel" },
+    { "surface": "Szolnokon", "canonical": "Szolnok", "form": "helynév, -on", "note": "" },
+    { "surface": "KOVÁCS JÁNOS", "canonical": "Kovács János", "form": "teljes név, csupa nagybetű", "note": "aláírásblokk" }
+  ],
+  "must_keep": ["dr. Halász Péter", "dr. Tímár Ágnes"],
+  "traps": [
+    { "text": "Nagy a kockázatot vállalta", "why": "a 'Nagy' itt melléknév mondat elején, NEM a tanú neve — nem szabad lecserélni" }
+  ]
+}

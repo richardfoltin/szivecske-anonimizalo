@@ -1,0 +1,129 @@
+{
+  "name": "szivecske-anonymizer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Offline magyar jogi dokumentum-álnevesítő",
+  "author": {
+    "name": "Foltin Csaba"
+  },
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "spike1": "tsx spike/run-spike1.ts",
+    "spike2": "tsx spike/run-spike2.ts",
+    "test": "tsx test/run-tests.ts",
+    "typecheck": "tsc --noEmit",
+    "build:electron": "esbuild electron/main.ts --bundle --platform=node --format=esm --external:electron --external:pdf-to-img --external:canvas --outfile=dist-electron/main.js --banner:js=\"import{createRequire}from'module';const require=createRequire(import.meta.url);\"",
+    "build:preload": "esbuild electron/preload.ts --bundle --platform=node --format=cjs --external:electron --outfile=dist-electron/preload.cjs",
+    "build:ui": "vite build",
+    "dist": "npm run build:electron && npm run build:preload && npm run build:aiworker && npm run build:ui && electron-builder",
+    "dev": "npm run build:electron && npm run build:preload && npm run build:aiworker && concurrently -k \"vite\" \"wait-on tcp:5273 && cross-env SZIVECSKE_DEV_URL=http://localhost:5273 electron .\"",
+    "start": "npm run build:electron && npm run build:preload && npm run build:aiworker && npm run build:ui && electron .",
+    "app": "npm run build:electron && npm run build:preload && cross-env SZIVECSKE_DEV_URL=http://localhost:5273 electron .",
+    "test:app": "tsx test/app-integration.ts",
+    "test:docx": "tsx test/docx-tests.ts",
+    "icon": "tsx scripts/make-icon.ts",
+    "build:aiworker": "esbuild src/ai/worker.ts --bundle --platform=node --format=cjs --external:@huggingface/transformers --external:onnxruntime-node --outfile=dist-electron/ai-worker.cjs",
+    "test:detect": "tsx test/detect-tests.ts",
+    "test:pdf": "tsx test/pdf-tests.ts",
+    "test:azonosito": "tsx test/azonosito-tests.ts",
+    "test:verify": "tsx test/verify-tests.ts",
+    "test:inflect": "tsx test/smoke-inflect.ts",
+    "test:osszeg-datum": "tsx test/osszeg-datum-tests.ts",
+    "test:app:docx": "tsx test/app-integration.ts docx",
+    "test:quant": "tsx test/quant-compare.ts",
+    "test:all": "npm run typecheck && npm test && npm run test:inflect && npm run test:detect && npm run test:azonosito && npm run test:verify && npm run test:osszeg-datum && npm run test:pdf && npm run test:docx && npm run test:app && npm run test:app:docx && npm run test:kapu && npm run test:formatum && npm run test:anyja && npm run test:lanc && npm run test:azon-szivargas && npm run test:nevelo && npm run test:automata && npm run test:tamadas && npm run test:temagyar && npm run test:haladas && npm run test:haladas-lanc && npm run test:letoltes && npm run test:keszlet && npm run test:prioritas && npm run test:cimke",
+    "test:kapu": "tsx test/szivargas-kapu.ts",
+    "test:formatum": "tsx test/formatum-tests.ts",
+    "test:anyja": "tsx test/anyja-neve.ts",
+    "test:lanc": "tsx test/lanc-tesztek.ts",
+    "test:azon-szivargas": "tsx test/szivargas-azonositok.ts",
+    "test:nevelo": "tsx test/nevelo-tests.ts",
+    "demo:modell": "tsx test/modell-demo.ts",
+    "test:automata": "tsx test/automata-tests.ts",
+    "test:tamadas": "tsx test/automata-tamadas.ts",
+    "test:temagyar": "tsx test/temagyar-tests.ts",
+    "test:haladas": "tsx test/haladas-tests.ts",
+    "test:haladas-lanc": "tsx test/haladas-lanc.ts",
+    "test:letoltes": "tsx test/modell-letoltes.ts",
+    "test:keszlet": "tsx test/keszlet-tests.ts",
+    "test:prioritas": "tsx test/prioritas-tests.ts",
+    "test:cimke": "tsx test/cimke-nyelv-es-hivatalos.ts"
+  },
+  "devDependencies": {
+    "@napi-rs/canvas": "^1.0.8",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^6.1.0",
+    "concurrently": "^9.2.4",
+    "cross-env": "^10.1.0",
+    "electron": "^41.7.1",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vite": "^8.2.2",
+    "wait-on": "^9.1.0"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^4.2.0",
+    "@pdf-lib/fontkit": "^1.1.1",
+    "onnxruntime-node": "^1.29.0",
+    "pdf-lib": "^1.17.1",
+    "pdf-to-img": "^6.2.0",
+    "pdfjs-dist": "^5.6.205",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "main": "dist-electron/main.js",
+  "build": {
+    "appId": "hu.szivecske.anonimizalo",
+    "productName": "Szivecske Anonimizáló",
+    "directories": {
+      "output": "dist/telepito"
+    },
+    "files": [
+      "dist-electron/**/*",
+      "dist/ui/**/*",
+      "package.json",
+      "node_modules/@huggingface/transformers/**/*",
+      "node_modules/onnxruntime-node/**/*",
+      "!node_modules/onnxruntime-node/bin/napi-v6/darwin/**",
+      "!node_modules/onnxruntime-node/bin/napi-v6/linux/**",
+      "!node_modules/onnxruntime-node/bin/napi-v6/win32/arm64/**",
+      "!node_modules/@huggingface/transformers/node_modules/onnxruntime-node/**",
+      "!node_modules/onnxruntime-web/**"
+    ],
+    "extraResources": [
+      {
+        "from": "data",
+        "to": "data"
+      },
+      {
+        "from": "build",
+        "to": "build"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "language": "1038",
+      "installerLanguages": [
+        "hu_HU"
+      ],
+      "shortcutName": "Szivecske Anonimizáló"
+    }
+  }
+}

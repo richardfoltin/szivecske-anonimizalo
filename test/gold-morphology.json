@@ -1,0 +1,2508 @@
+{
+ "cases": [
+  {
+   "tag": "ACC",
+   "name_hu": "tárgyeset",
+   "variants": [
+    "-t",
+    "-ot",
+    "-et",
+    "-öt",
+    "-at"
+   ],
+   "notes": "Kötőhang nélküli -t magánhangzó után, valamint rövid l, ly, n, ny, r, s, sz, z, zs, j után (Molnárt, Farkast, Kodályt, Ödönt, Balázst). Kötőhangzós -ot/-et/-öt b, c, cs, d, f, g, gy, h, k, m, p, t, ty, v után, mássalhangzó-torlódás után (Örsöt, Borsot) és hosszú mássalhangzó után (Pappot, Kisset). A kötőhangzó: mély szó → -o-, magas ajakréses → -e-, magas ajakkerekítéses (az utolsó magánhangzó ö/ő/ü/ű) → -ö-. Az -at változat tulajdonneveken gyakorlatilag nem fordul elő."
+  },
+  {
+   "tag": "DAT",
+   "name_hu": "részes eset",
+   "variants": [
+    "-nak",
+    "-nek"
+   ],
+   "notes": "Kétalakú, csak hangrend szerint illeszkedik (ajakkerekítés nem számít). Mássalhangzóval kezdődik, ezért nem hasonul és nem nyújt: Kovácsnak, Frédnek, Ödönnek, Kősziklának. Szó végi -a/-e NEM nyúlik? De igen: Annának, Tündének (a nyúlás minden ragozott alakban bekövetkezik)."
+  },
+  {
+   "tag": "INS",
+   "name_hu": "eszközhatározó eset (-val/-vel)",
+   "variants": [
+    "-val",
+    "-vel"
+   ],
+   "notes": "A rag v-je mássalhangzó után teljesen hasonul (AkH. 82., 160.). A legbonyolultabb eset: kétjegyű betűk kettőzése egyszerűsítve (Kováccsal, Kodállyal, Naggyal, Kökénnyel), eleve kettőzött mássalhangzó után kötőjel (Kiss-sel, Papp-pal), régies betű és x esetén a kiejtés szerinti hang (Tóthtal, Baloghgal, Móriczcal, Marxszal), idegen nevek esetén a KIEJTETT véghang szerint (Balzackal, Bachhal, Bruce-szal)."
+  },
+  {
+   "tag": "TRANS",
+   "name_hu": "eredményhatározó eset (-vá/-vé)",
+   "variants": [
+    "-vá",
+    "-vé"
+   ],
+   "notes": "Pontosan ugyanaz a hasonulási viselkedés, mint a -val/-vel esetén (AkH. 82., 160.): Kováccsá, Naggyá, Kiss-sé, Papp-pá, Annává. Jogi szövegben ritka, de a motorban ugyanazzal a kóddal kezelendő."
+  },
+  {
+   "tag": "INE",
+   "name_hu": "belviszony, hol? (-ban/-ben)",
+   "variants": [
+    "-ban",
+    "-ben"
+   ],
+   "notes": "Kétalakú, hangrend szerint. Személyneveken átvitt értelemben fordul elő (\"Kovács Jánosban megbízott\")."
+  },
+  {
+   "tag": "ILL",
+   "name_hu": "belviszony, hová? (-ba/-be)",
+   "variants": [
+    "-ba",
+    "-be"
+   ],
+   "notes": "Kétalakú. Szó végi -a/-e nyúlik előtte: Vargába, Tündébe."
+  },
+  {
+   "tag": "ELA",
+   "name_hu": "belviszony, honnan? (-ból/-ből)",
+   "variants": [
+    "-ból",
+    "-ből"
+   ],
+   "notes": "Kétalakú, hangrend szerint."
+  },
+  {
+   "tag": "SUP",
+   "name_hu": "külviszony, hol? (-on/-en/-ön/-n)",
+   "variants": [
+    "-n",
+    "-on",
+    "-en",
+    "-ön"
+   ],
+   "notes": "Háromalakú + puszta -n. Magánhangzó után puszta -n (Szabón, Annán, Tündén). Mássalhangzó után kötőhangzóval: mély -on (Farkason, Grániton, Borson), magas ajakréses -en (Erzsébeten, Kökényen, Ökörszemen), magas ajakkerekítéses -ön (Ödönön, Örsön, Füttyösön)."
+  },
+  {
+   "tag": "SUB",
+   "name_hu": "külviszony, hová? (-ra/-re)",
+   "variants": [
+    "-ra",
+    "-re"
+   ],
+   "notes": "Kétalakú; szó végi -a/-e nyúlik: Annára, Tündére, Kősziklára."
+  },
+  {
+   "tag": "DEL",
+   "name_hu": "külviszony, honnan? (-ról/-ről)",
+   "variants": [
+    "-ról",
+    "-ről"
+   ],
+   "notes": "Kétalakú; szó végi -a/-e nyúlik: Vargáról, Kőszikláról, Tündéről."
+  },
+  {
+   "tag": "ADE",
+   "name_hu": "közelviszony, hol? (-nál/-nél)",
+   "variants": [
+    "-nál",
+    "-nél"
+   ],
+   "notes": "Kétalakú. Jogi szövegben gyakori (\"a Kovács Jánosnál lefoglalt irat\")."
+  },
+  {
+   "tag": "ALL",
+   "name_hu": "közelviszony, hová? (-hoz/-hez/-höz)",
+   "variants": [
+    "-hoz",
+    "-hez",
+    "-höz"
+   ],
+   "notes": "HÁROMALAKÚ: az ajakkerekítést az UTOLSÓ magánhangzó dönti el, nem az utolsó nem-semleges magánhangzó. Ezért Kökényhez (nem *Kökényhöz), Tündéhez, Ökörszemhez, de Tücsökhöz, Ödönhöz, Örshöz."
+  },
+  {
+   "tag": "ABL",
+   "name_hu": "közelviszony, honnan? (-tól/-től)",
+   "variants": [
+    "-tól",
+    "-től"
+   ],
+   "notes": "Kétalakú. Ha a név t-re vagy tt-re végződik, hármas betűtorlódás keletkezhet: Ivett-től, Scott-tól (kötőjel, AkH. 93., 217.)."
+  },
+  {
+   "tag": "TER",
+   "name_hu": "határvető eset (-ig)",
+   "variants": [
+    "-ig"
+   ],
+   "notes": "EGYALAKÚ (nincs hangrendi illeszkedés), DE a szó végi -a/-e megnyúlik előtte: Annáig, Vargáig, Tündéig, Kovácsig, Frédig."
+  },
+  {
+   "tag": "ESS_FOR",
+   "name_hu": "essivus-formalis (-ként)",
+   "variants": [
+    "-ként"
+   ],
+   "notes": "EGYALAKÚ, és NEM nyújtja meg a szó végi -a/-e-t: Annaként, Vargaként, Tündeként, Kősziklaként, Zúzmaraként. Ez a leggyakoribb hibaforrás a -ig-gel szemben."
+  },
+  {
+   "tag": "ESS_MOD",
+   "name_hu": "essivus-modalis (-ul/-ül)",
+   "variants": [
+    "-ul",
+    "-ül"
+   ],
+   "notes": "Kétalakú, de SZEMÉLYNEVEKEN nem idiomatikus (a *Kovácsul, *Frédül alakok nem magyarok). Csak nyelv- és állapotnevekkel él (magyarul, feleségül). A motor ne generáljon -ul/-ül alakot személynévre."
+  },
+  {
+   "tag": "POSS",
+   "name_hu": "birtokjel (-é)",
+   "variants": [
+    "-é"
+   ],
+   "notes": "Egyalakú, hangrendileg átlátszó (a további toldalék a NÉV hangrendjét követi). Megnyújtja a szó végi -a/-e-t: Kovácsé, Szabóé, Annáé, Vargáé, Tündéé, Kőszikláé, Vörösmartyé."
+  },
+  {
+   "tag": "PL",
+   "name_hu": "többes szám jele (-k)",
+   "variants": [
+    "-k",
+    "-ok",
+    "-ek",
+    "-ök",
+    "-ak"
+   ],
+   "notes": "AkH. 162. Magánhangzó után puszta -k, a szó végi -a/-e nyúlik (Vargák, Annák, Tündék, Szabók, Kisfaludyak). Mássalhangzó után ugyanaz a kötőhangzó-választás, mint a tárgyragnál: Kovácsok, Némethek, Ödönök, Örsök, Füttyösök."
+  },
+  {
+   "tag": "FAM",
+   "name_hu": "családi (\"-ék\") képző",
+   "variants": [
+    "-ék",
+    "-ák",
+    "-ék (a/e nyúlással)"
+   ],
+   "notes": "Az egész családot/háztartást jelöli. HANGRENDILEG ÁTLÁTSZÓ: a rákövetkező toldalék a NÉV hangrendjét követi, nem az -ék é-jét: Kovácsék → Kovácséknak, Kovácsékkal, Kovácséknál, Kovácsékhoz; de Kissék → Kisséknek, Kissékkel. Szó végi -a/-e nyúlik: Vargáék, Annáék, Kőszikláék."
+  },
+  {
+   "tag": "WIFE",
+   "name_hu": "asszonynévképző (-né)",
+   "variants": [
+    "-né"
+   ],
+   "notes": "Egyalakú. Hangrendileg átlátszó, mint az -ék: mély tövön mély rag (Kovácsnénak, Kovácsnéval, Kovácsnéhoz), magas tövön magas (Kissnének, Kissnével). Magánhangzóra (é) végződik, ezért a -val/-vel nem hasonul, a tárgyrag puszta -t (Kovácsnét)."
+  },
+  {
+   "tag": "POSS3SG",
+   "name_hu": "egyes szám 3. személyű birtokos személyjel (-a/-e/-ja/-je)",
+   "variants": [
+    "-a",
+    "-e",
+    "-ja",
+    "-je"
+   ],
+   "notes": "Személyneveken jogi prózában gyakorlatilag nem fordul elő (az \"ügyfele\", \"jogi képviselője\" a köznévhez járul, nem a névhez). A választás (-a/-e vs. -ja/-je) tőfüggő és nem vezethető le megbízhatóan az írásképből, ezért a motor NE generáljon 3. személyű birtokos alakot személynévre. Lásd az \"uncertain\" listát."
+  }
+ ],
+ "rules": [
+  {
+   "id": "R01",
+   "name": "A három hangrendi osztály",
+   "statement": "Minden nevet pontosan egy osztályba kell sorolni: (1) MÉLY (back): a, á, o, ó, u, ú valamelyikét tartalmazza a mértékadó szótag; (2) MAGAS AJAKRÉSES (front unrounded): csak e, é, i, í szerepel benne; (3) MAGAS AJAKKEREKÍTÉSES (front rounded): az utolsó magánhangzó ö, ő, ü vagy ű. A kétalakú toldalékok (-nak/-nek, -val/-vel, -ban/-ben, -ból/-ből, -ba/-be, -ra/-re, -ról/-ről, -nál/-nél, -tól/-től) csak az (1) vs. (2+3) megkülönböztetést használják; a háromalakúak (-hoz/-hez/-höz, -on/-en/-ön, -ot/-et/-öt, -ok/-ek/-ök) mind a hármat.",
+   "examples": [
+    "Kovács → mély → Kovácsnak, Kovácshoz",
+    "Fréd → magas ajakréses → Frédnek, Frédhez",
+    "Ödön → magas ajakkerekítéses → Ödönnek, Ödönhöz"
+   ]
+  },
+  {
+   "id": "R02",
+   "name": "Hangrend meghatározása: az utolsó NEM SEMLEGES magánhangzó dönt",
+   "statement": "A mély/magas megkülönböztetéshez balról jobbra haladva vedd az UTOLSÓ olyan magánhangzót, amely nem i, í vagy é. Ha ez a, á, o, ó, u, ú → MÉLY; ha e, ö, ő, ü, ű → MAGAS. Ha a névben csak i/í/é van, akkor MAGAS (lásd R04). A puszta 'az utolsó magánhangzó dönt' heurisztika ott bukik el, ahol a név utolsó magánhangzója semleges i/í/é, de előtte mély magánhangzó áll: ilyenkor a szó MÉLY marad.",
+   "examples": [
+    "Béla (é, a) → utolsó nem semleges: a → mély → Bélának, Bélával",
+    "Kavics (a, i) → utolsó nem semleges: a → mély → Kavicsnak, Kaviccsal",
+    "Gránit (á, i) → mély → Gránitnak, Gránittal",
+    "Zsófia (o, i, a) → mély → Zsófiának",
+    "Kovács (o, á) → mély → Kovácsnak",
+    "Kossuth (o, u) → mély → Kossuthhoz"
+   ]
+  },
+  {
+   "id": "R03",
+   "name": "Az ajakkerekítés külön szabálya (a háromalakú toldalékokhoz)",
+   "statement": "A -hoz/-hez/-höz, -on/-en/-ön és a kötőhangzók (-ot/-et/-öt, -ok/-ek/-ök) ajakkerekítéses változatát NEM az utolsó nem semleges magánhangzó, hanem az UTOLSÓ MAGÁNHANGZÓ dönti el: csak akkor -höz/-ön/-öt/-ök, ha a szó utolsó magánhangzója ö, ő, ü vagy ű. Ha az utolsó magánhangzó e vagy é (akkor is, ha korábban ö/ü áll a szóban), az ajakréses változat jár. Ez a szabály független az R02 mély/magas döntésétől, és csak magas szavakra alkalmazandó.",
+   "examples": [
+    "Kökény (ö, é) → magas, utolsó magánhangzó é → Kökényhez, Kökényen, Kökényt",
+    "Tünde (ü, e→é) → Tündéhez, Tündén, Tündét",
+    "Ökörszem (ö, ö, e) → Ökörszemhez, Ökörszemen, Ökörszemet",
+    "Tücsök (ü, ö) → Tücsökhöz, Tücsökön",
+    "Örs (ö) → Örshöz, Örsön, Örsöt, Örsök",
+    "Füttyös (ü, ö) → Füttyöshöz, Füttyösön, Füttyösök"
+   ]
+  },
+  {
+   "id": "R04",
+   "name": "Csak i/í/é magánhangzót tartalmazó nevek",
+   "statement": "Ha egy név csak i, í, é (és/vagy e) magánhangzókat tartalmaz, MAGAS AJAKRÉSES osztályba kerül. A magyarban létezik kb. 40 olyan köznév, amely csupa semleges magánhangzót tartalmaz, mégis mély toldalékot kap (híd → hídnak, nyíl → nyílnak, cél → célok, derék → derekat, dél, héj, szíj, férfi → férfiak). Ezek KÖZNEVEK: magyar SZEMÉLYNÉV nem tartozik közéjük, ezért az anonimizáló motorban a csupa-semleges személynév kivétel nélkül magasként kezelendő. Egyetlen kockázat: ha egy vezetéknév alakilag azonos egy ilyen antiharmonikus köznévvel (pl. a ritka Szíj, Héj családnév) — ezeket kézi kivétellistára kell tenni.",
+   "examples": [
+    "Kiss (i) → Kissnek, Kisset, Kisshez, Kissek",
+    "Fréd (é) → Frédnek, Frédet, Frédhez",
+    "Németh (é, e) → Némethnek, Némethet, Némethhez",
+    "Ivett (i, e) → Ivettnek, Ivettet",
+    "Erzsébet (e, é, e) → Erzsébetnek, Erzsébetet"
+   ]
+  },
+  {
+   "id": "R05",
+   "name": "Vegyes hangrendű és összetett nevek",
+   "statement": "Vegyes hangrendű (mély + magas magánhangzót egyaránt tartalmazó) neveknél az R02 érvényes: az utolsó nem semleges magánhangzó dönt. ÖSSZETETT névnél (és minden összetételből alkotott álnévnél) az UTOTAG hangrendje dönt, akkor is, ha az előtag más osztályba tartozik.",
+   "examples": [
+    "József (o, ö) → utolsó nem semleges: ö → magas → Józsefnek, Józseffel, Józsefet",
+    "Kőszikla = kő + szikla → az utótag mély → Kősziklának, Kősziklával, Kősziklához",
+    "Ökörszem = ökör + szem → az utótag magas ajakréses → Ökörszemnek, Ökörszemmel, Ökörszemhez",
+    "Zúzmara (ú, a) → mély → Zúzmarának",
+    "Béla (é, a) → mély → Bélának"
+   ]
+  },
+  {
+   "id": "R06",
+   "name": "Idegen nevek hangrendje: a magyar KIEJTÉS dönt",
+   "statement": "Idegen eredetű nevek hangrendjét a magyarban szokásos kiejtés utolsó nem semleges magánhangzója határozza meg, nem az írásképe. Az írásképből ez nem mindig vezethető le (néma betűk, eltérő betű-hang megfelelés), ezért a programnak névenként tárolnia kell a hangrendi osztályt. A meghonosodott idegen szavaknál ingadozás is előfordul (fotelban ~ fotelben), tulajdonneveknél viszont egy alakot kell választani és következetesen tartani.",
+   "examples": [
+    "Bruce [brúsz] → mély → Bruce-nak, Bruce-szal, Bruce-hoz",
+    "Fréd [fréd] → magas → Frédnek, Fréddel",
+    "Wilma [vilma] → mély → Wilmának, Wilmával",
+    "Bach [bah] → mély → Bachnak, Bachhal",
+    "Balzac [balzak] → mély → Balzacnak, Balzackal",
+    "Greenwich [grinics] → magas → Greenwichcsel"
+   ]
+  },
+  {
+   "id": "R07",
+   "name": "-val/-vel: a v teljes hasonulása mássalhangzó után",
+   "statement": "Mássalhangzóra végződő névhez kapcsolva a -val/-vel (és a -vá/-vé) v-je teljesen hasonul a név utolsó mássalhangzójához, azaz a rag alakja -Cal/-Cel, ahol C a név záró mássalhangzója. Írásban a kettőzést jelöljük (AkH. 82., 160. a). Ez a szabály MINDIG a kiejtett záró hangra épül, nem az utolsó leírt betűre (lásd R10, R11).",
+   "examples": [
+    "Fréd + -vel → Fréddel",
+    "Ödön + -vel → Ödönnel",
+    "Molnár + -val → Molnárral",
+    "Farkas + -val → Farkassal",
+    "Bazalt + -val → Bazalttal",
+    "Gránit + -val → Gránittal",
+    "Ökörszem + -vel → Ökörszemmel",
+    "Ádám + -val → Ádámmal (AkH. 160. a)",
+    "Bálint + -val → Bálinttal (AkH. 160. a)"
+   ]
+  },
+  {
+   "id": "R08",
+   "name": "Kétjegyű (és háromjegyű) betűk kettőzése: az egyszerűsítő írásmód",
+   "statement": "Ha a név kétjegyű betűre végződik, a hasonult rag ugyanazt a kétjegyű betűt adja, de a kettőzött kétjegyű betűt egyszerűsítve írjuk: csak az első jegyet ismételjük (AkH. 92.). Táblázat: cs+cs → ccs; sz+sz → ssz; zs+zs → zzs; gy+gy → ggy; ny+ny → nny; ty+ty → tty; ly+ly → lly; dz+dz → ddz; dzs+dzs → ddzs. Fontos: az egyszerűsítés NEM alkalmazandó összetételi határon (AkH. 92. kivétele: kulcscsomó, nagygyűlés, észszerű) — kötőjeles kettős vezetéknévnél ezért az utótagon belül számol a szabály, a kötőjelen át soha.",
+   "examples": [
+    "Kovács + -val → Kováccsal",
+    "Kavics + -val → Kaviccsal",
+    "Szabolcs + -val → Szabolccsal (AkH. 160. a)",
+    "Kodály + -val → Kodállyal (AkH. 160. a)",
+    "Nagy + -val → Naggyal",
+    "Kökény + -vel → Kökénnyel",
+    "Kertész + -vel → Kertésszel",
+    "Balázs + -val → Balázzsal",
+    "Madách + -vá → Madáchcsá (AkH. 160. b)"
+   ]
+  },
+  {
+   "id": "R09",
+   "name": "Eleve kettőzött mássalhangzóra végződő nevek: KÖTŐJEL",
+   "statement": "Ha a személynév kettőzött (hosszú) mássalhangzót jelölő betűre végződik, a -val/-vel (és -vá/-vé) megfelelő alakját KÖTŐJELLEL kapcsoljuk, hogy az alapforma világosan elváljon (AkH. 160. c). Ugyanez általánosabban: a toldalékolás miatt egymás mellé kerülő három azonos mássalhangzót jelölő betűt köznévben kettőzöttre egyszerűsítjük (tollal, orra), TULAJDONNÉVBEN viszont nem egyszerűsítünk, hanem kötőjelet teszünk (AkH. 93.). Ez tehát nemcsak a -val/-vel-re, hanem minden olyan toldalékra vonatkozik, amely hármas betűtorlódást hozna létre (-tól/-től, -nak/-nek stb.). Ha nem keletkezik hármas torlódás, nincs kötőjel.",
+   "examples": [
+    "Kiss + -vel → Kiss-sel (AkH. 160. c)",
+    "Papp + -val → Papp-pal (AkH. 160. c)",
+    "Makk + -val → Makk-kal; Széll + -vel → Széll-lel (AkH. 160. c)",
+    "Ivett + -vel → Ivett-tel; Mariann + -val → Mariann-nal (AkH. 160. c)",
+    "Ivett + -től → Ivett-től; Mariann + -nak → Mariann-nak (AkH. 93.)",
+    "Hermann + -nál → Hermann-nál (AkH. 93.)",
+    "Scott + -tól → Scott-tól; Falstaff + -val → Falstaff-fal; Mann + -nak → Mann-nak (AkH. 217.)",
+    "DE: Kiss + -nek → Kissnek; Kiss + -től → Kisstől; Papp + -nak → Pappnak; Papp + -hoz → Papphoz (nincs hármas torlódás)"
+   ]
+  },
+  {
+   "id": "R10",
+   "name": "Régies betűt vagy x-et tartalmazó magyar családnevek",
+   "statement": "Ha a személynév végén régies betű (th, gh, ch, cz, tz, ts, eő, ss stb.) vagy x áll, a nevet VÁLTOZATLANUL hagyjuk, és a -val/-vel v-je helyére a név végén EJTETT hangnak megfelelő mai betűt írjuk (AkH. 160. b). A hasonult mássalhangzó tehát a kiejtett hangot tükrözi, de a név betűsora sértetlen marad — így a névben ugyanaz a hang kétszer, kétféle írással jelenik meg. Ugyanez a kiejtés-elv vezérli a tárgyrag kötőhangzóját is.",
+   "examples": [
+    "Kossuth + -val → Kossuthtal (AkH. 160. b)",
+    "Végh + -vel → Véghgel (AkH. 160. b)",
+    "Móricz + -val → Móriczcal; Rátz + -val → Rátzcal (AkH. 160. b)",
+    "Babits + -val → Babitscsal (AkH. 160. b)",
+    "Marx + -val → Marxszal; Félix + -vel → Félixszel; Alex + -vel → Alexszel (AkH. 160. b)",
+    "Tóth + -val → Tóthtal; Horváth + -val → Horváthtal; Németh + -vel → Némethtel",
+    "Balogh + -val → Baloghgal (a Véghgel mintájára)",
+    "Tóth + -t → Tóthot; Németh + -t → Némethet; Balogh + -t → Baloghot; Félix + -t → Félixet"
+   ]
+  },
+  {
+   "id": "R11",
+   "name": "Idegen nevek: a rag a KIEJTETT véghanghoz igazodik",
+   "statement": "Az idegen írásmód szerint írt tulajdonnevekhez a toldalékot általában kötőjel nélkül kapcsoljuk, és a -val/-vel v-je a név KIEJTETT utolsó hangjához hasonul, nem az utolsó betűjéhez (AkH. 216. b). Ebből következik, hogy egy algoritmus a puszta írásképből NEM tudja levezetni a helyes alakot: a Balzac c-je [k], a Bach ch-ja [h/x], a Greenwich ch-ja [cs], a Steinbeck ck-ja [k], a Bruce e-je néma és a végén [sz] hangzik. Ezért a programnak NÉVENKÉNT tárolnia kell: (a) a kiejtett záró hangot jelölő magyar betűt (a hasonuláshoz), (b) a hangrendi osztályt, (c) azt, hogy néma betűre végződik-e (kötőjel kell-e), (d) a tárgyrag kötőhangzóját. Álnevek esetén ez triviális, mert az álnevek magyar szavak — ezért ajánlott a valódi idegen neveket kizárólag ilyen tárolt rekordból ragozni.",
+   "examples": [
+    "Balzac + -val → Balzackal (AkH. 216. b)",
+    "Bach + -val → Bachhal (AkH. 216. b)",
+    "Steinbeck + -vel → Steinbeckkel; pech + -vel → pechhel (AkH. 216. b)",
+    "Greenwich + -vel → Greenwichcsel",
+    "Balzac + -t → Balzacot; Bach + -t → Bachot"
+   ]
+  },
+  {
+   "id": "R12",
+   "name": "Néma véghang és szokatlan betűegyüttes: kötőjel",
+   "statement": "Ha az idegen név végén hangérték nélküli (néma) betű áll, vagy ha az utolsó kiejtett hangot a magyar írásrendszerben szokatlan betűegyüttes jelöli, a magyar toldalékot MINDIG kötőjellel kapcsoljuk (AkH. 217.). A kötőjel után a toldalék a kiejtés szerint illeszkedik és hasonul.",
+   "examples": [
+    "Bruce + -t → Bruce-t; Bruce + -val → Bruce-szal; Bruce + -nak → Bruce-nak; Bruce + -nál → Bruce-nál",
+    "guillotine + -t → guillotine-t; monsieur + -nek → monsieur-nek (AkH. 217.)",
+    "Glasgow + -ban → Glasgow-ban; Loire + -on → Loire-on (AkH. 217.)"
+   ]
+  },
+  {
+   "id": "R13",
+   "name": "Magánhangzóra végződő nevek: nincs hasonulás",
+   "statement": "Magánhangzóra végződő névhez a -val/-vel v-je VÁLTOZATLANUL kapcsolódik; nincs kettőzés és nincs kötőjel. Ez a hosszú magánhangzókra (ó, ő, ú, ű, í), az i-re és az [i] hangértékű szó végi y-ra is vonatkozik.",
+   "examples": [
+    "Szabó + -val → Szabóval",
+    "Anna + -val → Annával",
+    "Varga + -val → Vargával",
+    "Tünde + -vel → Tündével",
+    "Zsófia + -val → Zsófiával",
+    "Széchenyi + -vel → Széchenyivel",
+    "Kőszikla + -val → Kősziklával",
+    "Zúzmara + -val → Zúzmarával"
+   ]
+  },
+  {
+   "id": "R14",
+   "name": "A szó végi -a/-e megnyúlása -á/-é-vé",
+   "statement": "A szó végi rövid -a és -e MEGNYÚLIK (-á, -é) minden ragozott és jelezett alakban: az összes esetrag előtt (-t, -nak/-nek, -val/-vel, -ban/-ben, -ba/-be, -ra/-re, -ról/-ről, -ban/-ben, -ból/-ből, -nál/-nél, -tól/-től, -hoz/-hez, -on/-en, -ig, -vá/-vé), a többes szám -k jele előtt, a birtokjel -é előtt és az -ék családi képző előtt. NEM nyúlik meg a -ként, a -kor, a -féle, a -szerű és a melléknévképző -i előtt. Ez a leggyakoribb géphiba-forrás, mert a -ig és a -ként egyaránt egyalakú toldalék, mégis ellentétesen viselkedik.",
+   "examples": [
+    "Anna → Annát, Annának, Annával, Annára, Annáról, Annáig, Annáé, Annák, Annáék — DE: Annaként",
+    "Varga → Vargát, Vargával, Vargáról, Vargáig, Vargáé, Vargák, Vargáék — DE: Vargaként",
+    "Tünde → Tündét, Tündével, Tündéhez, Tündéig, Tündéé, Tündék — DE: Tündeként",
+    "Kőszikla → Kősziklát, Kősziklával, Kőszikláról, Kőszikláé, Kőszikláék — DE: Kősziklaként",
+    "Coca-Cola → Coca-Colát (AkH. 216. a: az idegen szavak szó végi a/e/o/ö-je is nyúlik)"
+   ]
+  },
+  {
+   "id": "R15",
+   "name": "A tárgyrag kötőhangzója tulajdonneveknél",
+   "statement": "A tárgyrag alakja: (1) PUSZTA -t magánhangzó után; (2) PUSZTA -t egyetlen, magánhangzó előzte rövid l, ly, n, ny, r, s, sz, z, zs, j után; (3) KÖTŐHANGZÓS -ot/-et/-öt minden más mássalhangzó (b, c, cs, d, dz, f, g, gy, h, k, m, p, t, ty, v) után, továbbá mássalhangzó-torlódás után és hosszú (kettőzött) mássalhangzó után. A kötőhangzó a hangrend és az ajakkerekítés szerint -o- / -e- / -ö- (lásd R02, R03). A köznevekben élő -at/-et változat (házat, hidat, tollat) tulajdonnevekre NEM terjed ki: a mély hangrendű személynév kötőhangzója -o- (Pappot, nem *Pappat).",
+   "examples": [
+    "Szabót, Annát, Vargát, Tündét, Bélát (magánhangzó után puszta -t)",
+    "Molnárt, Farkast, Kodályt, Ödönt, Balázst, Kertészt, Kökényt, Csongort, Jánost, Füttyöst (egyszerű l/ly/n/ny/r/s/sz/z/zs után puszta -t)",
+    "Kovácsot, Kavicsot, Nagyot, Bazaltot, Gránitot, Baloghot, Tóthot, Bachot, Balzacot (kötőhangzós -ot)",
+    "Frédet, Némethet, Erzsébetet, Ökörszemet, Ivettet, Félixet (kötőhangzós -et)",
+    "Örsöt (rs torlódás + ajakkerekítés → -öt)",
+    "Pappot, Kisset (hosszú mássalhangzó → kötőhangzó kötelező)"
+   ]
+  },
+  {
+   "id": "R16",
+   "name": "Kötőhangzó a -k (többes), -m és -d (birtokos személyjel) előtt",
+   "statement": "A -k, -m, -d előtti kötőhangzó megválasztása ugyanaz, mint a tárgyragé (R15), azzal a különbséggel, hogy magánhangzó után mindig puszta -k/-m/-d áll, a szó végi -a/-e pedig megnyúlik. Mássalhangzó után: mély → -ok/-om/-od, magas ajakréses → -ek/-em/-ed, magas ajakkerekítéses → -ök/-öm/-öd. Tulajdonnévnél a többes szám a névalak megtartásával, nagy kezdőbetűvel áll (AkH. 162.).",
+   "examples": [
+    "Kovácsok, Pappok, Molnárok, Horváthok, Borsok (mély -ok)",
+    "Kissek, Frédek, Némethek, Erzsébetek, Kökények (magas ajakréses -ek)",
+    "Ödönök, Örsök, Füttyösök (ajakkerekítéses -ök)",
+    "Szabók, Vargák, Annák, Tündék, Petőfik, Kisfaludyak (magánhangzó után puszta -k, a/e nyúlással) (AkH. 162.)"
+   ]
+  },
+  {
+   "id": "R17",
+   "name": "A birtokjel -é",
+   "statement": "A -é birtokjel egyalakú, közvetlenül kapcsolódik, megnyújtja a szó végi -a/-e-t, és hangrendileg ÁTLÁTSZÓ: a rá következő további toldalék a NÉV eredeti hangrendjét követi. A -é után a tárgyrag puszta -t (Kovácsét), mert magánhangzóra végződik.",
+   "examples": [
+    "Kovács → Kovácsé; Szabó → Szabóé; Anna → Annáé; Varga → Vargáé; Tünde → Tündéé; Kőszikla → Kőszikláé",
+    "Vörösmarty → Vörösmartyé (AkH. 159.)",
+    "Kodály → Kodályé; Fréd → Frédé"
+   ]
+  },
+  {
+   "id": "R18",
+   "name": "Az -ék családi képző",
+   "statement": "Az -ék képző a névhez közvetlenül kapcsolódik, megnyújtja a szó végi -a/-e-t, és HANGRENDILEG ÁTLÁTSZÓ: az utána következő ragok az ALAPNÉV hangrendjét követik, nem az -ék é-jét. A -val/-vel az -ék k-jához hasonul (-kal/-kel). Az -ék a jogi szövegben leggyakrabban a -nak/-nek, -val/-vel, -nál/-nél, -hoz/-hez, -tól/-től, -ról/-ről ragokkal áll.",
+   "examples": [
+    "Kovács → Kovácsék → Kovácséknak, Kovácsékkal, Kovácséknál, Kovácsékhoz, Kovácséktól, Kovácsékról",
+    "Kiss → Kissék → Kisséknek, Kissékkel, Kisséknél, Kissékhez (magas alapnév)",
+    "Varga → Vargáék; Anna → Annáék; Gyula → Gyuláék; Kőszikla → Kőszikláék; Szabó → Szabóék; Fréd → Frédék",
+    "Nagy → Nagyék → Nagyékkal, Nagyéknak"
+   ]
+  },
+  {
+   "id": "R19",
+   "name": "A -né asszonynévképző három típusa",
+   "statement": "Három szerkezetileg különböző alak van. (A) FÉRJ TELJES NEVE + -né: 'Kovács Jánosné' — a -né a férj UTÓNEVÉHEZ tapad, a családnév külön szó marad; a ragot csak az utolsó elem kapja: Kovács Jánosnénak, Kovács Jánosnét, Kovács Jánosnéval. (B) FÉRJ CSALÁDNEVE + -né: 'Kovácsné' — egyetlen szó, önállóan ragozódik: Kovácsnét, Kovácsnénak, Kovácsnéval, Kovácsnéhoz, Kovácsnénál. (C) FÉRJ CSALÁDNEVE + -né + AZ ASSZONY SAJÁT TELJES NEVE: 'Kovácsné Szabó Anna' — háromelemű névsor, a ragot itt is csak az UTOLSÓ elem kapja: Kovácsné Szabó Annának, Kovácsné Szabó Annát, Kovácsné Szabó Annával; a 'Kovácsné' elem ragozatlan marad. Alaktanilag a -né mindhárom esetben é-re végződik, tehát nincs -val/-vel hasonulás, a tárgyrag puszta -t, és a rag a férj nevének hangrendjét követi (átlátszó képző). ANONIMIZÁLÁSKOR: a -né alak derivációs kapcsolatban áll a férj nevével, ezért a helyettesítésnek meg kell őriznie a kapcsolatot — ha 'Kovács János' → 'Kőszikla Fréd', akkor 'Kovács Jánosné' → 'Kőszikla Frédné', 'Kovácsné' → 'Kősziklané'... helyesen 'Kőszikláné' (a szó végi -a megnyúlik az -né előtt is), és 'Kovácsné Szabó Anna' → 'Kőszikláné Kavics Zúzmara' típusú alak, ahol a -né TÖVE a férjnek adott álnév családneve, a további elemek pedig a nő saját álneve. A programnak tehát a névtáblában rögzítenie kell a férj–feleség hivatkozást, és a -né-t a helyettesítés UTÁN kell újraképeznie, nem a felszíni szövegből átmásolnia.",
+   "examples": [
+    "Kovács Jánosné → Kovács Jánosnénak, Kovács Jánosnét, Kovács Jánosnéval",
+    "Kovácsné → Kovácsnénak, Kovácsnét, Kovácsnéval, Kovácsnéhoz, Kovácsnénál",
+    "Kissné → Kissnének, Kissnét, Kissnével (magas alapnév)",
+    "Kovácsné Szabó Anna → Kovácsné Szabó Annának, Kovácsné Szabó Annát, Kovácsné Szabó Annával",
+    "álnév-leképezés: Kovács János → Kőszikla Fréd; Kovács Jánosné → Kőszikla Frédné"
+   ]
+  },
+  {
+   "id": "R20",
+   "name": "Többelemű nevek: csak az UTOLSÓ elem kap ragot",
+   "statement": "A magyar személynévhez a ragokat, jeleket és képzőket kötőjel nélkül, közvetlenül kapcsoljuk (AkH. 159.). Többelemű (több különírt szóból álló) névnél a toldalékot MINDIG csak az utolsó elem veszi fel; a többi elem ragozatlan marad. A hangrendet és a hasonulást is kizárólag az utolsó elem határozza meg. (Kivétel: a névből képzett -i, -s, -ista, -izmus képző többelemű névnél kötőjellel és nagybetűvel: Eötvös József-i, Táncsics Mihály-i — AkH. 161.)",
+   "examples": [
+    "Kovács János → Kovács Jánosnak, Kovács Jánost, Kovács Jánossal (nem *Kovácsnak Jánosnak)",
+    "Táncsics Mihály → Táncsics Mihálynak (AkH. 159.)",
+    "Ilosvai Selymes Péter → Ilosvai Selymes Péternél (AkH. 159.)",
+    "Kőszikla Fréd → Kőszikla Frédnek, Kőszikla Fréddel, Kőszikla Frédet",
+    "Eötvös József-i, Csokonai Vitéz Mihály-os (AkH. 161.)"
+   ]
+  },
+  {
+   "id": "R21",
+   "name": "Kötőjeles kettős családnevek",
+   "statement": "A kötőjellel írt kettős családnév EGY szónak számít a toldalékolás szempontjából: a ragot az utolsó tag kapja, kötőjel nélkül hozzátapadva, és a hangrendet, illetve a -val/-vel hasonulást is az utolsó tag záró hangja szabja meg. A kötőjelen át soha nem történik hasonulás és soha nem érvényesül az egyszerűsítés.",
+   "examples": [
+    "Kiss-Nagy → Kiss-Nagynak, Kiss-Nagyot, Kiss-Naggyal",
+    "Szabó-Tóth → Szabó-Tóthnak, Szabó-Tóthot, Szabó-Tóthtal",
+    "Kovács-Kiss → Kovács-Kissnek, Kovács-Kisset, Kovács-Kiss-sel (az utótag kettőzött ss-e miatt R09 szerint kötőjel)"
+   ]
+  },
+  {
+   "id": "R22",
+   "name": "Egyalakú toldalékok: -ig és -ként",
+   "statement": "A -ig és a -ként EGYALAKÚ: nincs hangrendi változatuk, a hangrend meghatározását tehát átugorhatja a motor. Viselkedésük mégis eltér: a -ig előtt a szó végi -a/-e MEGNYÚLIK, a -ként előtt NEM. Mindkettő közvetlenül, kötőjel nélkül kapcsolódik, és egyik sem vált ki mássalhangzó-hasonulást.",
+   "examples": [
+    "Kovácsig, Frédig, Szabóig, Ödönig",
+    "Annáig, Vargáig, Tündéig, Kősziklá​ig → Kősziklaig? NEM: Kőszikláig",
+    "Kovácsként, Frédként, Ödönként, Jánosként",
+    "Annaként, Vargaként, Tündeként, Kősziklaként, Zúzmaraként"
+   ]
+  },
+  {
+   "id": "R23",
+   "name": "Az álnév átlátszatlan tő: tilos a tőalternáció",
+   "statement": "A behelyettesített álnevet TULAJDONNÉVKÉNT, azaz változatlan, nem alternáló tőként kell ragozni akkor is, ha alakilag azonos egy olyan köznévvel, amely tőbelseji magánhangzókiesést vagy tőnyúlást mutat. A motor tehát ne alkalmazzon köznévi tőváltozatot (kiesés, rövidülés, -at/-et kötőhangzó), csak a felszíni szabályokat (hangrend, hasonulás, kötőhangzó, nyúlás).",
+   "examples": [
+    "Tücsök (álnév) → Tücsöknek, Tücsökkel, Tücsökhöz, Tücsökön (nem *tücsköt-típusú tőkiesés)",
+    "Bors (álnév) → Borsot, Borsnak, Borssal, Borson",
+    "Kavics (álnév) → Kavicsot, Kaviccsal (nem köznévi rövidülés)"
+   ]
+  },
+  {
+   "id": "R24",
+   "name": "Anonimizálási invariáns: a ragot ÚJRA kell képezni, nem átmásolni",
+   "statement": "A csere során a forrásnév felszíni alakjából ki kell nyerni (a) a lemmát és (b) az esetcímkét, majd a CÉLNÉV lemmájából a fenti szabályokkal újra kell generálni a felszíni alakot. A forrásnév ragját tilos átmásolni vagy kötőjellel a célnévhez ragasztani. Az esetcímke felismerésénél a leghosszabb illeszkedés elve alapján kell dolgozni, és a hasonult -val/-vel alakokat is fel kell ismerni (a rag ott nem 'val/vel' alakban jelenik meg).",
+   "examples": [
+    "Kovács Jánosnak → Kőszikla Frédnek (nem *Kőszikla Fréd-nak, nem *Kőszikla Frédnak)",
+    "Kováccsal → Kősziklával (a forrás -csal, a cél -val: mindkettő INS)",
+    "Kovácsot → Kősziklát (a forrás -ot, a cél puszta -t)",
+    "Kovácsék → Kőszikláék; Kovácséknak → Kőszikláéknak",
+    "Kiss-sel → Bors + INS → Borssal (a kötőjel a forrásnév sajátja, nem vihető át)"
+   ]
+  },
+  {
+   "id": "R25",
+   "name": "Amit a motornak névenként tárolnia kell",
+   "statement": "Minden álnév- és minden felismert valódi név-rekordhoz el kell tárolni: (1) hangrendi osztály: BACK | FRONT_UNROUNDED | FRONT_ROUNDED; (2) a szó végi grafémaosztály: VOWEL_LONG | VOWEL_A | VOWEL_E | CONS_SIMPLE | CONS_DIGRAPH | CONS_GEMINATE | SILENT_LETTER; (3) a KIEJTETT záró mássalhangzót jelölő magyar betű a -val/-vel hasonulásához (Balogh → g, Kossuth → t, Balzac → k, Bruce → sz, Greenwich → cs); (4) a tárgyrag alakja (bare | -ot | -et | -öt); (5) kell-e kötőjel a hármas betűtorlódás vagy néma véghang miatt; (6) családi -ék és asszonynévi -né alak; (7) többelemű névnél az utolsó elem indexe. Ezek közül a (3) és (5) mező elvi okból nem vezethető le az írásképből, ezért kézzel karbantartott adat.",
+   "examples": [
+    "Kőszikla: BACK, VOWEL_A, —, bare -t, nincs kötőjel",
+    "Kiss: FRONT_UNROUNDED, CONS_GEMINATE(s), s, -et, kötőjel a -val/-vel előtt",
+    "Balogh: BACK, CONS_SIMPLE(gh), g, -ot, nincs kötőjel",
+    "Bruce: BACK, SILENT_LETTER(e), sz, bare -t, kötőjel mindig"
+   ]
+  }
+ ],
+ "test_pairs": [
+  {
+   "lemma": "Kovács",
+   "case_tag": "ACC",
+   "surface": "Kovácsot",
+   "why": "R15 kötőhangzós -ot cs után, R02 mély"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "DAT",
+   "surface": "Kovácsnak",
+   "why": "R01/R02 mély kétalakú rag"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "INS",
+   "surface": "Kováccsal",
+   "why": "R08 cs+cs → ccs egyszerűsítve (AkH. 92., 160. a)"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "ALL",
+   "surface": "Kovácshoz",
+   "why": "R03 mély háromalakú"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "ADE",
+   "surface": "Kovácsnál",
+   "why": "R01 mély"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "ABL",
+   "surface": "Kovácstól",
+   "why": "R01 mély, nincs betűtorlódás"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "DEL",
+   "surface": "Kovácsról",
+   "why": "R01 mély"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "SUB",
+   "surface": "Kovácsra",
+   "why": "R01 mély"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "INE",
+   "surface": "Kovácsban",
+   "why": "R01 mély"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "ILL",
+   "surface": "Kovácsba",
+   "why": "R01 mély"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "ELA",
+   "surface": "Kovácsból",
+   "why": "R01 mély"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "SUP",
+   "surface": "Kovácson",
+   "why": "R03 mély kötőhangzó -o-"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "TER",
+   "surface": "Kovácsig",
+   "why": "R22 egyalakú -ig"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "ESS_FOR",
+   "surface": "Kovácsként",
+   "why": "R22 egyalakú -ként"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "TRANS",
+   "surface": "Kováccsá",
+   "why": "R08 a -vá is hasonul (AkH. 160.)"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "POSS",
+   "surface": "Kovácsé",
+   "why": "R17 birtokjel"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "PL",
+   "surface": "Kovácsok",
+   "why": "R16 mély -ok"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "FAM",
+   "surface": "Kovácsék",
+   "why": "R18 -ék családi képző"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "FAM_DAT",
+   "surface": "Kovácséknak",
+   "why": "R18 az -ék hangrendileg átlátszó, az alapnév mély"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "FAM_INS",
+   "surface": "Kovácsékkal",
+   "why": "R18 a -val a k-hoz hasonul, mély illeszkedés"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "FAM_ADE",
+   "surface": "Kovácséknál",
+   "why": "R18 átlátszó -ék"
+  },
+  {
+   "lemma": "Kovács",
+   "case_tag": "FAM_ALL",
+   "surface": "Kovácsékhoz",
+   "why": "R18 átlátszó -ék, mély -hoz"
+  },
+  {
+   "lemma": "Szabó",
+   "case_tag": "ACC",
+   "surface": "Szabót",
+   "why": "R15 magánhangzó után puszta -t"
+  },
+  {
+   "lemma": "Szabó",
+   "case_tag": "DAT",
+   "surface": "Szabónak",
+   "why": "R02 mély"
+  },
+  {
+   "lemma": "Szabó",
+   "case_tag": "INS",
+   "surface": "Szabóval",
+   "why": "R13 magánhangzó után nincs hasonulás"
+  },
+  {
+   "lemma": "Szabó",
+   "case_tag": "ALL",
+   "surface": "Szabóhoz",
+   "why": "R03 mély"
+  },
+  {
+   "lemma": "Szabó",
+   "case_tag": "ADE",
+   "surface": "Szabónál",
+   "why": "R01 mély"
+  },
+  {
+   "lemma": "Szabó",
+   "case_tag": "ABL",
+   "surface": "Szabótól",
+   "why": "R01 mély"
+  },
+  {
+   "lemma": "Szabó",
+   "case_tag": "SUP",
+   "surface": "Szabón",
+   "why": "R03 magánhangzó után puszta -n"
+  },
+  {
+   "lemma": "Szabó",
+   "case_tag": "TER",
+   "surface": "Szabóig",
+   "why": "R22 -ig"
+  },
+  {
+   "lemma": "Szabó",
+   "case_tag": "ESS_FOR",
+   "surface": "Szabóként",
+   "why": "R22 -ként"
+  },
+  {
+   "lemma": "Szabó",
+   "case_tag": "POSS",
+   "surface": "Szabóé",
+   "why": "R17"
+  },
+  {
+   "lemma": "Szabó",
+   "case_tag": "PL",
+   "surface": "Szabók",
+   "why": "R16 magánhangzó után puszta -k"
+  },
+  {
+   "lemma": "Szabó",
+   "case_tag": "FAM",
+   "surface": "Szabóék",
+   "why": "R18"
+  },
+  {
+   "lemma": "Nagy",
+   "case_tag": "ACC",
+   "surface": "Nagyot",
+   "why": "R15 gy után kötőhangzó kell"
+  },
+  {
+   "lemma": "Nagy",
+   "case_tag": "DAT",
+   "surface": "Nagynak",
+   "why": "R02 mély"
+  },
+  {
+   "lemma": "Nagy",
+   "case_tag": "INS",
+   "surface": "Naggyal",
+   "why": "R08 gy+gy → ggy"
+  },
+  {
+   "lemma": "Nagy",
+   "case_tag": "ALL",
+   "surface": "Nagyhoz",
+   "why": "R03 mély"
+  },
+  {
+   "lemma": "Nagy",
+   "case_tag": "ADE",
+   "surface": "Nagynál",
+   "why": "R01 mély"
+  },
+  {
+   "lemma": "Nagy",
+   "case_tag": "ABL",
+   "surface": "Nagytól",
+   "why": "R01 mély"
+  },
+  {
+   "lemma": "Nagy",
+   "case_tag": "PL",
+   "surface": "Nagyok",
+   "why": "R16 mély -ok"
+  },
+  {
+   "lemma": "Nagy",
+   "case_tag": "TRANS",
+   "surface": "Naggyá",
+   "why": "R08 a -vá is hasonul"
+  },
+  {
+   "lemma": "Nagy",
+   "case_tag": "FAM_INS",
+   "surface": "Nagyékkal",
+   "why": "R18 -ék + -kal"
+  },
+  {
+   "lemma": "Tóth",
+   "case_tag": "ACC",
+   "surface": "Tóthot",
+   "why": "R10 a kiejtett [t] után kötőhangzó, mély -ot"
+  },
+  {
+   "lemma": "Tóth",
+   "case_tag": "DAT",
+   "surface": "Tóthnak",
+   "why": "R02 mély"
+  },
+  {
+   "lemma": "Tóth",
+   "case_tag": "INS",
+   "surface": "Tóthtal",
+   "why": "R10 régies th, a rag a kiejtett [t]-hez hasonul (AkH. 160. b)"
+  },
+  {
+   "lemma": "Tóth",
+   "case_tag": "ALL",
+   "surface": "Tóthhoz",
+   "why": "R10, vö. Kossuthhoz (AkH. 159.)"
+  },
+  {
+   "lemma": "Tóth",
+   "case_tag": "ADE",
+   "surface": "Tóthnál",
+   "why": "R01 mély"
+  },
+  {
+   "lemma": "Tóth",
+   "case_tag": "ABL",
+   "surface": "Tóthtól",
+   "why": "R01 mély, nincs hármas torlódás"
+  },
+  {
+   "lemma": "Horváth",
+   "case_tag": "ACC",
+   "surface": "Horváthot",
+   "why": "R10 + R15 mély -ot"
+  },
+  {
+   "lemma": "Horváth",
+   "case_tag": "DAT",
+   "surface": "Horváthnak",
+   "why": "R02 mély"
+  },
+  {
+   "lemma": "Horváth",
+   "case_tag": "INS",
+   "surface": "Horváthtal",
+   "why": "R10 régies th (AkH. 160. b)"
+  },
+  {
+   "lemma": "Horváth",
+   "case_tag": "ALL",
+   "surface": "Horváthhoz",
+   "why": "R10"
+  },
+  {
+   "lemma": "Horváth",
+   "case_tag": "PL",
+   "surface": "Horváthok",
+   "why": "R16 mély -ok"
+  },
+  {
+   "lemma": "Németh",
+   "case_tag": "ACC",
+   "surface": "Némethet",
+   "why": "R04 magas ajakréses + R10"
+  },
+  {
+   "lemma": "Németh",
+   "case_tag": "DAT",
+   "surface": "Némethnek",
+   "why": "R04 magas"
+  },
+  {
+   "lemma": "Németh",
+   "case_tag": "INS",
+   "surface": "Némethtel",
+   "why": "R10 régies th + magas illeszkedés"
+  },
+  {
+   "lemma": "Németh",
+   "case_tag": "ALL",
+   "surface": "Némethhez",
+   "why": "R03 magas ajakréses"
+  },
+  {
+   "lemma": "Németh",
+   "case_tag": "ABL",
+   "surface": "Némethtől",
+   "why": "R04 magas"
+  },
+  {
+   "lemma": "Németh",
+   "case_tag": "PL",
+   "surface": "Némethek",
+   "why": "R16 magas -ek"
+  },
+  {
+   "lemma": "Balogh",
+   "case_tag": "ACC",
+   "surface": "Baloghot",
+   "why": "R10 a kiejtett [g] után kötőhangzó, mély -ot"
+  },
+  {
+   "lemma": "Balogh",
+   "case_tag": "DAT",
+   "surface": "Baloghnak",
+   "why": "R02 mély"
+  },
+  {
+   "lemma": "Balogh",
+   "case_tag": "INS",
+   "surface": "Baloghgal",
+   "why": "R10 régies gh, a Véghgel mintájára (AkH. 160. b)"
+  },
+  {
+   "lemma": "Balogh",
+   "case_tag": "ALL",
+   "surface": "Baloghhoz",
+   "why": "R10"
+  },
+  {
+   "lemma": "Balogh",
+   "case_tag": "SUP",
+   "surface": "Baloghon",
+   "why": "R03 mély -on"
+  },
+  {
+   "lemma": "Végh",
+   "case_tag": "INS",
+   "surface": "Véghgel",
+   "why": "AkH. 160. b szó szerinti példája"
+  },
+  {
+   "lemma": "Kiss",
+   "case_tag": "ACC",
+   "surface": "Kisset",
+   "why": "R15 hosszú mássalhangzó után kötőhangzó, R04 magas -et"
+  },
+  {
+   "lemma": "Kiss",
+   "case_tag": "DAT",
+   "surface": "Kissnek",
+   "why": "R04 magas, nincs hármas torlódás"
+  },
+  {
+   "lemma": "Kiss",
+   "case_tag": "INS",
+   "surface": "Kiss-sel",
+   "why": "R09 kettőzött mássalhangzó → kötőjel (AkH. 160. c)"
+  },
+  {
+   "lemma": "Kiss",
+   "case_tag": "ALL",
+   "surface": "Kisshez",
+   "why": "R03 magas ajakréses, nincs kötőjel"
+  },
+  {
+   "lemma": "Kiss",
+   "case_tag": "ADE",
+   "surface": "Kissnél",
+   "why": "R04 magas"
+  },
+  {
+   "lemma": "Kiss",
+   "case_tag": "ABL",
+   "surface": "Kisstől",
+   "why": "R04 magas, nincs hármas torlódás"
+  },
+  {
+   "lemma": "Kiss",
+   "case_tag": "PL",
+   "surface": "Kissek",
+   "why": "R16 magas -ek"
+  },
+  {
+   "lemma": "Kiss",
+   "case_tag": "TRANS",
+   "surface": "Kiss-sé",
+   "why": "R09 (AkH. 160. c)"
+  },
+  {
+   "lemma": "Kiss",
+   "case_tag": "FAM_DAT",
+   "surface": "Kisséknek",
+   "why": "R18 az -ék átlátszó, az alapnév magas"
+  },
+  {
+   "lemma": "Papp",
+   "case_tag": "ACC",
+   "surface": "Pappot",
+   "why": "R15 hosszú mássalhangzó → kötőhangzó, mély -ot (nem *Pappat)"
+  },
+  {
+   "lemma": "Papp",
+   "case_tag": "DAT",
+   "surface": "Pappnak",
+   "why": "R02 mély, nincs torlódás"
+  },
+  {
+   "lemma": "Papp",
+   "case_tag": "INS",
+   "surface": "Papp-pal",
+   "why": "R09 kettőzött mássalhangzó → kötőjel (AkH. 160. c)"
+  },
+  {
+   "lemma": "Papp",
+   "case_tag": "ALL",
+   "surface": "Papphoz",
+   "why": "R03 mély, nincs kötőjel"
+  },
+  {
+   "lemma": "Papp",
+   "case_tag": "ADE",
+   "surface": "Pappnál",
+   "why": "R01 mély"
+  },
+  {
+   "lemma": "Papp",
+   "case_tag": "PL",
+   "surface": "Pappok",
+   "why": "R16 mély -ok"
+  },
+  {
+   "lemma": "Papp",
+   "case_tag": "TRANS",
+   "surface": "Papp-pá",
+   "why": "R09 (AkH. 160. c)"
+  },
+  {
+   "lemma": "Makk",
+   "case_tag": "INS",
+   "surface": "Makk-kal",
+   "why": "AkH. 160. c szó szerinti példája"
+  },
+  {
+   "lemma": "Széll",
+   "case_tag": "INS",
+   "surface": "Széll-lel",
+   "why": "AkH. 160. c szó szerinti példája"
+  },
+  {
+   "lemma": "Molnár",
+   "case_tag": "ACC",
+   "surface": "Molnárt",
+   "why": "R15 egyszerű r után puszta -t"
+  },
+  {
+   "lemma": "Molnár",
+   "case_tag": "DAT",
+   "surface": "Molnárnak",
+   "why": "R02 mély"
+  },
+  {
+   "lemma": "Molnár",
+   "case_tag": "INS",
+   "surface": "Molnárral",
+   "why": "R07 r+r hasonulás"
+  },
+  {
+   "lemma": "Molnár",
+   "case_tag": "ALL",
+   "surface": "Molnárhoz",
+   "why": "R03 mély"
+  },
+  {
+   "lemma": "Molnár",
+   "case_tag": "PL",
+   "surface": "Molnárok",
+   "why": "R16 mély -ok"
+  },
+  {
+   "lemma": "Farkas",
+   "case_tag": "ACC",
+   "surface": "Farkast",
+   "why": "R15 magánhangzó utáni egyszerű s → puszta -t"
+  },
+  {
+   "lemma": "Farkas",
+   "case_tag": "DAT",
+   "surface": "Farkasnak",
+   "why": "R02 mély"
+  },
+  {
+   "lemma": "Farkas",
+   "case_tag": "INS",
+   "surface": "Farkassal",
+   "why": "R07 s+s hasonulás, nincs kötőjel (a tő s-e rövid)"
+  },
+  {
+   "lemma": "Farkas",
+   "case_tag": "ALL",
+   "surface": "Farkashoz",
+   "why": "R03 mély"
+  },
+  {
+   "lemma": "Farkas",
+   "case_tag": "SUP",
+   "surface": "Farkason",
+   "why": "R03 mély -on"
+  },
+  {
+   "lemma": "Varga",
+   "case_tag": "ACC",
+   "surface": "Vargát",
+   "why": "R14 a → á, R15 puszta -t"
+  },
+  {
+   "lemma": "Varga",
+   "case_tag": "DAT",
+   "surface": "Vargának",
+   "why": "R14 nyúlás"
+  },
+  {
+   "lemma": "Varga",
+   "case_tag": "INS",
+   "surface": "Vargával",
+   "why": "R13 nincs hasonulás + R14 nyúlás"
+  },
+  {
+   "lemma": "Varga",
+   "case_tag": "ALL",
+   "surface": "Vargához",
+   "why": "R14 + R03 mély"
+  },
+  {
+   "lemma": "Varga",
+   "case_tag": "ADE",
+   "surface": "Vargánál",
+   "why": "R14"
+  },
+  {
+   "lemma": "Varga",
+   "case_tag": "DEL",
+   "surface": "Vargáról",
+   "why": "R14"
+  },
+  {
+   "lemma": "Varga",
+   "case_tag": "TER",
+   "surface": "Vargáig",
+   "why": "R22 a -ig NYÚJT"
+  },
+  {
+   "lemma": "Varga",
+   "case_tag": "ESS_FOR",
+   "surface": "Vargaként",
+   "why": "R22 a -ként NEM nyújt"
+  },
+  {
+   "lemma": "Varga",
+   "case_tag": "POSS",
+   "surface": "Vargáé",
+   "why": "R17 + R14"
+  },
+  {
+   "lemma": "Varga",
+   "case_tag": "PL",
+   "surface": "Vargák",
+   "why": "R16 + R14"
+  },
+  {
+   "lemma": "Varga",
+   "case_tag": "FAM",
+   "surface": "Vargáék",
+   "why": "R18 + R14"
+  },
+  {
+   "lemma": "Kodály",
+   "case_tag": "ACC",
+   "surface": "Kodályt",
+   "why": "R15 magánhangzó utáni ly → puszta -t"
+  },
+  {
+   "lemma": "Kodály",
+   "case_tag": "DAT",
+   "surface": "Kodálynak",
+   "why": "R02 mély (o, á)"
+  },
+  {
+   "lemma": "Kodály",
+   "case_tag": "INS",
+   "surface": "Kodállyal",
+   "why": "R08 ly+ly → lly (AkH. 160. a szó szerinti példája)"
+  },
+  {
+   "lemma": "Kodály",
+   "case_tag": "ALL",
+   "surface": "Kodályhoz",
+   "why": "R03 mély"
+  },
+  {
+   "lemma": "Kodály",
+   "case_tag": "POSS",
+   "surface": "Kodályé",
+   "why": "R17"
+  },
+  {
+   "lemma": "Szabolcs",
+   "case_tag": "ACC",
+   "surface": "Szabolcsot",
+   "why": "R15 cs után -ot"
+  },
+  {
+   "lemma": "Szabolcs",
+   "case_tag": "DAT",
+   "surface": "Szabolcsnak",
+   "why": "R02 mély"
+  },
+  {
+   "lemma": "Szabolcs",
+   "case_tag": "INS",
+   "surface": "Szabolccsal",
+   "why": "R08 cs+cs → ccs (AkH. 160. a szó szerinti példája)"
+  },
+  {
+   "lemma": "Szabolcs",
+   "case_tag": "ABL",
+   "surface": "Szabolcstól",
+   "why": "R01 mély"
+  },
+  {
+   "lemma": "Kertész",
+   "case_tag": "ACC",
+   "surface": "Kertészt",
+   "why": "R15 magánhangzó utáni sz → puszta -t"
+  },
+  {
+   "lemma": "Kertész",
+   "case_tag": "DAT",
+   "surface": "Kertésznek",
+   "why": "R04 magas ajakréses"
+  },
+  {
+   "lemma": "Kertész",
+   "case_tag": "INS",
+   "surface": "Kertésszel",
+   "why": "R08 sz+sz → ssz"
+  },
+  {
+   "lemma": "Balázs",
+   "case_tag": "ACC",
+   "surface": "Balázst",
+   "why": "R15 magánhangzó utáni zs → puszta -t"
+  },
+  {
+   "lemma": "Balázs",
+   "case_tag": "DAT",
+   "surface": "Balázsnak",
+   "why": "R02 mély"
+  },
+  {
+   "lemma": "Balázs",
+   "case_tag": "INS",
+   "surface": "Balázzsal",
+   "why": "R08 zs+zs → zzs"
+  },
+  {
+   "lemma": "Bálint",
+   "case_tag": "INS",
+   "surface": "Bálinttal",
+   "why": "AkH. 160. a szó szerinti példája"
+  },
+  {
+   "lemma": "Ádám",
+   "case_tag": "INS",
+   "surface": "Ádámmal",
+   "why": "AkH. 160. a szó szerinti példája"
+  },
+  {
+   "lemma": "János",
+   "case_tag": "ACC",
+   "surface": "Jánost",
+   "why": "R15 magánhangzó utáni s → puszta -t"
+  },
+  {
+   "lemma": "János",
+   "case_tag": "DAT",
+   "surface": "Jánosnak",
+   "why": "R02 mély"
+  },
+  {
+   "lemma": "János",
+   "case_tag": "INS",
+   "surface": "Jánossal",
+   "why": "R07 s+s"
+  },
+  {
+   "lemma": "János",
+   "case_tag": "ALL",
+   "surface": "Jánoshoz",
+   "why": "R03 mély"
+  },
+  {
+   "lemma": "János",
+   "case_tag": "ESS_FOR",
+   "surface": "Jánosként",
+   "why": "R22"
+  },
+  {
+   "lemma": "Anna",
+   "case_tag": "ACC",
+   "surface": "Annát",
+   "why": "R14 a → á"
+  },
+  {
+   "lemma": "Anna",
+   "case_tag": "DAT",
+   "surface": "Annának",
+   "why": "R14"
+  },
+  {
+   "lemma": "Anna",
+   "case_tag": "INS",
+   "surface": "Annával",
+   "why": "R13 + R14: magánhangzó-végű, nincs hasonulás, de nyúlik"
+  },
+  {
+   "lemma": "Anna",
+   "case_tag": "ALL",
+   "surface": "Annához",
+   "why": "R14 + R03 mély"
+  },
+  {
+   "lemma": "Anna",
+   "case_tag": "ADE",
+   "surface": "Annánál",
+   "why": "R14"
+  },
+  {
+   "lemma": "Anna",
+   "case_tag": "SUB",
+   "surface": "Annára",
+   "why": "R14"
+  },
+  {
+   "lemma": "Anna",
+   "case_tag": "DEL",
+   "surface": "Annáról",
+   "why": "R14"
+  },
+  {
+   "lemma": "Anna",
+   "case_tag": "TER",
+   "surface": "Annáig",
+   "why": "R22 a -ig nyújt"
+  },
+  {
+   "lemma": "Anna",
+   "case_tag": "ESS_FOR",
+   "surface": "Annaként",
+   "why": "R22 a -ként nem nyújt"
+  },
+  {
+   "lemma": "Anna",
+   "case_tag": "POSS",
+   "surface": "Annáé",
+   "why": "R17 + R14"
+  },
+  {
+   "lemma": "Anna",
+   "case_tag": "PL",
+   "surface": "Annák",
+   "why": "R16 + R14"
+  },
+  {
+   "lemma": "Anna",
+   "case_tag": "TRANS",
+   "surface": "Annává",
+   "why": "R13 + R14"
+  },
+  {
+   "lemma": "Béla",
+   "case_tag": "ACC",
+   "surface": "Bélát",
+   "why": "R02 vegyes hangrend, utolsó nem semleges: a → mély; R14"
+  },
+  {
+   "lemma": "Béla",
+   "case_tag": "DAT",
+   "surface": "Bélának",
+   "why": "R02 vegyes hangrendű név MÉLY ragot kap"
+  },
+  {
+   "lemma": "Béla",
+   "case_tag": "INS",
+   "surface": "Bélával",
+   "why": "R13 + R14"
+  },
+  {
+   "lemma": "Béla",
+   "case_tag": "ALL",
+   "surface": "Bélához",
+   "why": "R02 mély + R14"
+  },
+  {
+   "lemma": "Erzsébet",
+   "case_tag": "ACC",
+   "surface": "Erzsébetet",
+   "why": "R15 t után kötőhangzó, magas -et"
+  },
+  {
+   "lemma": "Erzsébet",
+   "case_tag": "DAT",
+   "surface": "Erzsébetnek",
+   "why": "R04 csupa e/é → magas"
+  },
+  {
+   "lemma": "Erzsébet",
+   "case_tag": "INS",
+   "surface": "Erzsébettel",
+   "why": "R07 t+t"
+  },
+  {
+   "lemma": "Erzsébet",
+   "case_tag": "ALL",
+   "surface": "Erzsébethez",
+   "why": "R03 magas ajakréses"
+  },
+  {
+   "lemma": "Erzsébet",
+   "case_tag": "SUP",
+   "surface": "Erzsébeten",
+   "why": "R03 magas -en"
+  },
+  {
+   "lemma": "Erzsébet",
+   "case_tag": "INE",
+   "surface": "Erzsébetben",
+   "why": "R04 magas"
+  },
+  {
+   "lemma": "Gyula",
+   "case_tag": "ACC",
+   "surface": "Gyulát",
+   "why": "R14"
+  },
+  {
+   "lemma": "Gyula",
+   "case_tag": "DAT",
+   "surface": "Gyulának",
+   "why": "R14 + mély"
+  },
+  {
+   "lemma": "Gyula",
+   "case_tag": "INS",
+   "surface": "Gyulával",
+   "why": "R13 + R14"
+  },
+  {
+   "lemma": "Gyula",
+   "case_tag": "FAM",
+   "surface": "Gyuláék",
+   "why": "R18 + R14"
+  },
+  {
+   "lemma": "Ödön",
+   "case_tag": "ACC",
+   "surface": "Ödönt",
+   "why": "R15 magánhangzó utáni n → puszta -t"
+  },
+  {
+   "lemma": "Ödön",
+   "case_tag": "DAT",
+   "surface": "Ödönnek",
+   "why": "R01 magas"
+  },
+  {
+   "lemma": "Ödön",
+   "case_tag": "INS",
+   "surface": "Ödönnel",
+   "why": "R07 n+n"
+  },
+  {
+   "lemma": "Ödön",
+   "case_tag": "ALL",
+   "surface": "Ödönhöz",
+   "why": "R03 utolsó magánhangzó ö → -höz"
+  },
+  {
+   "lemma": "Ödön",
+   "case_tag": "SUP",
+   "surface": "Ödönön",
+   "why": "R03 ajakkerekítéses -ön"
+  },
+  {
+   "lemma": "Ödön",
+   "case_tag": "PL",
+   "surface": "Ödönök",
+   "why": "R16 ajakkerekítéses -ök"
+  },
+  {
+   "lemma": "Ödön",
+   "case_tag": "ESS_FOR",
+   "surface": "Ödönként",
+   "why": "R22"
+  },
+  {
+   "lemma": "Zsófia",
+   "case_tag": "ACC",
+   "surface": "Zsófiát",
+   "why": "R02 mély (o…a) + R14"
+  },
+  {
+   "lemma": "Zsófia",
+   "case_tag": "DAT",
+   "surface": "Zsófiának",
+   "why": "R02 mély"
+  },
+  {
+   "lemma": "Zsófia",
+   "case_tag": "INS",
+   "surface": "Zsófiával",
+   "why": "R13 + R14"
+  },
+  {
+   "lemma": "Zsófia",
+   "case_tag": "ALL",
+   "surface": "Zsófiához",
+   "why": "R03 mély + R14"
+  },
+  {
+   "lemma": "Örs",
+   "case_tag": "ACC",
+   "surface": "Örsöt",
+   "why": "R15 rs torlódás → kötőhangzó; R03 ajakkerekítéses -öt"
+  },
+  {
+   "lemma": "Örs",
+   "case_tag": "DAT",
+   "surface": "Örsnek",
+   "why": "R01 magas"
+  },
+  {
+   "lemma": "Örs",
+   "case_tag": "INS",
+   "surface": "Örssel",
+   "why": "R07 s+s"
+  },
+  {
+   "lemma": "Örs",
+   "case_tag": "ALL",
+   "surface": "Örshöz",
+   "why": "R03 -höz"
+  },
+  {
+   "lemma": "Örs",
+   "case_tag": "SUP",
+   "surface": "Örsön",
+   "why": "R03 -ön"
+  },
+  {
+   "lemma": "Örs",
+   "case_tag": "PL",
+   "surface": "Örsök",
+   "why": "R16 -ök"
+  },
+  {
+   "lemma": "Tünde",
+   "case_tag": "ACC",
+   "surface": "Tündét",
+   "why": "R14 e → é"
+  },
+  {
+   "lemma": "Tünde",
+   "case_tag": "DAT",
+   "surface": "Tündének",
+   "why": "R14 + magas"
+  },
+  {
+   "lemma": "Tünde",
+   "case_tag": "INS",
+   "surface": "Tündével",
+   "why": "R13 + R14"
+  },
+  {
+   "lemma": "Tünde",
+   "case_tag": "ALL",
+   "surface": "Tündéhez",
+   "why": "R03 KULCS: az utolsó magánhangzó e/é → ajakréses -hez, nem *-höz"
+  },
+  {
+   "lemma": "Tünde",
+   "case_tag": "DEL",
+   "surface": "Tündéről",
+   "why": "R14 + magas"
+  },
+  {
+   "lemma": "Tünde",
+   "case_tag": "TER",
+   "surface": "Tündéig",
+   "why": "R22 a -ig nyújt"
+  },
+  {
+   "lemma": "Tünde",
+   "case_tag": "ESS_FOR",
+   "surface": "Tündeként",
+   "why": "R22 a -ként nem nyújt"
+  },
+  {
+   "lemma": "Tünde",
+   "case_tag": "POSS",
+   "surface": "Tündéé",
+   "why": "R17 + R14 (kettős é)"
+  },
+  {
+   "lemma": "Tünde",
+   "case_tag": "PL",
+   "surface": "Tündék",
+   "why": "R16 + R14"
+  },
+  {
+   "lemma": "Csongor",
+   "case_tag": "ACC",
+   "surface": "Csongort",
+   "why": "R15 egyszerű r után puszta -t"
+  },
+  {
+   "lemma": "Csongor",
+   "case_tag": "DAT",
+   "surface": "Csongornak",
+   "why": "R02 mély"
+  },
+  {
+   "lemma": "Csongor",
+   "case_tag": "INS",
+   "surface": "Csongorral",
+   "why": "R07 r+r"
+  },
+  {
+   "lemma": "Csongor",
+   "case_tag": "ALL",
+   "surface": "Csongorhoz",
+   "why": "R03 mély"
+  },
+  {
+   "lemma": "József",
+   "case_tag": "DAT",
+   "surface": "Józsefnek",
+   "why": "R05 vegyes hangrend, utolsó nem semleges ö → magas"
+  },
+  {
+   "lemma": "József",
+   "case_tag": "INS",
+   "surface": "Józseffel",
+   "why": "R05 + R07 f+f"
+  },
+  {
+   "lemma": "József",
+   "case_tag": "ACC",
+   "surface": "Józsefet",
+   "why": "R15 f után kötőhangzó, magas ajakréses -et (utolsó magánhangzó ö, de az e-hez képest a kötőhangzó -e-)"
+  },
+  {
+   "lemma": "Fréd",
+   "case_tag": "ACC",
+   "surface": "Frédet",
+   "why": "R04 magas + R15 d után kötőhangzó"
+  },
+  {
+   "lemma": "Fréd",
+   "case_tag": "DAT",
+   "surface": "Frédnek",
+   "why": "R04 magas (célalak a Kovács Jánosnak → Kőszikla Frédnek cseréhez)"
+  },
+  {
+   "lemma": "Fréd",
+   "case_tag": "INS",
+   "surface": "Fréddel",
+   "why": "R07 d+d"
+  },
+  {
+   "lemma": "Fréd",
+   "case_tag": "ALL",
+   "surface": "Frédhez",
+   "why": "R03 magas ajakréses"
+  },
+  {
+   "lemma": "Fréd",
+   "case_tag": "ADE",
+   "surface": "Frédnél",
+   "why": "R04 magas"
+  },
+  {
+   "lemma": "Fréd",
+   "case_tag": "ABL",
+   "surface": "Frédtől",
+   "why": "R04 magas"
+  },
+  {
+   "lemma": "Fréd",
+   "case_tag": "TER",
+   "surface": "Frédig",
+   "why": "R22"
+  },
+  {
+   "lemma": "Fréd",
+   "case_tag": "PL",
+   "surface": "Frédek",
+   "why": "R16 magas -ek"
+  },
+  {
+   "lemma": "Fréd",
+   "case_tag": "FAM",
+   "surface": "Frédék",
+   "why": "R18"
+  },
+  {
+   "lemma": "Balzac",
+   "case_tag": "ACC",
+   "surface": "Balzacot",
+   "why": "R11 a kiejtett [k] után kötőhangzó, mély -ot"
+  },
+  {
+   "lemma": "Balzac",
+   "case_tag": "DAT",
+   "surface": "Balzacnak",
+   "why": "R06 kiejtés szerinti mély hangrend"
+  },
+  {
+   "lemma": "Balzac",
+   "case_tag": "INS",
+   "surface": "Balzackal",
+   "why": "R11 a c betű [k] hangot jelöl (AkH. 216. b)"
+  },
+  {
+   "lemma": "Balzac",
+   "case_tag": "ALL",
+   "surface": "Balzachoz",
+   "why": "R06 mély"
+  },
+  {
+   "lemma": "Bach",
+   "case_tag": "ACC",
+   "surface": "Bachot",
+   "why": "R11 mély -ot"
+  },
+  {
+   "lemma": "Bach",
+   "case_tag": "DAT",
+   "surface": "Bachnak",
+   "why": "R06 mély"
+  },
+  {
+   "lemma": "Bach",
+   "case_tag": "INS",
+   "surface": "Bachhal",
+   "why": "R11 a ch [h]-t jelöl (AkH. 216. b)"
+  },
+  {
+   "lemma": "Bach",
+   "case_tag": "ALL",
+   "surface": "Bachhoz",
+   "why": "R06 mély"
+  },
+  {
+   "lemma": "Steinbeck",
+   "case_tag": "INS",
+   "surface": "Steinbeckkel",
+   "why": "AkH. 216. b szó szerinti példája"
+  },
+  {
+   "lemma": "Greenwich",
+   "case_tag": "INS",
+   "surface": "Greenwichcsel",
+   "why": "R11 a ch [cs]-t jelöl; írásképből nem levezethető"
+  },
+  {
+   "lemma": "Wilma",
+   "case_tag": "ACC",
+   "surface": "Wilmát",
+   "why": "R06 mély + R14"
+  },
+  {
+   "lemma": "Wilma",
+   "case_tag": "DAT",
+   "surface": "Wilmának",
+   "why": "R06 mély"
+  },
+  {
+   "lemma": "Wilma",
+   "case_tag": "INS",
+   "surface": "Wilmával",
+   "why": "R13 + R14"
+  },
+  {
+   "lemma": "Bruce",
+   "case_tag": "ACC",
+   "surface": "Bruce-t",
+   "why": "R12 néma szó végi e → kötőjel (AkH. 217.)"
+  },
+  {
+   "lemma": "Bruce",
+   "case_tag": "DAT",
+   "surface": "Bruce-nak",
+   "why": "R12 + R06 kiejtés szerinti mély hangrend"
+  },
+  {
+   "lemma": "Bruce",
+   "case_tag": "INS",
+   "surface": "Bruce-szal",
+   "why": "R11 + R12: kiejtett véghang [sz], néma e → kötőjel"
+  },
+  {
+   "lemma": "Bruce",
+   "case_tag": "ADE",
+   "surface": "Bruce-nál",
+   "why": "R12 + mély"
+  },
+  {
+   "lemma": "Mann",
+   "case_tag": "DAT",
+   "surface": "Mann-nak",
+   "why": "AkH. 217. szó szerinti példája (hármas betűtorlódás)"
+  },
+  {
+   "lemma": "Scott",
+   "case_tag": "ABL",
+   "surface": "Scott-tól",
+   "why": "AkH. 217. szó szerinti példája"
+  },
+  {
+   "lemma": "Falstaff",
+   "case_tag": "INS",
+   "surface": "Falstaff-fal",
+   "why": "AkH. 217. szó szerinti példája"
+  },
+  {
+   "lemma": "Hermann",
+   "case_tag": "ADE",
+   "surface": "Hermann-nál",
+   "why": "AkH. 93. szó szerinti példája"
+  },
+  {
+   "lemma": "Ivett",
+   "case_tag": "ACC",
+   "surface": "Ivettet",
+   "why": "R15 hosszú tt után kötőhangzó, magas -et"
+  },
+  {
+   "lemma": "Ivett",
+   "case_tag": "INS",
+   "surface": "Ivett-tel",
+   "why": "R09 (AkH. 160. c szó szerinti példája)"
+  },
+  {
+   "lemma": "Ivett",
+   "case_tag": "ABL",
+   "surface": "Ivett-től",
+   "why": "R09 hármas betűtorlódás más ragnál is (AkH. 93.)"
+  },
+  {
+   "lemma": "Ivett",
+   "case_tag": "DAT",
+   "surface": "Ivettnek",
+   "why": "R09 nincs torlódás → nincs kötőjel"
+  },
+  {
+   "lemma": "Mariann",
+   "case_tag": "INS",
+   "surface": "Mariann-nal",
+   "why": "AkH. 160. c szó szerinti példája"
+  },
+  {
+   "lemma": "Mariann",
+   "case_tag": "DAT",
+   "surface": "Mariann-nak",
+   "why": "R09 hármas n (AkH. 93.)"
+  },
+  {
+   "lemma": "Félix",
+   "case_tag": "ACC",
+   "surface": "Félixet",
+   "why": "R10 az x [ksz], magas -et"
+  },
+  {
+   "lemma": "Félix",
+   "case_tag": "INS",
+   "surface": "Félixszel",
+   "why": "AkH. 160. b szó szerinti példája"
+  },
+  {
+   "lemma": "Marx",
+   "case_tag": "INS",
+   "surface": "Marxszal",
+   "why": "AkH. 160. b szó szerinti példája"
+  },
+  {
+   "lemma": "Alex",
+   "case_tag": "INS",
+   "surface": "Alexszel",
+   "why": "AkH. 160. b szó szerinti példája"
+  },
+  {
+   "lemma": "Móricz",
+   "case_tag": "INS",
+   "surface": "Móriczcal",
+   "why": "AkH. 160. b: régies cz, kiejtve [c]"
+  },
+  {
+   "lemma": "Rátz",
+   "case_tag": "INS",
+   "surface": "Rátzcal",
+   "why": "AkH. 160. b szó szerinti példája"
+  },
+  {
+   "lemma": "Babits",
+   "case_tag": "INS",
+   "surface": "Babitscsal",
+   "why": "AkH. 160. b: a ts [cs]-t jelöl"
+  },
+  {
+   "lemma": "Madách",
+   "case_tag": "TRANS",
+   "surface": "Madáchcsá",
+   "why": "AkH. 160. b szó szerinti példája"
+  },
+  {
+   "lemma": "Kossuth",
+   "case_tag": "INS",
+   "surface": "Kossuthtal",
+   "why": "AkH. 160. b: régies th"
+  },
+  {
+   "lemma": "Kossuth",
+   "case_tag": "ALL",
+   "surface": "Kossuthhoz",
+   "why": "AkH. 159. szó szerinti példája"
+  },
+  {
+   "lemma": "Kőszikla",
+   "case_tag": "ACC",
+   "surface": "Kősziklát",
+   "why": "R05 összetétel, az utótag mély; R14 a → á"
+  },
+  {
+   "lemma": "Kőszikla",
+   "case_tag": "DAT",
+   "surface": "Kősziklának",
+   "why": "R05 KULCS: ő ellenére mély, mert az utótag (szikla) mély"
+  },
+  {
+   "lemma": "Kőszikla",
+   "case_tag": "INS",
+   "surface": "Kősziklával",
+   "why": "R13 + R14"
+  },
+  {
+   "lemma": "Kőszikla",
+   "case_tag": "ALL",
+   "surface": "Kősziklához",
+   "why": "R03 mély -hoz"
+  },
+  {
+   "lemma": "Kőszikla",
+   "case_tag": "ADE",
+   "surface": "Kősziklánál",
+   "why": "R14"
+  },
+  {
+   "lemma": "Kőszikla",
+   "case_tag": "ABL",
+   "surface": "Kősziklától",
+   "why": "R14"
+  },
+  {
+   "lemma": "Kőszikla",
+   "case_tag": "SUB",
+   "surface": "Kősziklára",
+   "why": "R14"
+  },
+  {
+   "lemma": "Kőszikla",
+   "case_tag": "DEL",
+   "surface": "Kőszikláról",
+   "why": "R14"
+  },
+  {
+   "lemma": "Kőszikla",
+   "case_tag": "TER",
+   "surface": "Kőszikláig",
+   "why": "R22 a -ig nyújt"
+  },
+  {
+   "lemma": "Kőszikla",
+   "case_tag": "ESS_FOR",
+   "surface": "Kősziklaként",
+   "why": "R22 a -ként nem nyújt"
+  },
+  {
+   "lemma": "Kőszikla",
+   "case_tag": "POSS",
+   "surface": "Kőszikláé",
+   "why": "R17 + R14"
+  },
+  {
+   "lemma": "Kőszikla",
+   "case_tag": "FAM",
+   "surface": "Kőszikláék",
+   "why": "R18 + R14"
+  },
+  {
+   "lemma": "Kavics",
+   "case_tag": "ACC",
+   "surface": "Kavicsot",
+   "why": "R02 mély (a…i) + R15 cs után -ot"
+  },
+  {
+   "lemma": "Kavics",
+   "case_tag": "DAT",
+   "surface": "Kavicsnak",
+   "why": "R02 KULCS: az utolsó magánhangzó i semleges, az a dönt"
+  },
+  {
+   "lemma": "Kavics",
+   "case_tag": "INS",
+   "surface": "Kaviccsal",
+   "why": "R08 cs+cs → ccs"
+  },
+  {
+   "lemma": "Kavics",
+   "case_tag": "ALL",
+   "surface": "Kavicshoz",
+   "why": "R03 mély"
+  },
+  {
+   "lemma": "Kavics",
+   "case_tag": "FAM_DAT",
+   "surface": "Kavicséknak",
+   "why": "R18 átlátszó -ék, mély alapnév"
+  },
+  {
+   "lemma": "Bazalt",
+   "case_tag": "ACC",
+   "surface": "Bazaltot",
+   "why": "R15 t után -ot"
+  },
+  {
+   "lemma": "Bazalt",
+   "case_tag": "DAT",
+   "surface": "Bazaltnak",
+   "why": "R02 mély"
+  },
+  {
+   "lemma": "Bazalt",
+   "case_tag": "INS",
+   "surface": "Bazalttal",
+   "why": "R07 t+t"
+  },
+  {
+   "lemma": "Bazalt",
+   "case_tag": "ALL",
+   "surface": "Bazalthoz",
+   "why": "R03 mély"
+  },
+  {
+   "lemma": "Bazalt",
+   "case_tag": "ABL",
+   "surface": "Bazalttól",
+   "why": "R01 mély, nincs hármas torlódás (egy t + t)"
+  },
+  {
+   "lemma": "Gránit",
+   "case_tag": "ACC",
+   "surface": "Gránitot",
+   "why": "R02 mély (á…i) + R15 t után -ot"
+  },
+  {
+   "lemma": "Gránit",
+   "case_tag": "DAT",
+   "surface": "Gránitnak",
+   "why": "R02 az i semleges, az á dönt"
+  },
+  {
+   "lemma": "Gránit",
+   "case_tag": "INS",
+   "surface": "Gránittal",
+   "why": "R07 t+t"
+  },
+  {
+   "lemma": "Gránit",
+   "case_tag": "ALL",
+   "surface": "Gránithoz",
+   "why": "R03 mély"
+  },
+  {
+   "lemma": "Gránit",
+   "case_tag": "SUP",
+   "surface": "Grániton",
+   "why": "R03 mély -on"
+  },
+  {
+   "lemma": "Zúzmara",
+   "case_tag": "ACC",
+   "surface": "Zúzmarát",
+   "why": "R14 a → á"
+  },
+  {
+   "lemma": "Zúzmara",
+   "case_tag": "DAT",
+   "surface": "Zúzmarának",
+   "why": "R02 mély + R14"
+  },
+  {
+   "lemma": "Zúzmara",
+   "case_tag": "INS",
+   "surface": "Zúzmarával",
+   "why": "R13 + R14"
+  },
+  {
+   "lemma": "Zúzmara",
+   "case_tag": "ALL",
+   "surface": "Zúzmarához",
+   "why": "R03 mély + R14"
+  },
+  {
+   "lemma": "Zúzmara",
+   "case_tag": "DEL",
+   "surface": "Zúzmaráról",
+   "why": "R14"
+  },
+  {
+   "lemma": "Zúzmara",
+   "case_tag": "ESS_FOR",
+   "surface": "Zúzmaraként",
+   "why": "R22 a -ként nem nyújt"
+  },
+  {
+   "lemma": "Ökörszem",
+   "case_tag": "ACC",
+   "surface": "Ökörszemet",
+   "why": "R05 az utótag magas ajakréses; R15 m után -et"
+  },
+  {
+   "lemma": "Ökörszem",
+   "case_tag": "DAT",
+   "surface": "Ökörszemnek",
+   "why": "R05 összetétel, az utótag dönt"
+  },
+  {
+   "lemma": "Ökörszem",
+   "case_tag": "INS",
+   "surface": "Ökörszemmel",
+   "why": "R07 m+m"
+  },
+  {
+   "lemma": "Ökörszem",
+   "case_tag": "ALL",
+   "surface": "Ökörszemhez",
+   "why": "R03 KULCS: két ö ellenére -hez, mert az utolsó magánhangzó e"
+  },
+  {
+   "lemma": "Ökörszem",
+   "case_tag": "SUP",
+   "surface": "Ökörszemen",
+   "why": "R03 ajakréses -en"
+  },
+  {
+   "lemma": "Ökörszem",
+   "case_tag": "INE",
+   "surface": "Ökörszemben",
+   "why": "R05 magas"
+  },
+  {
+   "lemma": "Tücsök",
+   "case_tag": "DAT",
+   "surface": "Tücsöknek",
+   "why": "R01 magas ajakkerekítéses"
+  },
+  {
+   "lemma": "Tücsök",
+   "case_tag": "INS",
+   "surface": "Tücsökkel",
+   "why": "R07 k+k"
+  },
+  {
+   "lemma": "Tücsök",
+   "case_tag": "ALL",
+   "surface": "Tücsökhöz",
+   "why": "R03 utolsó magánhangzó ö → -höz"
+  },
+  {
+   "lemma": "Tücsök",
+   "case_tag": "ADE",
+   "surface": "Tücsöknél",
+   "why": "R01 magas"
+  },
+  {
+   "lemma": "Tücsök",
+   "case_tag": "ABL",
+   "surface": "Tücsöktől",
+   "why": "R01 magas"
+  },
+  {
+   "lemma": "Tücsök",
+   "case_tag": "DEL",
+   "surface": "Tücsökről",
+   "why": "R01 magas"
+  },
+  {
+   "lemma": "Füttyös",
+   "case_tag": "ACC",
+   "surface": "Füttyöst",
+   "why": "R15 magánhangzó utáni egyszerű s → puszta -t"
+  },
+  {
+   "lemma": "Füttyös",
+   "case_tag": "DAT",
+   "surface": "Füttyösnek",
+   "why": "R01 magas"
+  },
+  {
+   "lemma": "Füttyös",
+   "case_tag": "INS",
+   "surface": "Füttyössel",
+   "why": "R07 s+s (a szó belseji tty nem játszik szerepet)"
+  },
+  {
+   "lemma": "Füttyös",
+   "case_tag": "ALL",
+   "surface": "Füttyöshöz",
+   "why": "R03 -höz"
+  },
+  {
+   "lemma": "Füttyös",
+   "case_tag": "SUP",
+   "surface": "Füttyösön",
+   "why": "R03 -ön"
+  },
+  {
+   "lemma": "Füttyös",
+   "case_tag": "PL",
+   "surface": "Füttyösök",
+   "why": "R16 -ök"
+  },
+  {
+   "lemma": "Bors",
+   "case_tag": "ACC",
+   "surface": "Borsot",
+   "why": "R15 rs torlódás → kötőhangzó, mély -ot"
+  },
+  {
+   "lemma": "Bors",
+   "case_tag": "DAT",
+   "surface": "Borsnak",
+   "why": "R02 mély"
+  },
+  {
+   "lemma": "Bors",
+   "case_tag": "INS",
+   "surface": "Borssal",
+   "why": "R07 s+s"
+  },
+  {
+   "lemma": "Bors",
+   "case_tag": "ALL",
+   "surface": "Borshoz",
+   "why": "R03 mély"
+  },
+  {
+   "lemma": "Bors",
+   "case_tag": "SUP",
+   "surface": "Borson",
+   "why": "R03 mély -on"
+  },
+  {
+   "lemma": "Bors",
+   "case_tag": "PL",
+   "surface": "Borsok",
+   "why": "R16 mély -ok"
+  },
+  {
+   "lemma": "Kökény",
+   "case_tag": "ACC",
+   "surface": "Kökényt",
+   "why": "R15 magánhangzó utáni ny → puszta -t"
+  },
+  {
+   "lemma": "Kökény",
+   "case_tag": "DAT",
+   "surface": "Kökénynek",
+   "why": "R01 magas"
+  },
+  {
+   "lemma": "Kökény",
+   "case_tag": "INS",
+   "surface": "Kökénnyel",
+   "why": "R08 ny+ny → nny"
+  },
+  {
+   "lemma": "Kökény",
+   "case_tag": "ALL",
+   "surface": "Kökényhez",
+   "why": "R03 KULCS: ö ellenére -hez, mert az utolsó magánhangzó é"
+  },
+  {
+   "lemma": "Kökény",
+   "case_tag": "SUP",
+   "surface": "Kökényen",
+   "why": "R03 ajakréses -en"
+  },
+  {
+   "lemma": "Kökény",
+   "case_tag": "PL",
+   "surface": "Kökények",
+   "why": "R16 magas -ek"
+  },
+  {
+   "lemma": "Kovács János",
+   "case_tag": "DAT",
+   "surface": "Kovács Jánosnak",
+   "why": "R20 csak az utolsó elem kap ragot (AkH. 159.)"
+  },
+  {
+   "lemma": "Kovács János",
+   "case_tag": "ACC",
+   "surface": "Kovács Jánost",
+   "why": "R20"
+  },
+  {
+   "lemma": "Kovács János",
+   "case_tag": "INS",
+   "surface": "Kovács Jánossal",
+   "why": "R20 + R07 az utolsó elem s-e hasonít"
+  },
+  {
+   "lemma": "Kőszikla Fréd",
+   "case_tag": "DAT",
+   "surface": "Kőszikla Frédnek",
+   "why": "R20 + R24 a cserealak: Kovács Jánosnak → Kőszikla Frédnek"
+  },
+  {
+   "lemma": "Kőszikla Fréd",
+   "case_tag": "INS",
+   "surface": "Kőszikla Fréddel",
+   "why": "R20 + R07: Kováccsal → Kőszikla Fréddel"
+  },
+  {
+   "lemma": "Kőszikla Fréd",
+   "case_tag": "ACC",
+   "surface": "Kőszikla Frédet",
+   "why": "R20 + R15"
+  },
+  {
+   "lemma": "Táncsics Mihály",
+   "case_tag": "DAT",
+   "surface": "Táncsics Mihálynak",
+   "why": "AkH. 159. szó szerinti példája"
+  },
+  {
+   "lemma": "Ilosvai Selymes Péter",
+   "case_tag": "ADE",
+   "surface": "Ilosvai Selymes Péternél",
+   "why": "AkH. 159. szó szerinti példája"
+  },
+  {
+   "lemma": "Kiss-Nagy",
+   "case_tag": "DAT",
+   "surface": "Kiss-Nagynak",
+   "why": "R21 kettős családnév, az utótag mély"
+  },
+  {
+   "lemma": "Kiss-Nagy",
+   "case_tag": "ACC",
+   "surface": "Kiss-Nagyot",
+   "why": "R21 + R15 gy után -ot"
+  },
+  {
+   "lemma": "Kiss-Nagy",
+   "case_tag": "INS",
+   "surface": "Kiss-Naggyal",
+   "why": "R21 + R08: a hasonulás csak az utótagon belül"
+  },
+  {
+   "lemma": "Szabó-Tóth",
+   "case_tag": "INS",
+   "surface": "Szabó-Tóthtal",
+   "why": "R21 + R10 régies th az utótagon"
+  },
+  {
+   "lemma": "Szabó-Tóth",
+   "case_tag": "ACC",
+   "surface": "Szabó-Tóthot",
+   "why": "R21 + R10"
+  },
+  {
+   "lemma": "Kovács Jánosné",
+   "case_tag": "DAT",
+   "surface": "Kovács Jánosnénak",
+   "why": "R19 A-típus, átlátszó -né, mély alapnév"
+  },
+  {
+   "lemma": "Kovács Jánosné",
+   "case_tag": "ACC",
+   "surface": "Kovács Jánosnét",
+   "why": "R19 é-re végződik → puszta -t"
+  },
+  {
+   "lemma": "Kovács Jánosné",
+   "case_tag": "INS",
+   "surface": "Kovács Jánosnéval",
+   "why": "R19 + R13 magánhangzó után nincs hasonulás"
+  },
+  {
+   "lemma": "Kovácsné",
+   "case_tag": "DAT",
+   "surface": "Kovácsnénak",
+   "why": "R19 B-típus"
+  },
+  {
+   "lemma": "Kovácsné",
+   "case_tag": "INS",
+   "surface": "Kovácsnéval",
+   "why": "R19 + R13"
+  },
+  {
+   "lemma": "Kovácsné",
+   "case_tag": "ACC",
+   "surface": "Kovácsnét",
+   "why": "R19"
+  },
+  {
+   "lemma": "Kovácsné",
+   "case_tag": "ALL",
+   "surface": "Kovácsnéhoz",
+   "why": "R19 átlátszó -né, mély alapnév"
+  },
+  {
+   "lemma": "Kovácsné",
+   "case_tag": "ADE",
+   "surface": "Kovácsnénál",
+   "why": "R19"
+  },
+  {
+   "lemma": "Kissné",
+   "case_tag": "DAT",
+   "surface": "Kissnének",
+   "why": "R19 magas alapnév → magas rag"
+  },
+  {
+   "lemma": "Kissné",
+   "case_tag": "INS",
+   "surface": "Kissnével",
+   "why": "R19 + R13"
+  },
+  {
+   "lemma": "Kissné",
+   "case_tag": "ACC",
+   "surface": "Kissnét",
+   "why": "R19"
+  },
+  {
+   "lemma": "Kovácsné Szabó Anna",
+   "case_tag": "DAT",
+   "surface": "Kovácsné Szabó Annának",
+   "why": "R19 C-típus + R20 csak az utolsó elem ragozódik"
+  },
+  {
+   "lemma": "Kovácsné Szabó Anna",
+   "case_tag": "ACC",
+   "surface": "Kovácsné Szabó Annát",
+   "why": "R19 C-típus + R14"
+  },
+  {
+   "lemma": "Kovácsné Szabó Anna",
+   "case_tag": "INS",
+   "surface": "Kovácsné Szabó Annával",
+   "why": "R19 C-típus + R13 + R14"
+  },
+  {
+   "lemma": "Kőszikla Frédné",
+   "case_tag": "DAT",
+   "surface": "Kőszikla Frédnének",
+   "why": "R19 az álnév-alapú -né: magas alapnév (Fréd) → magas rag"
+  },
+  {
+   "lemma": "Kőszikla Frédné",
+   "case_tag": "ACC",
+   "surface": "Kőszikla Frédnét",
+   "why": "R19 + R15"
+  },
+  {
+   "lemma": "Kisfaludy",
+   "case_tag": "PL",
+   "surface": "Kisfaludyak",
+   "why": "AkH. 162. szó szerinti példája"
+  },
+  {
+   "lemma": "Petőfi",
+   "case_tag": "PL",
+   "surface": "Petőfik",
+   "why": "AkH. 162. szó szerinti példája"
+  },
+  {
+   "lemma": "Vörösmarty",
+   "case_tag": "POSS",
+   "surface": "Vörösmartyé",
+   "why": "AkH. 159. szó szerinti példája"
+  },
+  {
+   "lemma": "Széchenyi",
+   "case_tag": "INS",
+   "surface": "Széchenyivel",
+   "why": "R13 [i] hangértékű szó végi i után nincs hasonulás"
+  },
+  {
+   "lemma": "Dózsa",
+   "case_tag": "ACC",
+   "surface": "Dózsát",
+   "why": "AkH. 159. szó szerinti példája + R14"
+  },
+  {
+   "lemma": "Szemere",
+   "case_tag": "DEL",
+   "surface": "Szemeréről",
+   "why": "AkH. 159. szó szerinti példája (e → é)"
+  }
+ ],
+ "uncertain": [
+  "Az -ék családi képző TÁRGYESETE (Kovácsékat ~ Kovácsékot ~ Kovácséket): a használat ingadozik, és mérvadó AkH-pontot nem találtam rá. Ezért nem tettem a gold setbe. Javaslat: a motor kerülje az -ék + tárgyrag automatikus generálását, vagy tárolja kézzel.",
+  "A -né utáni toldalék hangrendje MÉLY alapnév esetén ingadozik: a helyesiras.mta.hu blogja és a szakmai fórumok szerint az ajánlott alak az alapnév hangrendjét követi (Ákosnéval, Kovácsnénak, Horváthnéval), de él a magas változat is (Ákosnével, Horváthnével). Magas alapnévnél (Kissné, Némethné) nincs kockázat, mert mindkét elemzés magas alakot ad. A tesztkészletbe csak a mérvadóként megjelölt (alapnév-követő) alakokat vettem fel.",
+  "Nem találtam AkH. 12. kiadású, számozott szabálypontot sem a -né asszonynévképző, sem az -ék családi képző toldalékolására. A rájuk vonatkozó R18/R19 állítások az általános toldalékolási szabályokból (AkH. 159., 82., 92., 93.) és a mai normatív használatból következnek, nem közvetlen szabálypont-idézetek.",
+  "Tőalternáló köznévvel azonos alakú álnevek tárgyesete és többes száma: a Tücsök köznévi mintája tücsköt/tücskök (tőbeli magánhangzókieséssel), tulajdonnévként viszont a nem alternáló Tücsököt/Tücsökök alak várható. Mivel megbízható forrást nem találtam rá, a Tücsök tárgyesetét és többes számát kihagytam a gold setből. Ugyanez érinti a Bokor, Ökör, Bagoly, Sátor típusú neveket.",
+  "A -at/-et kötőhangzós tárgyeset (házat, tollat, hidat típus) tulajdonnevekre való kiterjedése: pl. a Vas családnév tárgyesete Vast vagy Vasat, a Toll névé Tollat vagy Tollt. Nem találtam mérvadó forrást; a gold setben csak -ot/-et/-öt kötőhangzós alakok szerepelnek.",
+  "Kettőzött mássalhangzóra végződő nevek tárgyesete: a Kisset alakot a hosszú mássalhangzó utáni kötelező kötőhangzó (toll → tollat, orr → orrot) analógiájára vettem fel, de kifejezett AkH-pontot erre nem találtam. A Mariann tárgyesetét (Mariannt ~ Mariannot) ezért kihagytam.",
+  "A ty-re és dzs-re végződő magyar SZEMÉLYNEVEK gyakorlatilag nem léteznek, ezért a ty+ty → tty és dzs+dzs → ddzs kettőzésre nincs valódi névpéldám. A szabály maga biztos (AkH. 92.: fütty), de a tesztkészletben csak köznévi analógiával lenne igazolható.",
+  "Az egyes szám 3. személyű birtokos személyjel (-a/-e vs. -ja/-je) választása személyneveken: a két változat közötti döntés tőfüggő, és nem vezethető le megbízhatóan az írásképből (Kavicsa ~ Kavicsja). Személyneveken jogi prózában alig fordul elő; a motor ne generálja automatikusan.",
+  "Az -ul/-ül rag személynévvel nem idiomatikus (*Kovácsul, *Frédül), ezért a case-listában szerepel, de tesztpárt nem adtam hozzá.",
+  "A Balogh eszközhatározós alakját (Baloghgal) az AkH. 160. b Véghgel példájának analógiájára adtam meg; ez a normatív alak, de a valós korpuszokban gyakori a Baloggal írásmód is. Ugyanez a helyzet a Tóthtal/Tóttal, Horváthtal/Horváttal párokkal.",
+  "A Greenwichcsel alak az AkH. 11. kiadásában szó szerint szerepelt; a 12. kiadás 216. b pontjának általam megtalált példasorában (Balzackal, pechhel, Bachhal, Steinbeckkel) nem láttam. Az alak maga a szabályból következik, de a pontos 12. kiadású hivatkozás nem igazolt.",
+  "Antiharmonikus (csupa i/í/é magánhangzót tartalmazó, mégis mély toldalékot kapó) SZEMÉLYNEVET nem találtam. Kockázat viszont az olyan ritka családnév, amely alakilag azonos egy antiharmonikus köznévvel (Szíj, Héj, Nyíl, Cél): ezeknél nem tudom megmondani, hogy tulajdonnévként megőrzik-e a mély toldalékolást (Szíjnak vs. Szíjnek). Kézi kivétellistát javaslok.",
+  "A József tárgyesetét (Józsefet) az ajakréses kötőhangzóval adtam meg, mert a szó utolsó magánhangzója ö, viszont az e-re végződő szótag miatt a norma az -et. Ez a pár egyszerre teszteli az R03-at és egy határesetet; ha a motor implementációja szigorúan az utolsó magánhangzót nézi, itt *Józseföt-öt adna, ami hibás — de a szabály pontos megfogalmazásában (utolsó magánhangzó ö/ő/ü/ű) a József utolsó magánhangzója valóban ö, ezért ezt a tesztpárt külön ellenőrizni javaslom.",
+  "Nem sikerült szó szerinti, teljes AkH. 12. szövegeket beszereznem (a forrás szerzői jogi okból megtagadta a teljes reprodukciót); a 82., 92., 93., 158., 159., 160. a/b/c, 161., 162., 216. a/b és 217. pontok tartalmát és példáit másodlagos, de egybehangzó forrásokból erősítettem meg."
+ ]
+}

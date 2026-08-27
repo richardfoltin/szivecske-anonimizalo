@@ -1,0 +1,889 @@
+<title>Szivecske belülről</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --paper:      #FBFBFC;
+    --surface:    #FFFFFF;
+    --sunk:       #F2F3F6;
+    --ink:        #16181D;
+    --slate:      #59636F;
+    --faint:      #8B95A1;
+    --rule:       #E3E5EA;
+    --rose:       #A8384E;
+    --rose-soft:  #F7EBEE;
+    --warn:       #8A6212;
+    --warn-soft:  #FBF3E0;
+    --good:       #2F6B4F;
+    --good-soft:  #E9F3ED;
+
+    --display: "Newsreader", "Iowan Old Style", Georgia, serif;
+    --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", "Cascadia Mono", Consolas, monospace;
+
+    --measure: 68ch;
+    --step: clamp(0.9rem, 0.86rem + 0.2vw, 1rem);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:     #131519;
+      --surface:   #191C21;
+      --sunk:      #1F232A;
+      --ink:       #E6E8EC;
+      --slate:     #A3ADBA;
+      --faint:     #737E8B;
+      --rule:      #2B3038;
+      --rose:      #E48095;
+      --rose-soft: #2C1C22;
+      --warn:      #D6A94A;
+      --warn-soft: #2A2318;
+      --good:      #77C39B;
+      --good-soft: #17241D;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper:     #131519;
+    --surface:   #191C21;
+    --sunk:      #1F232A;
+    --ink:       #E6E8EC;
+    --slate:     #A3ADBA;
+    --faint:     #737E8B;
+    --rule:      #2B3038;
+    --rose:      #E48095;
+    --rose-soft: #2C1C22;
+    --warn:      #D6A94A;
+    --warn-soft: #2A2318;
+    --good:      #77C39B;
+    --good-soft: #17241D;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: var(--step);
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 clamp(1.1rem, 4vw, 3rem);
+  }
+
+  @media (min-width: 1020px) {
+    .wrap { grid-template-columns: 15.5rem minmax(0, 1fr); gap: clamp(2rem, 4vw, 4.5rem); }
+  }
+
+  /* ── fejléc ───────────────────────────────────────────── */
+
+  header.masthead {
+    grid-column: 1 / -1;
+    padding: clamp(3rem, 8vw, 5.5rem) 0 clamp(2rem, 4vw, 3rem);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--rose);
+    margin: 0 0 1.1rem;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    line-height: 1.02;
+    letter-spacing: -0.022em;
+    margin: 0 0 1rem;
+    text-wrap: balance;
+  }
+
+  .standfirst {
+    font-family: var(--display);
+    font-size: clamp(1.08rem, 1.6vw, 1.3rem);
+    line-height: 1.5;
+    color: var(--slate);
+    max-width: 46ch;
+    margin: 0;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.6rem;
+    margin-top: 2rem;
+    font-family: var(--mono);
+    font-size: 0.76rem;
+    color: var(--faint);
+  }
+  .meta b { color: var(--ink); font-weight: 500; }
+
+  /* ── tartalomjegyzék ──────────────────────────────────── */
+
+  nav.toc { display: none; }
+
+  @media (min-width: 1020px) {
+    nav.toc {
+      display: block;
+      grid-column: 1;
+      align-self: start;
+      position: sticky;
+      top: 0;
+      padding: 2.6rem 0;
+      max-height: 100vh;
+      overflow-y: auto;
+    }
+    nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.15rem; }
+    nav.toc a {
+      display: grid;
+      grid-template-columns: 1.6rem 1fr;
+      gap: 0.3rem;
+      padding: 0.3rem 0;
+      text-decoration: none;
+      color: var(--slate);
+      font-size: 0.83rem;
+      line-height: 1.35;
+      border-bottom: 1px solid transparent;
+    }
+    nav.toc a:hover { color: var(--rose); }
+    nav.toc a span.n { font-family: var(--mono); font-size: 0.72rem; color: var(--faint); padding-top: 0.12em; }
+    nav.toc a:hover span.n { color: var(--rose); }
+  }
+
+  main { grid-column: 1; min-width: 0; }
+  @media (min-width: 1020px) { main { grid-column: 2; } }
+
+  /* ── szakaszok ────────────────────────────────────────── */
+
+  section { padding: clamp(2.6rem, 5vw, 4rem) 0; border-bottom: 1px solid var(--rule); }
+  section:last-of-type { border-bottom: 0; }
+
+  .sec-head { display: flex; align-items: baseline; gap: 0.85rem; margin-bottom: 1.4rem; }
+  .sec-num {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--rose);
+    padding-top: 0.2em;
+    letter-spacing: 0.04em;
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(1.55rem, 3vw, 2.1rem);
+    line-height: 1.14;
+    letter-spacing: -0.015em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: var(--body);
+    font-weight: 600;
+    font-size: 1.02rem;
+    letter-spacing: -0.005em;
+    margin: 2.2rem 0 0.7rem;
+    color: var(--ink);
+  }
+
+  p { max-width: var(--measure); margin: 0 0 1.05rem; }
+  p:last-child { margin-bottom: 0; }
+
+  strong { font-weight: 600; }
+  em { font-style: italic; }
+
+  a { color: var(--rose); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.86em;
+    background: var(--sunk);
+    padding: 0.1em 0.34em;
+    border-radius: 3px;
+  }
+
+  ul, ol { max-width: var(--measure); margin: 0 0 1.05rem; padding-left: 1.15rem; }
+  li { margin-bottom: 0.35rem; }
+  li::marker { color: var(--faint); }
+
+  /* ── kód ──────────────────────────────────────────────── */
+
+  pre {
+    font-family: var(--mono);
+    font-size: 0.79rem;
+    line-height: 1.6;
+    background: var(--sunk);
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    padding: 0.95rem 1.1rem;
+    margin: 0 0 1.15rem;
+    overflow-x: auto;
+    tab-size: 2;
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+  .c-dim { color: var(--faint); }
+  .c-rose { color: var(--rose); }
+  .c-good { color: var(--good); }
+
+  /* ── csere-blokk: a program lényege vizuálisan ────────── */
+
+  .swap {
+    display: grid;
+    gap: 0;
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 0 0 1.2rem;
+    max-width: var(--measure);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+  }
+  @media (min-width: 620px) { .swap { grid-template-columns: 1fr 1fr; } }
+
+  .swap > div { padding: 0.8rem 1rem; min-width: 0; overflow-x: auto; }
+  .swap .from { background: var(--sunk); }
+  .swap .to { background: var(--rose-soft); border-top: 1px solid var(--rule); }
+  @media (min-width: 620px) { .swap .to { border-top: 0; border-left: 1px solid var(--rule); } }
+
+  .swap .lbl {
+    display: block;
+    font-family: var(--body);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--faint);
+    margin-bottom: 0.4rem;
+  }
+  .swap .to .lbl { color: var(--rose); }
+
+  /* ── kiemelt doboz ────────────────────────────────────── */
+
+  .note {
+    max-width: var(--measure);
+    border-left: 2px solid var(--warn);
+    background: var(--warn-soft);
+    padding: 0.95rem 1.15rem;
+    margin: 0 0 1.2rem;
+    border-radius: 0 4px 4px 0;
+  }
+  .note .tag {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--warn);
+    margin-bottom: 0.45rem;
+  }
+  .note p { margin-bottom: 0.6rem; }
+  .note p:last-child { margin-bottom: 0; }
+
+  .note.ok { border-left-color: var(--good); background: var(--good-soft); }
+  .note.ok .tag { color: var(--good); }
+
+  /* ── táblázat ─────────────────────────────────────────── */
+
+  .tw { overflow-x: auto; margin: 0 0 1.2rem; max-width: var(--measure); }
+  table { border-collapse: collapse; width: 100%; font-size: 0.83rem; }
+  th, td { text-align: left; padding: 0.5rem 0.85rem 0.5rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th {
+    font-family: var(--body);
+    font-weight: 500;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--faint);
+    border-bottom-color: var(--ink);
+  }
+  td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td code { font-size: 0.8em; }
+
+  /* ── folyamatábra ─────────────────────────────────────── */
+
+  .flow { display: grid; gap: 0; margin: 0 0 1.4rem; max-width: var(--measure); }
+
+  .stage {
+    display: grid;
+    grid-template-columns: 2.3rem 1fr;
+    gap: 0.9rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .stage:last-child { border-bottom: 0; }
+  .stage .k { font-family: var(--mono); font-size: 0.72rem; color: var(--faint); padding-top: 0.28em; }
+  .stage .t { font-weight: 600; }
+  .stage .d { color: var(--slate); font-size: 0.88rem; }
+
+  .boundary {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.55rem 0;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--rose);
+  }
+  .boundary::before, .boundary::after {
+    content: "";
+    flex: 1;
+    height: 0;
+    border-top: 1px dashed var(--rose);
+    opacity: 0.55;
+  }
+
+  footer {
+    grid-column: 1 / -1;
+    padding: 3rem 0 4.5rem;
+    border-top: 1px solid var(--rule);
+    color: var(--faint);
+    font-size: 0.83rem;
+  }
+  footer p { max-width: var(--measure); }
+
+  :focus-visible { outline: 2px solid var(--rose); outline-offset: 2px; border-radius: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">Szivecske Anonimizáló · műszaki leírás</p>
+    <h1>Szivecske belülről</h1>
+    <p class="standfirst">Mi történik attól, hogy megnyitsz egy iratot, addig, hogy a kész fájl a lemezre kerül — és melyik lépésnél mi az, amit könnyű elrontani.</p>
+    <div class="meta">
+      <span><b>16</b> tesztkészlet</span>
+      <span><b>1393</b> ellenőrzés</span>
+      <span><b>4+1</b> folyamat</span>
+      <span><b>26</b> híd-hívás</span>
+      <span><b>1</b> hálózati hívás az egész programban</span>
+    </div>
+  </header>
+
+  <nav class="toc" aria-label="Tartalom">
+    <ol>
+      <li><a href="#egy"><span class="n">01</span><span>Egy mondatban</span></a></li>
+      <li><a href="#folyamat"><span class="n">02</span><span>A folyamat egésze</span></a></li>
+      <li><a href="#hatarok"><span class="n">03</span><span>Folyamatok és határok</span></a></li>
+      <li><a href="#magyar"><span class="n">04</span><span>A magyar nyelvi motor</span></a></li>
+      <li><a href="#modell"><span class="n">05</span><span>A nyelvi modell</span></a></li>
+      <li><a href="#felismeres"><span class="n">06</span><span>Felismerés</span></a></li>
+      <li><a href="#csere"><span class="n">07</span><span>Keresés és csere</span></a></li>
+      <li><a href="#pdf"><span class="n">08</span><span>PDF-sebészet</span></a></li>
+      <li><a href="#docx"><span class="n">09</span><span>DOCX-sebészet</span></a></li>
+      <li><a href="#szamok"><span class="n">10</span><span>Összegek és dátumok</span></a></li>
+      <li><a href="#kapu"><span class="n">11</span><span>Az ellenőrző kapu</span></a></li>
+      <li><a href="#kimenet"><span class="n">12</span><span>Ami keletkezik</span></a></li>
+      <li><a href="#nem"><span class="n">13</span><span>Amit nem csinál</span></a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <!-- 01 ─────────────────────────────────────────────── -->
+    <section id="egy">
+      <div class="sec-head"><span class="sec-num">01</span><h2>Egy mondatban</h2></div>
+
+      <p>A program megkeresi egy magyar jogi iratban a személyek, szervezetek és hivatalos azonosítók <em>minden</em> felszíni alakját — ragozva, rövidítve, e-mail címbe ágyazva —, kicseréli őket következetes álnevekre vagy adatfajta-címkékre, majd <strong>visszaolvassa a saját kész fájlját</strong>, és csak akkor engedi lemezre, ha abban egyetlen eredeti adat sem maradt.</p>
+
+      <p>A hangsúly a visszaolvasáson van. A felismerés hibázhat; a kapu az, ami miatt a hiba nem jut ki a kezedből.</p>
+    </section>
+
+    <!-- 02 ─────────────────────────────────────────────── -->
+    <section id="folyamat">
+      <div class="sec-head"><span class="sec-num">02</span><h2>A folyamat egésze</h2></div>
+
+      <p>Ez a tizenhárom lépés fut le minden iratra, ebben a sorrendben. A számozás nem díszítés: a sorrend kötött, és a legtöbb hiba abból származik, ha valaki felcseréli két lépését.</p>
+
+      <div class="flow">
+        <div class="stage"><span class="k">01</span><div><div class="t">Megnyitás</div><div class="d">A bájtok döntenek, nem a kiterjesztés. Egy <code>.doc</code> vagy <code>.odt</code> itt hangosan elbukik — nem esik a szöveges ágra.</div></div></div>
+        <div class="stage"><span class="k">02</span><div><div class="t">Kiolvasás</div><div class="d">PDF-nél tartalomfolyam + Form XObjectek; DOCX-nél a ZIP minden szöveghordozó része. Az eredmény lapos szöveg + offszettérkép.</div></div></div>
+        <div class="stage"><span class="k">03</span><div><div class="t">Változáskövetés-kapu</div><div class="d">Feloldatlan korrektúrával nem megyünk tovább: a törölt szöveg szó szerint bent van a fájlban.</div></div></div>
+        <div class="stage"><span class="k">04</span><div><div class="t">Felismerés</div><div class="d">A nyelvi modell megtalálja a neveket, a szerkezeti minták a szerepet és a megtartandókat, a saját felismerők az azonosítókat.</div></div></div>
+        <div class="boundary">emberi döntés</div>
+        <div class="stage"><span class="k">05</span><div><div class="t">Átnézés</div><div class="d">A felhasználó javít, kiegészít, töröl. A bizonytalan találatok itt dőlnek el — a program soha nem dönt helyette.</div></div></div>
+        <div class="stage"><span class="k">06</span><div><div class="t">Névalak-generálás</div><div class="d">Minden félre legyártjuk az összes lehetséges felszíni alakot. Egy személynél ez tipikusan 600–1200 alak.</div></div></div>
+        <div class="stage"><span class="k">07</span><div><div class="t">Keresés</div><div class="d">Minden alakra, ékezet nélkül is; háromfokú besorolással (automatikus / átnézésre / elutasítva).</div></div></div>
+        <div class="stage"><span class="k">08</span><div><div class="t">Álnév-kiosztás</div><div class="d">Determinisztikus, az ügy titkából. A feleség a férj álnevéből származik, a közös vezetéknév megmarad közösnek.</div></div></div>
+        <div class="stage"><span class="k">09</span><div><div class="t">Csereszöveg</div><div class="d">Az álnév ugyanabba az esetbe ragozva, amiben az eredeti állt. Plusz a névelő igazítása.</div></div></div>
+        <div class="stage"><span class="k">10</span><div><div class="t">Írás memóriába</div><div class="d">PDF: bájtszintű törlés + sor-újraszedés. DOCX: futamok szétvágása. Lemezre még semmi.</div></div></div>
+        <div class="stage"><span class="k">11</span><div><div class="t">Metaadat-tisztítás</div><div class="d">Amihez a szövegcsere elvileg sem ér el: XMP, jegyzetek, űrlapmezők, könyvjelzők, EXIF.</div></div></div>
+        <div class="boundary">a kapu</div>
+        <div class="stage"><span class="k">12</span><div><div class="t">Visszaolvasás</div><div class="d">A <em>kész bájtokból</em>, más úton, mint ahogy írtuk. Ha talál eredeti adatot: fájl nem keletkezik.</div></div></div>
+        <div class="stage"><span class="k">13</span><div><div class="t">Mentés</div><div class="d">Az irat, a titkosított kulcsfájl (ha kérted) és a jegyzőkönyv.</div></div></div>
+      </div>
+    </section>
+
+    <!-- 03 ─────────────────────────────────────────────── -->
+    <section id="hatarok">
+      <div class="sec-head"><span class="sec-num">03</span><h2>Folyamatok és határok</h2></div>
+
+      <p>Nyugalmi állapotban négy folyamat fut, összesen nagyjából 370 MB-tal. A modellé az ötödik, és csak a felismerés idejére létezik.</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>folyamat</th><th>memória</th><th>mit ér el</th></tr></thead>
+          <tbody>
+            <tr><td>főfolyamat</td><td class="num">122 MB</td><td>fájlrendszer, hálózat, párbeszédek, menü</td></tr>
+            <tr><td>felület</td><td class="num">91 MB</td><td>csak a híd 26 függvénye</td></tr>
+            <tr><td>rajzolás</td><td class="num">95 MB</td><td>a Chromium adja, nem mi</td></tr>
+            <tr><td>hálózati szolgáltatás</td><td class="num">62 MB</td><td>a program nem használja</td></tr>
+            <tr><td><em>modell (eldobható)</em></td><td class="num">535–577 MB</td><td>szöveget kap, entitást ad</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>A felületben nincs <code>require</code>, nincs <code>process</code>, nincs <code>module</code> — a <code>contextIsolation</code> és a <code>nodeIntegration: false</code> párosa zárja ki. Amit lát: mindent. Az eredeti neveket, a környezetüket, a kirenderelt oldalképeket. Az ígéret nem az, hogy a felület nem látja az adatot, hanem hogy <strong>nincs kijárata</strong>.</p>
+
+      <h3>A modell folyamata a munka után kilép</h3>
+
+      <p>Három egymásra rakott mechanizmus. A felismerés <code>finally</code> ága elengedi; a munkafolyamat a <code>dispose</code> üzenetre 50 ms múlva kilép, mert a memória csak a kilépéssel adódik vissza; és ha a szülő összeomlik, a <code>disconnect</code> eseményre magától kilép. Ez utóbbit külön mértük: a szülőt kilőve a gyerek három másodpercen belül eltűnt — nem marad 550 MB-os árva folyamat.</p>
+
+      <p>A mérés a lényeget is igazolja: a szülő memóriája a felismerés alatt <strong>56 MB-ról 57-re</strong> nő. A modell tényleg nem ott van.</p>
+
+      <h3>Hálózat</h3>
+
+      <p>Az egész forrásban egyetlen kimenő hívás van: a <code>models.ts</code> Hugging Face-letöltése. Ez az alapértelmezett működésben <em>elérhetetlen</em> — a szállított magyar modell a telepítővel érkezik, és a letöltő függvény erre a fajtára már a hálózat előtt kilép. A hálózat csak akkor él, ha kézzel letöltöd az opcionális többnyelvű modellt. Nincs telemetria, nincs hibajelentő, nincs automatikus frissítés.</p>
+    </section>
+
+    <!-- 04 ─────────────────────────────────────────────── -->
+    <section id="magyar">
+      <div class="sec-head"><span class="sec-num">04</span><h2>A magyar nyelvi motor</h2></div>
+
+      <p>Ez a réteg egyetlen dolgot csinál, de determinisztikusan: egy névből legyártja az összes alakot, amiben magyar szövegben előfordulhat. Nincs benne modell és nincs benne találgatás. Ugyanez a kód dolgozik <em>visszafelé</em> (a valódi nevek alakjait gyártja, hogy megtaláljuk őket) és <em>előre</em> (az álnév alakjait, hogy a helyes ragozott formát írjuk vissza).</p>
+
+      <h3>A hangrend két menetben dől el</h3>
+
+      <p>Ez az a részlet, amit szinte mindenki elront. A <em>mély vagy magas</em> kérdést hátulról az első <strong>nem semleges</strong> magánhangzó dönti el — az <code>i</code>, <code>í</code>, <code>é</code> átlátszó. Az <em>ajakkerekítést</em> viszont a ténylegesen <strong>utolsó</strong> magánhangzó, akkor is, ha semleges.</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>szó</th><th>1. menet</th><th>2. menet</th><th>eredmény</th></tr></thead>
+          <tbody>
+            <tr><td class="num">Gránit</td><td>á → mély</td><td>—</td><td class="num">Gránit<b>nak</b></td></tr>
+            <tr><td class="num">Kökény</td><td>ö → magas</td><td>é</td><td class="num">Kökény<b>hez</b></td></tr>
+            <tr><td class="num">Ödön</td><td>ö → magas</td><td>ö</td><td class="num">Ödön<b>höz</b></td></tr>
+            <tr><td class="num">József</td><td>e → magas</td><td>e</td><td class="num">József<b>nek</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Az <code>e</code> szándékosan <em>nincs</em> a semlegesek között. Enélkül a „József” mélynek látszana, és „Józsefnak” lenne belőle.</p>
+
+      <h3>A <code>-val/-vel</code> hasonulása</h3>
+
+      <p>Itt négy külön szabály fut egymás után, és mindegyik más:</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>eset</th><th>példa</th><th>miért</th></tr></thead>
+          <tbody>
+            <tr><td>magánhangzó után</td><td class="num">Szabó → Szabó<b>val</b></td><td>nincs hasonulás, a <code>v</code> marad</td></tr>
+            <tr><td>kétjegyű mássalhangzó</td><td class="num">Kovács → Ková<b>ccsal</b></td><td>egyszerűsítő kettőzés, nem „cscsal”</td></tr>
+            <tr><td>régies írásmód</td><td class="num">Balogh → Balogh<b>gal</b></td><td>a <em>kiejtett</em> hang kettőződik, a leírt alak marad</td></tr>
+            <tr><td>eleve kettőzött</td><td class="num">Kiss → Kiss<b>-sel</b></td><td>a hármas <code>sss</code> helyett kötőjel</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>A régies írásmódok listája: <code>th→t</code>, <code>gh→g</code>, <code>cz→c</code>, <code>tz→c</code>, <code>ts→cs</code>, <code>x→sz</code>. Ezért lesz „Tóth” + „t” + „al” = <strong>Tóthtal</strong>, és „Marx” + „sz” + „al” = <strong>Marxszal</strong>.</p>
+
+      <div class="note">
+        <span class="tag">csapda</span>
+        <p>A <strong><code>-né</code> nem rag, hanem képző</strong>, és <em>másik embert</em> jelöl. A programban élt egyszer egy összevonó szabály: „ha az egyik név a másik eleje, és a többlet legfeljebb néhány kisbetű, akkor ugyanaz az ember”. Ettől a <em>Kovács Jánosné</em> beolvadt a <em>Kovács János</em>ba — az asszony a férje álnevét kapta volna, a saját neve pedig bent marad.</p>
+        <p>A javítás nem betűszámlálás, hanem a ragozó motor mind a 21 esete, a <code>WIFE</code> tag kihagyásával. Ugyanígy külön kategória az <code>-ék</code> (család).</p>
+      </div>
+
+      <h3>Hány alakot gyárt egy névből</h3>
+
+      <p>Magok (teljes név, fordított, vezetéknév, keresztnév, család, monogram négyféleképpen) × 19 ragozható eset × névelőtag × megszólítás:</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>bemenet</th><th>mag</th><th>felszíni alak</th></tr></thead>
+          <tbody>
+            <tr><td class="num">Kovács János</td><td class="num">9</td><td class="num">668</td></tr>
+            <tr><td class="num">Kovácsné Szabó Anna</td><td class="num">14</td><td class="num">1181</td></tr>
+            <tr><td class="num">Aranykalász Kereskedelmi Kft.</td><td class="num">4</td><td class="num">76</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Az asszonynévnél a 14 mag azért több, mert a leánykori név is szerepelhet: <em>Kovács Jánosné</em>, <em>Kovácsné</em>, <em>Kovácsné Szabó Anna</em>, <em>Szabó Anna</em>, <em>Szabó</em>.</p>
+
+      <p>A cégformánál külön szabály él: a rövidítés a <em>kiejtése</em> szerint ragozódik, kötőjellel. A „Kft.” kiejtve „káeftté”, ami magas hangrendű — ezért <strong>Aranykalász Kft.-nek</strong>, nem „-nak”.</p>
+    </section>
+
+    <!-- 05 ─────────────────────────────────────────────── -->
+    <section id="modell">
+      <div class="sec-head"><span class="sec-num">05</span><h2>A nyelvi modell</h2></div>
+
+      <p>A modell egyetlen dolgot ad vissza, és abból egyetlen mező számít igazán: a <strong>karakterpozíció</strong>. Egy kitakaró programban a név szövege önmagában semmit nem ér — ha nem tudjuk, <em>hol</em> van a fájlban, nem tudjuk kivágni.</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th></th><th>alapértelmezett</th><th>másodlagos</th></tr></thead>
+          <tbody>
+            <tr><td>modell</td><td>NYTK NerKor huBERT</td><td>bardsai EU-PII</td></tr>
+            <tr><td>licenc</td><td>Apache-2.0</td><td>Apache-2.0</td></tr>
+            <tr><td>méret</td><td class="num">440 342 356 B</td><td class="num">278 736 360 B</td></tr>
+            <tr><td>nyelv</td><td>magyar</td><td>24 európai</td></tr>
+            <tr><td>honnan</td><td>a telepítővel</td><td>letöltés</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>A választás méréssel történt, nem népszerűség alapján, és a végeredmény nem az, amit várnál: <strong>a nyertes nem nagy nyelvi modell.</strong> A magyar Szeged NER mérésen ez a 110 milliós kódoló 90,2 pontot ér, míg a legjobb 16 GB-ba férő generatív modell 79,1-et — és nagyságrendekkel gyorsabb is. Egy 30 oldalas beadványt ez ~20 másodperc alatt olvas végig; a legjobb generatív jelölt 51 percig tartott, és a pozíciói mind rosszak voltak.</p>
+
+      <h3>Saját tokenizáló</h3>
+
+      <p>A kész könyvtár token-osztályozója nem ad karakterpozíciót — a forrásában ott a nyitott TODO. Ezért a tokenizálást magunk végezzük, és így a pozíció <em>nem visszaállított becslés</em>, hanem a tokenizálás közvetlen eredménye.</p>
+
+      <p>Magyar szempontból egy dolog kritikus, és ez a szótárból ellenőrizhető: a modell <strong>ékezetes szótárral</strong> tanult. A „Kovács” egyetlen szótári elem (7252-es azonosító). Ha ékezetet vennénk le, a modell más szót látna, és a pozíciók is elcsúsznának. A betöltő ezért nem tippel: a <code>tokenizer.json</code>-ból olvassa ki, hogy nem kell kisbetűsíteni és nem szabad ékezetet levenni — és ha egy későbbi modellnél ez másképp lenne, hangosan elszáll.</p>
+
+      <div class="note">
+        <span class="tag">csapda</span>
+        <p>A BERT-féle névfelismerő tanításakor a címkét <strong>csak a szó első aldarabja</strong> kapja meg; a folytatások ki vannak hagyva a veszteségből. Vagyis a modell jóslata a <code>##</code>-darabokon <em>betanítatlan zaj</em>.</p>
+        <p>Ha valaki token szinten fűzi össze a BIO-címkéket — ami a kézenfekvő megoldás —, ez jön ki:</p>
+        <pre><code><span class="c-dim">token szinten:</span>  "Szentend" + "rei Járásbíróság"
+                 "Sár" + "közi Ügyvédi Iroda"
+                 "Kovác"          <span class="c-dim">← a záró s elveszett</span>
+<span class="c-good">szó szinten:</span>    "Szentendrei Járásbíróság"
+                 "Sárközi Ügyvédi Iroda"
+                 "Kováccsal"</code></pre>
+        <p>A megoldás: a címke a szó első darabjától jön, a tartomány viszont az <em>egész szó</em>. Ez viszi át a magyar toldalékot is, ami a pontos kivágáshoz kell.</p>
+      </div>
+
+      <h3>Ellenőrzőösszeg</h3>
+
+      <p>A 440 MB-os hálófájl épségét a betöltő minden induláskor ellenőrzi a mellé szállított összegfájlból. Egy sérült háló ugyanis nem omlik össze — <em>csendben rosszul működne</em>, kihagyna neveket. Egyetlen átbillentett bit elég:</p>
+
+      <pre><code><span class="c-rose">A nyelvi modell „tokenizer.json" fájlja SÉRÜLT</span>: az ellenőrzőösszege nem
+egyezik azzal, amit a programmal együtt szállítottunk. Egy sérült hálóval a
+felismerés csendben rosszul működne — kihagyna neveket —, ezért nem
+dolgozunk vele. Telepítsd újra a programot.</code></pre>
+
+      <p>Az ellenőrzés egyszeri: ép modellnél 650 ms az első alkalommal, utána 1 ms a gyorstárból.</p>
+    </section>
+
+    <!-- 06 ─────────────────────────────────────────────── -->
+    <section id="felismeres">
+      <div class="sec-head"><span class="sec-num">06</span><h2>Felismerés</h2></div>
+
+      <p>Három forrás dolgozik együtt, és egyik sem pótolja a másikat.</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>forrás</th><th>mit ad</th><th>amit nem tud</th></tr></thead>
+          <tbody>
+            <tr><td>nyelvi modell</td><td>a neveket, ott is, ahol semmi nem utal rájuk</td><td>ki milyen szerepben áll</td></tr>
+            <tr><td>szerkezeti minta</td><td>az eljárási szerepet és a megtartandókat</td><td>a folyó szövegben elszórt neveket</td></tr>
+            <tr><td>saját felismerők</td><td>13 azonosítófajtát ellenőrzőszámmal</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>A szerkezeti ág <em>mindig</em> lefut, és önmagában is teljes eredményt ad — ez a tartalék, ha a modell nincs telepítve vagy elszáll. A modell találata opcionális kiegészítés, nem előfeltétel.</p>
+
+      <h3>Amit a törvény szerint bent kell hagyni</h3>
+
+      <p>A Bszi. 166. § (2) szerint az eljáró bíró, ügyvéd, védő és a bíróság neve nem anonimizálható. Ezeket külön listán tartjuk, és nem cseréljük le. A felismerésük a magyar aláírásblokk alakjaira épül: <em>„dr. Vasvári Anikó s. k. bíró”</em>, <em>„A tanács elnöke: …”</em>, <em>„Ülnökök: …”</em>.</p>
+
+      <div class="note">
+        <span class="tag">csapda</span>
+        <p>A JavaScript <code>\b</code> szóhatára <strong>ASCII-alapú</strong>. A „bíró” utolsó betűje az „ó”, amit a JS nem tekint szóalkotó karakternek — ezért sorvég előtt <em>nincs</em> szóhatár, és a <code>bíró\b</code> minta soha nem illeszkedett. Ugyanez igaz a „védő”, „bírónő”, „közjegyző”, „végrehajtó” szavakra.</p>
+        <p>Következmény: a bíró neve <em>sosem</em> került a megtartandók közé, tehát a program félként cserélte volna le. Ugyanez a <code>\b</code> viszont <em>bent</em> illeszkedett a „Járás<b>bíró</b>ság” szóba.</p>
+        <p>Magyar szövegre írt regexben nem szabad <code>\b</code>-t és <code>\w</code>-t használni. Helyette explicit magyar betűosztály negatív előretekintésben.</p>
+      </div>
+
+      <h3>Az ellenőrzőszám nem szűrő</h3>
+
+      <p>Tizenhárom azonosítófajtát ismerünk fel: adóazonosító jel, TAJ, adószám, cégjegyzékszám, bankszámlaszám, IBAN, helyrajzi szám, irányítószám, lakcím, telefonszám, személyi igazolvány, ügyszám, rendszám, e-mail.</p>
+
+      <p>A kézenfekvő terv az lenne, hogy az ellenőrzőszám dönt. Ez rossz terv, és ezt megmértük a saját mintairatainkon:</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>azonosító</th><th>ellenőrzőszám</th><th>besorolás</th></tr></thead>
+          <tbody>
+            <tr><td class="num">8517029364</td><td>érvényes</td><td>automatikus</td></tr>
+            <tr><td class="num">8442130976</td><td><b>hibás</b></td><td>átnézésre</td></tr>
+            <tr><td class="num">8391764205</td><td><b>hibás</b></td><td>átnézésre</td></tr>
+            <tr><td class="num">041 273 856</td><td>érvényes</td><td>automatikus</td></tr>
+            <tr><td class="num">HU42 1040 … 1008</td><td><b>hibás</b></td><td>átnézésre</td></tr>
+            <tr><td class="num">13-09-184627</td><td>nincs neki</td><td>automatikus</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>A három adóazonosítóból egy érvényes, az IBAN nem az. Kemény kapuval a program a saját tesztadatai többségét sem találná meg — a valódi iratokban pedig ott az elgépelés. Ezért a minta illeszkedése önmagában találat, az ellenőrzőszám csak <strong>megbízhatósági pontot</strong> ad. A cégjegyzékszám nem esik vissza a hiányzó összeg miatt: annak nincs ellenőrzőszáma, ez a szám természete, nem gyanújel.</p>
+
+      <p>A legerősebb jel egyébként nem a matematika, hanem a <strong>címke-kontextus</strong>: az „adóazonosító jel:”, „TAJ szám:”, „hrsz.” előtag zárja ki a téves illeszkedést.</p>
+    </section>
+
+    <!-- 07 ─────────────────────────────────────────────── -->
+    <section id="csere">
+      <div class="sec-head"><span class="sec-num">07</span><h2>Keresés és csere</h2></div>
+
+      <p>A keresés nem csak azt jegyzi meg, <em>mit</em> talált, hanem azt is, hogy <em>milyen recept szerint</em> állt elő. A csere ugyanazt a receptet játssza le az álnéven. Ez a trükk az egész alrendszer lelke.</p>
+
+      <div class="swap">
+        <div class="from"><span class="lbl">eredeti</span>dr. Kovács Jánossal</div>
+        <div class="to"><span class="lbl">recept</span>mag=teljes név · eset=INS<br>előtag="dr. "</div>
+      </div>
+
+      <p>A csere így nem szócsere: az álnév <em>ugyanabba az esetbe</em> ragozódik, és az előtag a helyén marad.</p>
+
+      <div class="swap">
+        <div class="from"><span class="lbl">bemenet</span>A tárgyaláson a Nagy Péter és a<br>Szabó Márton is megjelent.</div>
+        <div class="to"><span class="lbl">kimenet</span>A tárgyaláson <b>az</b> Érces Gránit és a<br>Palás Jáspis is megjelent.</div>
+      </div>
+
+      <div class="note ok">
+        <span class="tag">javítva a leírás írása közben</span>
+        <p>A fenti „az” nem volt magától értetődő. A határozott névelő magyarul a következő szó kezdőhangjától függ, és a névelő-igazító függvény meg is volt írva — csak épp <strong>egy olyan úton, amit a valódi program nem jár be</strong>: kizárólag a mérőfuttatások hívták. Az igazi kimeneten sosem futott le, tehát „a Érces Gránit” került volna az iratba.</p>
+        <p>Ez a program visszatérő hibamintázata: a fogadóoldal megépül, a termelő nem. A kód olvasva késznek látszik, a tesztek zöldek, és a funkció mégsem működik.</p>
+      </div>
+
+      <h3>Háromfokú besorolás</h3>
+
+      <p>Minden találat egyike a háromnak: <strong>automatikus</strong> (cserélődik), <strong>átnézésre</strong> (a felhasználó dönt), <strong>elutasítva</strong> (nem név). A küszöb állítható, és tényleg hat.</p>
+
+      <p>A nehéz eset a köznévvel azonos vezetéknév. A modell erre jó — ugyanabban az iratban a „Nagy a kockázat” mondatban 1,0000 biztonsággal köznévnek látja a „Nagy”-ot, a „Nagy Péter”-ben pedig 0,9993-mal személynévnek. Ahol mégis téved, ott magas magabiztossággal teszi, tehát küszöbbel nem szűrhető — ezért van mellette a köznévi homonimák listája, és ezért mennek az ilyen találatok átnézésre.</p>
+
+      <h3>Álnév-kiosztás</h3>
+
+      <p>Az álnév determinisztikus, az ügy titkából származik: ugyanaz a név ugyanabban az ügyben mindig ugyanazt kapja, más ügyben mást. A vezetéknév-készlet <em>közös</em>, ezért a rokonság megmarad — ha az iratban Kovács János és Kovács Jánosné szerepel, az álnevük is közös vezetéknevű lesz, és az asszonyé a férjéből képződik:</p>
+
+      <div class="swap">
+        <div class="from"><span class="lbl">eredeti</span>Kovács János<br>Kovács Jánosné</div>
+        <div class="to"><span class="lbl">álnév</span>Kvarcos Márvány<br>Kvarcos Márvány<b>né</b></div>
+      </div>
+
+      <p>Négy csere-mód közül lehet választani: témás fedőnév, hivatalos (OBH) eljárási szerep, adatfajta neve, vagy számozott címke. Az azonosítók sosem kapnak témás fedőnevet — egy adószámnak nincs értelmes „Kovakövi Frédi” megfelelője —, hanem adatfajta-címkét: <code>[adószám]</code>, <code>[lakcím]</code>, <code>[TAJ-szám]</code>.</p>
+    </section>
+
+    <!-- 08 ─────────────────────────────────────────────── -->
+    <section id="pdf">
+      <div class="sec-head"><span class="sec-num">08</span><h2>PDF-sebészet</h2></div>
+
+      <p>A PDF-ben nincs „szöveg”. Van egy tartalomfolyam, benne operátorok, amik betűkészletekből vett <em>kódokat</em> rajzolnak ki adott koordinátákra. Hogy egy kód melyik betű, azt a betűkészlet ToUnicode táblája mondja meg — ha van neki.</p>
+
+      <p>A program végigjárja a folyamot, és minden szövegrajzoló utasításról feljegyzi, hogy <strong>melyik bájttól melyik bájtig</strong> tart. Ez a bájttartomány az egész alrendszer tengelye: exportkor ezeket a bájtokat töröljük ki a fájlból, és a sort a saját betűkészletünkkel újraszedjük.</p>
+
+      <pre><code><span class="c-dim">nyers folyam:</span>
+BT /F1 12 Tf 1 0 0 1 72 700 Tm &lt;00010002…0006&gt; Tj ET
+
+<span class="c-dim">tokenizálva:</span>
+  [  0..  2] BT
+  [ 13.. 30] Tm  ← 1 0 0 1 72 700
+  [ 31..120] Tj  ← hexstring(42 bájt)   <span class="c-rose">ez a tartomány</span>
+
+<span class="c-dim">törlés után:</span>
+BT /F1 12 Tf 1 0 0 1 72 700 Tm   ET
+124 bájt → 36 bájt · a név glifakódjai bent maradtak? <span class="c-good">nem</span></code></pre>
+
+      <div class="note">
+        <span class="tag">a legfontosabb csapda</span>
+        <p>A kézenfekvő megoldás — „cseréld ki a nevet, de tartsd meg a sor szélességét, hogy ne csússzon el a tördelés” — <strong>pontosan a hibás megoldás.</strong></p>
+        <p>Bland, Iyer és Levchenko 2023-as PETS-cikke ezt támadásként írja le. A kitakart szövegdarab <em>szélessége</em> a lapon pontosan mérhető, és egy arányos betűkészletnél minden karakternek más az előretolása — ezért egy adott pixelszélességű dobozba nagyon kevés karaktersorozat fér el pont pontosan. A támadó minden jelölt névre kiszámolja ugyanazzal a betűkészlettel a szélességet, és kizárja azokat, amik nem stimmelnek. Wordből készült PDF-eknél a névkitakarások <strong>38%-át</strong> törték fel így.</p>
+        <p>A támadás nem a betűkhöz nyúl, hanem a <em>lyuk méretéhez</em>. Ezért a program a szakasz <strong>minden</strong> bájttartományát törli, nem csak a névre esőt, és a sort a nulláról szedi újra. Ára: elveszik a sorkizárás, a betűtípus, a félkövér és a szín. Ez tudatos csere.</p>
+      </div>
+
+      <h3>Form XObjectek</h3>
+
+      <p>A fejléc, a lábléc, az iratsablon, a bélyegző és az aláírásblokk sok generátornál <em>nem</em> a lap tartalomfolyamában van, hanem beágyazott Form XObjectekben. Ha oda nem lépünk be, az ott lévő név nem jut a kiolvasott szövegbe, nem lesz találat, nem törlődik — és mivel az ellenőrzés is a mi szövegünkön futna, semmi nem jelezne.</p>
+
+      <p>A bejárás rekurzív, saját erőforrás-szótárral és mátrixszal, mélységkorláttal és már-látott halmazzal a körkörös hivatkozás ellen. Minden tartomány hordozza, hogy <em>melyik folyamban</em> van — enélkül egy XObjectből származó tartomány a lap folyamára alkalmazva egy tetszőleges utasítást vágna ki, a név pedig a helyén maradna.</p>
+
+      <div class="note">
+        <span class="tag">csapda</span>
+        <p>A kód a betűkészlet <em>altípusából</em> vezeti le a kódhosszt, nem a ToUnicode táblából — mert a tábla hazudhat:</p>
+        <pre><code>folyambeli bájtok: 4b 6f 76 e1
+  a táblát hisszük el (2 bájt):  ""       <span class="c-rose">az egész sor eltűnik</span>
+  az altípus dönt (1 bájt):      "Ková"</code></pre>
+        <p>Egy hibás <code>codespacerange</code> mellett a teljes sor kiesik a kiolvasott szövegből. A névkereső nem talál semmit, és a program tisztának mondaná az iratot — miközben <em>nem is látta</em> a szöveget. Ezért számoljuk és jelentjük a feloldatlan karakterkódokat: a „nem találtam nevet” és a „nem is láttam a szöveget” nem ugyanaz.</p>
+      </div>
+
+      <h3>Amihez a szövegcsere nem ér el</h3>
+
+      <p>A tartalomfolyamon kívül is van szöveg a PDF-ben: az <code>/Info</code> szótár, az XMP-metaadat (benne gyakran az eredeti fájlútvonal a Windows-felhasználónévvel), a jegyzetek szerzője és szövege, az űrlapmezők értékei, a beágyazott mellékletek, a könyvjelzőcímek. Mindet tisztítjuk.</p>
+
+      <p>A legfurcsább tétel a <strong>StructTreeRoot <code>/ActualText</code></strong>. A címkézett, akadálymentes PDF szerkezetfájában ez a bejegyzés szó szerint tartalmazza a lap szövegét, hogy a képernyőolvasó felolvashassa — a nevet is. Vagyis a kitakart iratból egy vak felhasználó gépe felolvasta volna az eredeti nevet. A törlésnek ára van: a kimenet kevésbé akadálymentes, mint a forrás, és ezt a jegyzőkönyv ki is mondja.</p>
+
+      <div class="note">
+        <span class="tag">csapda</span>
+        <p>Egy hivatkozás elvágása <strong>nem töröl semmit</strong> a fájlból. A pdf-lib mentéskor minden nyilvántartott objektumot kiír, elérhető-e vagy sem. Mérve, egy könyvjelzőn:</p>
+        <pre><code>csak a hivatkozást vágtuk el       → a cím bent van a bájtokban? <span class="c-rose">igen</span>
+elérhetőségi bejárással            → a cím bent van a bájtokban? <span class="c-good">nem</span></code></pre>
+        <p>Ezért nem célzott törlés van, hanem elérhetőségi bejárás a trailerből, és ami kimarad, az kiesik. Így nem attól függ, eszünkbe jutott-e egy hely — és a forrásfájl korábbi növekményes mentéseinek árvái is eltűnnek.</p>
+      </div>
+    </section>
+
+    <!-- 09 ─────────────────────────────────────────────── -->
+    <section id="docx">
+      <div class="sec-head"><span class="sec-num">09</span><h2>DOCX-sebészet</h2></div>
+
+      <p>A <code>.docx</code> egy ZIP, benne több tucat XML-résszel. Négy külön ok teszi lehetetlenné a naiv keresés-cserét.</p>
+
+      <p><strong>A név nincs egyben.</strong> A Word egyetlen szót is szétvág több futamra — nem formázási okból, hanem mert a szerkesztésnyomot őrzi. A „Kovács János” a fájlban gyakran így néz ki:</p>
+
+      <pre><code>&lt;w:r&gt;&lt;w:t&gt;Kov&lt;/w:t&gt;&lt;/w:r&gt;
+&lt;w:r&gt;&lt;w:t&gt;ács Já&lt;/w:t&gt;&lt;/w:r&gt;
+&lt;w:r&gt;&lt;w:t&gt;nos&lt;/w:t&gt;&lt;/w:r&gt;</code></pre>
+
+      <p><strong>A név nemcsak a törzsben van.</strong> Élőfej, élőláb, lábjegyzet, végjegyzet, szövegdoboz, diagram gyorsítótára, kapcsolatlista, dokumentumtulajdonságok — mind ugyanúgy azonosít.</p>
+
+      <p><strong>A név lehet attribútumban</strong>, ahol a szöveges kereső nem is jár. Ezeket kezeljük: a kép- és alakzatleírásokat, a mezőkódot, a könyvjelző nevét (amit a Word a címsor szövegéből gyárt magától), a hivatkozás elemleírását, a táblázat feliratát és leírását, a VML alternatív szövegét, a megjegyzés szerzőjét.</p>
+
+      <p><strong>Egy alakzat kétszer is szerepel</strong>, modern és régi ágon (<code>mc:Choice</code> és <code>mc:Fallback</code>), és mindkettőt át kell írni — különben a régebbi Word az eredetit mutatja.</p>
+
+      <p>Az írás úgy megy vissza, hogy az <em>érintetlen bájtok bájtazonosak maradnak</em>. Ezért marad meg a formázás pontosan.</p>
+
+      <h3>Változáskövetés</h3>
+
+      <p>Feloldatlan korrektúrával nem exportálunk. A törölt szöveg ilyenkor szó szerint benne van a fájlban, akkor is, ha a Wordben nem látszik — és a „elfogadom / elvetem” döntés nem a mi dolgunk. Ez blokkoló kapu, nem figyelmeztetés.</p>
+
+      <h3>Beágyazott képek</h3>
+
+      <p>A beszkennelt aláírás vagy a fényképezett tanúsítvány ugyanúgy tartalmazza a nevet, a JPEG EXIF-je pedig szerzőt, gépnevet és GPS-koordinátát. OCR nincs, tehát a képen lévő <em>szöveget</em> nem tudjuk kitakarni — de a metaadatot igen: a JPEG APP1/Exif, APP13/IPTC és XMP szegmenseit, valamint a PNG szöveges darabjait töröljük, a képi tartalmat érintetlenül hagyva. És hangosan jelentjük, hány kép van a dokumentumban.</p>
+    </section>
+
+    <!-- 10 ─────────────────────────────────────────────── -->
+    <section id="szamok">
+      <div class="sec-head"><span class="sec-num">10</span><h2>Összegek és dátumok</h2></div>
+
+      <p>Mindkettő opcionális, és mindkettőnek van egy nem nyilvánvaló nehézsége.</p>
+
+      <h3>Az összegeknek stimmelniük kell</h3>
+
+      <p>Ha minden összeget ugyanazzal a titkos szorzóval szorzunk, az összeadások elvben megmaradnak: ha <code>a+b=c</code>, akkor <code>ka+kb=kc</code>. A gyakorlatban viszont a kerekítés elrontja. Ez a mérés a javítás előtt:</p>
+
+      <pre><code>1 250 000 + 3 550 000 = 4 800 000 = 1 800 000 + 3 000 000
+<span class="c-rose">197 / 1500 ügytitokkal elromlott a végösszeg</span></code></pre>
+
+      <p>A négy tag nem független — a kerekítési hibák nem tudnak <em>mindkét</em> összeadásban kioltódni. A megoldás közös kerekítési rács az összefüggő csoporton belül, plusz visszalépéses keresés arra az együttállásra, amiben minden összeadás stimmel. 900 ügytitokkal újrafuzzolva: <strong>0 elromlott végösszeg.</strong></p>
+
+      <p>A másik nehézség a betűs alak. Ha az irat így írja — <em>„1 250 000 (egymillió-kétszázötvenezer) forint”</em> —, akkor a zárójeles alakot is át kell írni, különben azonnal elárulja az eredetit. Ehhez magyar számnév-generátor kell, az AkH. 289. kötőjelezési szabályával: kétezer fölött tagolva, alatta egybe.</p>
+
+      <div class="swap">
+        <div class="from"><span class="lbl">eredeti</span>1 250 000 (egymillió-<br>kétszázötvenezer) forint</div>
+        <div class="to"><span class="lbl">csere</span>1 100 000 (egymillió-<br>egyszázezer) forint</div>
+      </div>
+
+      <h3>A dátumoknál az újraragozás</h3>
+
+      <p>Az eltolás ügyre állandó, tehát az időközök megmaradnak — ha a szerződés és a felmondás közt 90 nap telt el, az eltolás után is 90 nap telik el. Ez fontos, mert a jogi érvelés gyakran az időközökre épül.</p>
+
+      <p>A nehéz rész a ragozott alak: a <em>„2026. június 24-én”</em> alakot az új dátumra újra kell ragozni, és a magyar napragozás a szám <strong>kiejtésétől</strong> függ, nem a leírt alakjától.</p>
+
+      <pre><code>4-<span class="c-rose">én</span>   de   5-<span class="c-rose">én</span>       <span class="c-dim">(négyedikén / ötödikén)</span>
+20-<span class="c-rose">án</span>  de  21-<span class="c-rose">én</span>       <span class="c-dim">(huszadikán / huszonegyedikén)</span>
+ 1-<span class="c-rose">jén</span>              <span class="c-dim">(elseje — kivétel)</span></code></pre>
+
+      <p>Ezért nem táblázat, hanem képzés: a sorszámnévből a ragozó motor állítja elő a toldalékot, a hangrend-felismerővel. Mind a 31 nap ellenőrizve. Ugyanígy az évszám: <em>2019-ben</em>, de <em>2020-ban</em>.</p>
+
+      <p>Amit a program visszamond: a határidő-számítás a valós naptárhoz képest elcsúszik. Ez nem elhallgatható mellékhatás.</p>
+    </section>
+
+    <!-- 11 ─────────────────────────────────────────────── -->
+    <section id="kapu">
+      <div class="sec-head"><span class="sec-num">11</span><h2>Az ellenőrző kapu</h2></div>
+
+      <p>Ez a program legfontosabb tulajdonsága, és két szabályon áll.</p>
+
+      <p><strong>Az ellenőrzés a kész bájtokon fut</strong>, nem a memóriabeli szándékszövegen. A különbség nem elméleti: ha egy szöveghelyet nem láttunk — Form XObject, jegyzet, XMP, <code>/ActualText</code> —, az a szándékszövegben <em>sincs</em> benne, tehát ott az ellenőrzés definíció szerint nem tud megbukni. A visszaolvasás ezért más úton megy, mint az írás: PDF-nél újraparse-oljuk a fájlt és összeszedjük <em>minden</em> objektum minden karakterláncát; DOCX-nél a kész csomagot elemezzük, plusz nyers bájtszinten átnézzük a nem szöveghordozó részeket is.</p>
+
+      <p><strong>Szivárgásnál nem keletkezik fájl.</strong> A kiírás az ellenőrzés <em>után</em> van, nem előtte. Lemérve, szándékosan hiányos félsorral:</p>
+
+      <pre><code>jelentés: ok=false, 6 bennmaradt név
+keletkezett kimeneti fájl: <span class="c-good">nem</span>
+keletkezett kulcsfájl:     <span class="c-good">nem</span>
+keletkezett jegyzőkönyv:   <span class="c-good">nem</span>
+idegen fájl sértetlen:     <span class="c-good">igen</span></code></pre>
+
+      <p>A felületen ilyenkor az áll, hogy egyetlen fájl sem készült el — és ez most már igaz is.</p>
+
+      <div class="note">
+        <span class="tag">amit az ellenőrzés önmagában nem old meg</span>
+        <p>A kapu csak azt fogja meg, amit <em>keres</em>. Az ellenőrző kör sokáig vak volt a számokra: az egyetlen felszíni mintája nagybetűvel kezdődő szavakra illeszkedett, a betűosztályban nem volt számjegy. Egy bent maradt adóazonosító vagy IBAN nem jelöltként bukott el — <em>sosem került a keresés látókörébe</em>, és a jegyzőkönyv szó szerint „tiszta” minősítést írt.</p>
+        <p>Ugyanez az osztály: a vesszős lakcím és a kukacos e-mail sem bukott el, mert az elválasztó-készletbe nem fért bele a vessző és a kukac.</p>
+      </div>
+    </section>
+
+    <!-- 12 ─────────────────────────────────────────────── -->
+    <section id="kimenet">
+      <div class="sec-head"><span class="sec-num">12</span><h2>Ami keletkezik</h2></div>
+
+      <p>Legfeljebb három fájl, és mind a három ott lesz a kimenet mellett — ezt a felület ki is írja, mert egy meglepetésfájl a mappában maga is kockázat.</p>
+
+      <div class="tw">
+        <table>
+          <thead><tr><th>fájl</th><th>mi van benne</th></tr></thead>
+          <tbody>
+            <tr><td>az álnevesített irat</td><td>a kimenet; az eredeti érintetlen marad</td></tr>
+            <tr><td><code>.szkulcs</code></td><td>a ki-kicsoda tábla, jelszóval titkosítva — csak ha kérted</td></tr>
+            <tr><td><code>-jegyzokonyv.txt</code></td><td>mit csináltunk, számokban; <b>megfeleltetés nélkül</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <span class="tag">javított hiba</span>
+        <p>A jegyzőkönyv korábban <strong>titkosítatlanul a kimenet mellé írta a teljes ki-kicsoda táblát</strong> — akkor is, ha kikapcsoltad a kulcsfájlt. A fájl a saját fejlécében írta, hogy „visszafordíthatatlan”, tizenkét sorral a teljes visszafejtő tábla fölött.</p>
+        <p>Ugyanaz a tábla, amit a kulcsfájl AES-256-tal titkosít — kitalálható néven, az irat mellett. Aki kiküldte a mappát, mindent kiküldött. Ma a jegyzőkönyvben csak fajtánkénti darabszám van, a megfeleltetés kizárólag a titkosított kulcsfájlban.</p>
+      </div>
+
+      <h3>Álnevesítés, nem anonimizálás</h3>
+
+      <p>A program végig álnevesítésről beszél, és ez nem szerénykedés. Amíg a visszafejtő kulcs létezik, a kimenet a GDPR szerint <em>továbbra is személyes adat</em> — az anonimizálás ehhez képest visszafordíthatatlan, és más jogi következményekkel jár. Ezért van a kulcsfájl dokumentumonkénti kapcsolóra, és ezért mondja ki a jegyzőkönyv, melyik állapotban vagy.</p>
+
+      <p>A jelszót maga a kulcsfájl-író utasítja vissza, ha rövid vagy üres — nem a felületi gomb letiltása. Az a bizalmi határ rossz oldala: az AES-256 formálisan ott lenne, csak épp bárki kinyithatná.</p>
+    </section>
+
+    <!-- 13 ─────────────────────────────────────────────── -->
+    <section id="nem">
+      <div class="sec-head"><span class="sec-num">13</span><h2>Amit nem csinál</h2></div>
+
+      <p><strong>Nem találgat.</strong> A feleket te adod meg vagy hagyod jóvá. Amit ezen kívül talál, az átnézésre kerül. A garancia nem az, hogy mindent megtalált — hanem hogy <em>amit megadtál, azt hiánytalanul lecseréltük</em>, és ez mérhető.</p>
+
+      <p><strong>Nem rajzol fekete csíkot.</strong> A kitakarás a betűk fizikai törlése a fájlból, nem letakarása. A rárajzolt téglalap alatt a szöveg ott marad, kimásolható.</p>
+
+      <p><strong>Nem olvas képet.</strong> A szkennelt PDF-et megnyitáskor felismeri és megmondja, hogy nincs mit kiolvasni belőle — nem megy végig rajta úgy, hogy a végén tisztának mondja. Az OCR későbbi bővítési irány.</p>
+
+      <p><strong>Nem dolgozik táblázattal.</strong> Egy <code>.xlsx</code> hangos elutasítást kap. Ez szándékos: a rossz feldolgozás rosszabb, mint a nyílt „ezt nem tudom”.</p>
+
+      <p><strong>Nem megy fel az internetre.</strong> Egyetlen kimenő hívása a modell letöltése, az is csak akkor, ha rákattintasz — és az alapértelmezett modell a telepítővel érkezik, tehát ehhez sem kell hálózat.</p>
+
+      <div class="note ok">
+        <span class="tag">a mérés mai állása</span>
+        <p>16 tesztkészlet, 1393 ellenőrzés, mind zöld. Köztük a három, ami nem a felismerést méri, hanem azt, hogy a hiba <em>ne jusson ki</em>: a szivárgás-kapu (nem keletkezik fájl), az azonosítók a kimenetben (mind a hat fajta eltűnik), és a formátum-elutasítás (nem támogatott fájl nem kap „tiszta” minősítést).</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>A leírás a valódi kódból készült: minden állítás mögött futtatott mérés vagy fájlhivatkozás áll. Ahol a kód megjegyzése és a viselkedés eltért, a viselkedés került a leírásba — és a legtöbb ilyen eltérésből javítás lett.</p>
+  </footer>
+
+</div>

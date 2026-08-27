@@ -1,0 +1,424 @@
+{
+ "id": "semleges_magyar",
+ "lang": "hu",
+ "family": "semleges_magyar",
+ "name_hu": "Semleges magyar nevek",
+ "description_hu": "Hétköznapi, feltűnésmentes magyar nevek: olyan iratokhoz, amelyeknek anonimizálás után is teljesen normálisan kell olvasódniuk (bírósági beadvány, szerződéstervezet, oktatási anyag). Szándékosan unalmas. A vezetéknevek a leggyakoribb harminc magyar családnéven kívülről valók (nincs Nagy, Kovács, Tóth, Szabó, Horváth), az utónevek pedig a ma leggyakoribb utónevek listáján kívüli, mégis teljesen szokványos nevek – így kicsi az esélye, hogy az álnév véletlenül egybeessen az irat valamelyik valós szereplőjével.",
+ "license_note": "Puszta magyar utó- és vezetéknevek: nevek önmagukban nem állnak szerzői jogi vagy védjegyoltalom alatt, szabadon használhatók. A csomagból tudatosan kimaradtak a leggyakoribb családnevek (ütközési kockázat) és a közismert személyekhez erősen kötődő nevek (pl. Illyés, Egressy, Balassa). Fontos korlát: mivel ezek valós magyar nevek, egy adott néven létezhet valós személy – ez a csomag statisztikai ütközéscsökkentést ad, nem garanciát; ahol az irat olvasójának biztosan látnia kell, hogy álnévről van szó, a másik három csomag ajánlott.",
+ "given_names": [
+  {
+   "form": "Bertalan",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "Vegyes hangrendű (e + a), mély toldalékot kap: Bertalannak, Bertalannal, Bertalanhoz."
+  },
+  {
+   "form": "Kálmán",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Tivadar",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Nándor",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Zsigmond",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Ábel",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": "Vegyes hangrendű (á + e), magas toldalékot kap: Ábelnek, Ábellel, Ábelhez."
+  },
+  {
+   "form": "Dénes",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Elemér",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Frigyes",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Lehel",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Menyhért",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Ödön",
+   "gender": "M",
+   "harmony": "front_rounded",
+   "notes": ""
+  },
+  {
+   "form": "Rezső",
+   "gender": "M",
+   "harmony": "front_rounded",
+   "notes": ""
+  },
+  {
+   "form": "Blanka",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Cecília",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "Vegyes hangrendű, a záró a miatt mély toldalékot kap: Cecíliának, Cecíliával, Cecíliához."
+  },
+  {
+   "form": "Etelka",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "Vegyes hangrendű (e + a), mély toldalékot kap: Etelkának, Etelkával, Etelkához."
+  },
+  {
+   "form": "Gizella",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Jolán",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Kornélia",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "Vegyes hangrendű, a záró a miatt mély toldalékot kap: Kornéliának, Kornéliával."
+  },
+  {
+   "form": "Matild",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Sarolta",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Lenke",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Emőke",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": "Vegyes magas (ő + e): a záró e miatt kerekítetlen toldalék: Emőkének, Emőkével, Emőkéhez."
+  },
+  {
+   "form": "Gyöngyvér",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": "Vegyes magas (ö + é): kerekítetlen toldalékot kap: Gyöngyvérnek, Gyöngyvérrel, Gyöngyvérhez."
+  },
+  {
+   "form": "Enikő",
+   "gender": "F",
+   "harmony": "front_rounded",
+   "notes": ""
+  }
+ ],
+ "surnames": [
+  {
+   "form": "Aranyi",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Dobrai",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Csanádi",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Vámosi",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Zádori",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Bakonyi",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Sarudi",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Ugrai",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Tarjányi",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Kalocsai",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Dombrádi",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Pallagi",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Almádi",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Hadnagy",
+   "harmony": "back",
+   "notes": "gy digráfra végződik: a -val alakja Hadnaggyal (nem Hadnagyval, nem Hadnagygyal)."
+  },
+  {
+   "form": "Szakáll",
+   "harmony": "back",
+   "notes": "Kettőzött mássalhangzóra végződik: a -val kötőjeles alakú (Szakáll-lal). Egyébként szabályos: Szakállnak, Szakállhoz."
+  },
+  {
+   "form": "Bereczki",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Csengeri",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Kelecsényi",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Fenyvesi",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Perjési",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Reményi",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Beregi",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Cselényi",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Jenei",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Hegyesi",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Ötvös",
+   "harmony": "front_rounded",
+   "notes": ""
+  },
+  {
+   "form": "Törő",
+   "harmony": "front_rounded",
+   "notes": ""
+  },
+  {
+   "form": "Csörgő",
+   "harmony": "front_rounded",
+   "notes": ""
+  }
+ ],
+ "org_parts": [
+  "Kőrisliget",
+  "Nyárfasor",
+  "Hármaskút",
+  "Aranypatak",
+  "Szélmalom",
+  "Dombalja",
+  "Vadkörte",
+  "Csendesrét",
+  "Tóhát",
+  "Kékdomb"
+ ],
+ "org_names": [
+  {
+   "form": "Kőrisliget Kft.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Nyárfasor Zrt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Hármaskút Bt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Aranypatak Kft.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Szélmalom Zrt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Csendesrét Bt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Kőrisligeti Általános Iskola",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Aranypataki Kórház",
+   "kind": "institution",
+   "notes": "A -ház tárgyesete kötőhangzós: Kórházat, nem Kórházt.",
+   "overrides": {
+    "acc": "Kórházat"
+   }
+  },
+  {
+   "form": "Nyárfasori Óvoda",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Hármaskúti Alapítvány",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Dombaljai Egyesület",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Vadkörtei Idősek Otthona",
+   "kind": "institution",
+   "notes": ""
+  }
+ ],
+ "place_names": [
+  {
+   "form": "Nyárasháza",
+   "locative": "sup"
+  },
+  {
+   "form": "Kőrisszeg",
+   "locative": "sup"
+  },
+  {
+   "form": "Dombszeg",
+   "locative": "sup"
+  },
+  {
+   "form": "Aranyoskövesd",
+   "locative": "sup"
+  },
+  {
+   "form": "Szélvár",
+   "locative": "sup"
+  },
+  {
+   "form": "Nyárashalom",
+   "locative": "sup",
+   "overrides": {
+    "stemAlt": "Nyárashalm"
+   }
+  },
+  {
+   "form": "Csendesfalva",
+   "locative": "sup"
+  },
+  {
+   "form": "Vámosvár",
+   "locative": "sup"
+  },
+  {
+   "form": "Ligetkövesd",
+   "locative": "sup"
+  },
+  {
+   "form": "Kékdombszeg",
+   "locative": "sup"
+  }
+ ]
+}

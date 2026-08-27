@@ -1,0 +1,1082 @@
+[
+ {
+  "terület": "funkciok",
+  "cím": "A felek automatikus felismerése soha nem fut le a programban",
+  "hiány": "A hiány valós, de két pontosítás. (a) Az `autoDetect` beállítás nem teljesen olvasatlan: electron/main.ts:248 kiolvassa (`if (!s.autoDetect) return { parties: [], ... }`) — csak épp a kezelőn belül, amit a felület soha nem hív meg, tehát a kapcsoló így is hatástalan. (b) Az App.tsx:69 már fel is iratkozik a felismerés állapotüzeneteire (`api.onDetectStatus?.((s) => setBusy(s))`), tehát a bekötésből tényleg csak maga a `api.detectParties()` hívás + `setDetected()` hiányzik — a fogadó oldal (dialógus, státuszsáv, keepList megjelenítés) teljesen kész. Ez néhány sornyi munka, nem új funkció.",
+  "bizonyíték": "ui/src/App.tsx:56 `const [detected, setDetected] = useState<DetectionResult | null>(null);` — a `setDetected` a teljes ui/ könyvtárban egyszer sem hívódik meg. ui/src/App.tsx:105-122 `openDocument()` a megnyitás után rögtön `setDialog('parties')`-t hív, felismerés nélkül. Grep az egész projektre: `detectParties` csak api.ts (típus), devMock.ts, electron/main.ts és preload.ts fájlokban fordul elő — valódi hívás sehol.",
+  "súly": "blokkoló",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/ui/src/App.tsx",
+   "F:/Projects/Szivecske-Anonymizer/electron/main.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/app/detect.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "funkciok",
+  "cím": "Az összegek átírása: a kapcsoló mögött NINCS kód",
+  "hiány": "Pontos. Egyetlen kiegészítés: a `Ft`/`HUF`/`EUR` string előfordul src/verify.ts:59-ben, de ott a DEFAULT_SAFE_WORDS tömbben, azaz kifejezetten azért, hogy az ellenőrző kör NE jelezze őket gyanús maradványként — ez az ellenkezője az összegfelismerésnek. Tehát valóban nulla összegkezelő logika van a kódban.",
+  "bizonyíték": "Grep az egész projektre `replaceAmounts`-ra: csak src/app/settings.ts:35,51,100 (definíció+alapérték+validálás), ui/src/api.ts:54 (típus), ui/src/devMock.ts:159, ui/src/settings.tsx:223-224 (jelölőnégyzet). Egyetlen olvasás sincs src/app/session.ts, src/app/detect.ts vagy src/pseudonym.ts fájlban. Az `ExportOptions` (src/app/types.ts:130-137) csak `mode`, `keepKey`, `keyPassphrase`, `outputPath` mezőt tartalmaz.",
+  "súly": "blokkoló",
+  "munka": "nagy",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/app/settings.ts",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/settings.tsx",
+   "F:/Projects/Szivecske-Anonymizer/src/app/session.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/app/types.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "funkciok",
+  "cím": "A dátumok eltolása: a kapcsoló mögött NINCS kód",
+  "hiány": "Pontos, ahogy megfogalmazták. A kulcsfájl oldalán is megerősítem: a `KeyPayload` (src/app/keyfile.ts:18-21) csak `created` és `entries` mezőt tartalmaz, tehát a titkos eltolást jelenleg sehol nem lehetne visszafejtésre eltenni — a funkció a kulcsfájl-formátum bővítését is igényli.",
+  "bizonyíték": "Grep `shiftDates`: csak src/app/settings.ts:37,52,101, ui/src/api.ts:55, ui/src/devMock.ts:160, ui/src/settings.tsx:238-239. Grep dátumkezelésre a motorban (`dátum|date`) src/app/detect.ts és src/app/session.ts fájlokban: egyetlen találat a `new Date()` a jegyzőkönyv keltezéséhez (src/app/session.ts:528).",
+  "súly": "blokkoló",
+  "munka": "nagy",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/app/settings.ts",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/settings.tsx",
+   "F:/Projects/Szivecske-Anonymizer/src/app/session.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/app/keyfile.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "funkciok",
+  "cím": "„Mindent, ami ezekben szokott lenni\" — a neveken kívül semmilyen adatfajta nincs kezelve",
+  "hiány": "Pontos. Kiegészítés a súlyosság megítéléséhez: a hiányzó adatfajtákhoz nem csak felismerő kell, hanem típusbővítés is — az `EntityKind` (src/app/types.ts:9) háromértékű uniót az egész lánc végigviszi (PartyInput, SeedEntity, TYPE_LABEL, numbered mód címkéi), tehát új adatfajta bevezetése típusszintű változtatás, nem csak egy regex hozzáadása. Az is igaz, hogy a matcher már ma is FELISMERI a „(szül. …, anyja neve: …, lakcím: …)\" környezetet (src/hu/matcher.ts:414) — de csak azért, hogy a NÉV találatát erősítse, az ott álló adatokat nem cseréli.",
+  "bizonyíték": "src/pseudonym.ts:414-418 `const TYPE_LABEL: Record<SeedEntity['kind'], string> = { person: 'név', org: 'szervezet', place: 'helység' };` — miközben a fájl fejlécének 7. sora ezt írja: „'type' adatfajta neve ([lakcím])\". Grep `adószám|TAJ|bankszám|IBAN|irányítószám|telefonszám|cégjegyzék` az src/ könyvtárra: nulla érdemi találat, egyedül src/hu/matcher.ts:414 használja a „lakcím\" szót, ott is csak zárójeles környezet felismerésére. Az `EntityKind` (src/app/types.ts:9) három értékű: 'person' | 'org' | 'place'.",
+  "súly": "blokkoló",
+  "munka": "nagy",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/app/types.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/pseudonym.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/app/detect.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/hu/identifiers.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "funkciok",
+  "cím": "A telepítő nem viszi magával a magyar modellt — telepítve az alapmodell hiányzik és nem is pótolható",
+  "hiány": "Pontos, nincs mit javítani. A hatás annyival súlyosabb, hogy nem csak a modell hiányzik: mivel az alapértelmezett `modelId` épp ez a modell, a telepített programban a felismerés a modell nélküli, csak szerkezeti ágra esne vissza (electron/main.ts:255-259 „A nyelvi modell nincs letöltve\" üzenet) — feltéve, hogy a felismerés egyáltalán meghívódna (lásd az 1. pontot).",
+  "bizonyíték": "package.json:66-75 `extraResources` csak `data` és `build`. electron/main.ts:53-61 `bundledModelDir()` a `join(process.resourcesPath, 'modellek')` utat keresi elsőként. src/app/models.ts download(): `if (spec.source === 'converted') throw new Error('A(z) „...\" a programmal együtt érkezik, nem kell letölteni...')`. ui/src/settings.tsx:362-366: bundled modellnél letöltés gomb helyett csak szöveg jelenik meg.",
+  "súly": "blokkoló",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/package.json",
+   "F:/Projects/Szivecske-Anonymizer/electron/main.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/app/models.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "funkciok",
+  "cím": "Angol nyelvű irat: csak a modellista sugallja, a feldolgozólánc végig magyar",
+  "hiány": "Pontos. Egy árnyalat: a többnyelvű modell nem „hamis reklám\" a modellista szintjén — a modell tényleg felismerné az angol neveket, és a `detectParties()` modell-ága elvben elfogadná a találatait. A lánc a felismerés UTÁN törik el: névsorrend (session.ts:604-611), álnévkészlet és ragozás. Vagyis nem az egész lánc használhatatlan, hanem a csere és a ragozás oldala — de a kimenet így is magyar álnevekkel és magyar címkékkel jönne ki angol szövegbe.",
+  "bizonyíték": "src/app/detect.ts:57-95 `ROLE_WORDS` teljes egészében magyar; :146 `COMPANY_FORM = '(?:Kft|Zrt|Nyrt|Bt|Kkt|Kht|Ec|Rt)\\.'`; :149-152 `AUTHORITY` magyar bíróságnevek. src/app/session.ts:604-611 `toEntity()`: `surname: parts[0]`, `given: parts.slice(1).join(' ')` — kötött magyar sorrend. data/themes/ tartalma: asvanyok.json, kokorszak.json, novenyek.json, semleges_magyar.json — mind magyar. src/pseudonym.ts:414-418 magyar címkék.",
+  "súly": "fontos",
+  "munka": "nagy",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/app/detect.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/app/session.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/pseudonym.ts",
+   "F:/Projects/Szivecske-Anonymizer/data/themes"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "funkciok",
+  "cím": "PDF mentésnél az ellenőrző kör nem a kész fájlt olvassa vissza, pedig a felület ezt állítja",
+  "hiány": "Valós, de a leírás a DOCX-ágra nézve túl megengedő — a tényleges kép rosszabb. (a) A felhasználónak MEGJELENÍTETT jelentés (`verifyOutput`, session.ts:358, és a belőle épített `report` :360-368) MINDKÉT ágon a memóriabeli szövegre fut, DOCX-nél is (exportDocx visszatérése session.ts:421: `text: texts.join('\\n\\n')`, ez az `applyEdits` memóriabeli eredménye). Tehát a dialogs.tsx:390 mondata DOCX-nél is pontatlan. (b) A DOCX valódi visszaolvasása egy külön, kemény kapu (kivételt dob, nem jelentést ad), és ráadásul FELTÉTELES: session.ts:411-417 szerint a `forbidden` lista csak akkor telik meg, ha `pendingMatches.length === 0`, vagyis ha a felhasználó minden találatot eldöntött. Ha maradt eldöntetlen találat, a DOCX-ágon SEM fut semmilyen fájlszintű visszaolvasás. Így a javítandó felület kétirányú: PDF-re be kell vezetni a visszaparse-olást, DOCX-re pedig a felületi szöveget kell a valósághoz igazítani (vagy a jelentést a fájlból építeni).",
+  "bizonyíték": "src/app/session.ts:352-357: `const result = await this.exportPdf(edits); outputBytes = result.bytes; outputText = result.text;` majd :371 `writeFileSync(opts.outputPath, outputBytes);` és :373 `const report = verifyOutput(outputText, ...)` — az `outputText` az exportPdf-ben a `producedText.join('\\n\\n')`, azaz a `pdf.pageText.spans`-ból számolt szöveg (session.ts:452-470), nem a fájl újraparsze. Összevetve: ui/src/dialogs.tsx:390 „Az ellenőrzés a <b>kész fájlt</b> olvasta vissza, nem azt, amit beleírtunk.\"",
+  "súly": "fontos",
+  "munka": "közepes",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/app/session.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/verify.ts",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/dialogs.tsx"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "funkciok",
+  "cím": "Az „Automatikus csere küszöbe\" csúszka nem csinál semmit",
+  "hiány": "Pontos. Kiegészítés a javításhoz: nem elég a `SeedMatcher`-nek átadni a küszöböt, mert a `dispositionOf()` (matcher.ts:72) modulszintű függvény, és a `REJECT_THRESHOLD` (matcher.ts:70) is konstans mellette; ezenkívül a :469 sor a „korábban már bemutatott fél\" konfidencia-emelésnél újra beégetve hivatkozik a konstansra. A küszöböt tehát a matcher példányszintű állapotába kell felvinni három helyen, és a beállítást az `AnalyzeInput`-on (session.ts:73-80) keresztül kell a motorba juttatni — amihez ugyanaz a settings-átadási csatorna kell, mint a 2. és 3. ponthoz.",
+  "bizonyíték": "src/hu/matcher.ts:67 `export const AUTO_REPLACE_THRESHOLD = 0.8;` — ezt használja a :74 `dispositionOf()`, a :253 és a :469 sor is. A `SeedMatcher` konstruktora (src/app/session.ts:226-229-ben hívva) csak `homonyms` és `ambiguousGivenNames` opciót kap. Grep `autoThreshold`: csak settings.ts, api.ts, devMock.ts és settings.tsx — a motorban nulla találat.",
+  "súly": "fontos",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/hu/matcher.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/app/session.ts",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/settings.tsx"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "funkciok",
+  "cím": "A program indításkor nem veszi figyelembe a mentett alapértelmezéseket",
+  "hiány": "Valós, egy súlyosbító pontosítással a `keepKey`-re. Nem csak újraindítás után vész el: az App.tsx `SettingsDialog onChanged` visszahívása (App.tsx:363-366) CSAK a `themeId`-t és a `mode`-ot veszi át (`setThemeId(s.themeId); setMode(s.mode);`), a `keepKey`-t nem, és az `ExportDialog` sem kapja meg propként. Az „Alapból készüljön visszafejtő kulcsfájl\" kapcsoló tehát még abban a munkamenetben sem hat, amelyikben átállították — teljesen halott beállítás, míg a másik kettő csak az újraindítást nem éli túl.",
+  "bizonyíték": "ui/src/App.tsx:47-48 `const [themeId, setThemeId] = useState('kokorszak'); const [mode, setMode] = useState<ReplacementMode>('theme');` — az App.tsx `useEffect`-je (:59-87) csak `api.listThemes()`-t hívja, `api.getSettings()`-t soha (grep: `getSettings` csak ui/src/settings.tsx:37-ben). ui/src/dialogs.tsx:379 `const [keepKey, setKeepKey] = useState(true);` — az ExportDialog nem kap settings paramétert.",
+  "súly": "fontos",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/ui/src/App.tsx",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/dialogs.tsx"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "funkciok",
+  "cím": "A `parties:suggest` IPC-kezelő üres csonk, ami mindig üres listát ad",
+  "hiány": "Pontos. Erős érv a törlés mellett: a `doc:detectParties` kezelő (electron/main.ts:245-281) már MA is elvégzi ugyanezt a munkát, ráadásul jobban — a szerkezeti felismerést és a modellt is futtatja, és rovatcímke-alapú szerepeket ad vissza. A `parties:suggest` így nem csak üres, hanem funkcionálisan felesleges is: a helyes lépés a csonk és a hozzá tartozó preload/api bejegyzés törlése, nem a kitöltése — a valódi hiány az 1. pont (a `detectParties` bekötése a felületre).",
+  "bizonyíték": "electron/main.ts:337-343: `ipcMain.handle('parties:suggest', () => { ... if (!lastAnalysis && !session) return [] as PartyInput[]; return [] as PartyInput[]; });` — mindkét ág üres tömb. A felületen egyébként sincs hívó: grep `suggestParties` csak api.ts:105-ben (típus), devMock.ts:224-ben és preload.ts:35-ben.",
+  "súly": "jó-lenne",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/electron/main.ts",
+   "F:/Projects/Szivecske-Anonymizer/electron/preload.ts",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/api.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "funkciok",
+  "cím": "A kézzel átírt fedőnév csak fedőnév-módban él, a másik három módban némán elveszik",
+  "hiány": "Pontos, egy fontos kiegészítéssel: a néma eltérés nem áll meg a felületnél, hanem a MENTETT bizonyítékokba is beépül. A jegyzőkönyv SZEREPLAP-ja (src/app/session.ts:520-521: `lines.push(\"  ${a.original.padEnd(34)} → ${a.display}\")`) és a titkosított kulcsfájl (src/app/keyfile.ts:31-35: `replacement: a.display`) egyaránt az `a.display`-t, vagyis a kézi értéket írja le — miközben a dokumentumban 'role'/'type'/'numbered' módban „a felperesnek\" / „[név]\" / „[NÉV-1]\" áll. Így a jegyzőkönyv és a kulcsfájl olyan megfeleltetést állít, ami a kimeneti iratban nem szerepel; ez a visszafejtést is elrontja, nem csak a felület konzisztenciáját.",
+  "bizonyíték": "src/pseudonym.ts:442-467: a `case 'role'`, `case 'type'` és `case 'numbered'` ág mindegyike `return`-nel zárul a `ctx.roles` / `TYPE_LABEL` / `ctx.numbering` alapján, az `Assignment.manual` és `Assignment.display` mezőt egyik sem olvassa. Az `applyManualReplacement` (src/app/session.ts:626-638) csak az `a.display`-t és a `a.pseudo` névrészeit írja át, amiket kizárólag a 'theme' ág használ (`ctx.coreTables`). Közben ui/src/panels.tsx:240 minden módban kiírja a „kézi\" jelölést.",
+  "súly": "fontos",
+  "munka": "közepes",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/pseudonym.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/app/session.ts",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/panels.tsx"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "felulet",
+  "cím": "A felek automatikus felismerése nincs bekötve a felületbe – a felhasználónak mégis gépelnie kell",
+  "hiány": "A `doc:detectParties` IPC-csatorna, a preload-kivezetés és a detect motor kész (electron/main.ts:245-281, src/app/detect.ts:194), de a React-felület soha nem hívja meg: az `api.detectParties()`-nek nincs valódi hívóhelye a ui/src-ben, a `setDetected` sehol nem fut le. Az `openDocument` egyenesen az üres Felek-táblázatra visz, így a PartiesDialog egész felismerés-ága (találatszám a címben, előfordulás-számláló, bizonyíték-szöveg, keepList-doboz, „Modell letöltése” gomb) elérhetetlen. Egy pontosítás a másik ügynök leírásához: az App.tsx:70 `onDetectStatus` → `setBusy(s)` önmagában nem „örökre ragadó fátylat” jelent, hanem azt, hogy a státusz-figyelő nem takarít maga után — ha a hívást bekötik, a hívó `finally`-jában kell a `setBusy(null)`, különben tényleg beragad. Jelenleg hatástalan, mert a csatorna sosem küld státuszt.",
+  "bizonyíték": "ui/src/App.tsx:56 `const [detected, setDetected] = useState<DetectionResult|null>(null);` – a `setDetected` a teljes ui/src-ben nem szerepel többször (grep: csak ez az egy találat). ui/src/App.tsx:105-122 `openDocument`: `setDoc/setAnalysis/setDecisions/setSelected` után rögtön `setDialog(info.pendingRevisions > 0 ? 'revisions' : 'parties')` – nincs detect-hívás. Miközben electron/main.ts:245 `ipcMain.handle('doc:detectParties', ...)` teljesen megírt, electron/preload.ts:16 kivezeti, és ui/src/dialogs.tsx:62,77,94-114 külön ágat renderel rá. ui/src/App.tsx:70 `api.onDetectStatus?.((s) => setBusy(s))` – nincs `setBusy(null)` sehol az eseménykezelőben.",
+  "súly": "blokkoló",
+  "munka": "közepes",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/ui/src/App.tsx",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/dialogs.tsx",
+   "F:/Projects/Szivecske-Anonymizer/electron/main.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "felulet",
+  "cím": "A Beállítások „Alapértelmezések\" fülén öt kapcsoló semmit nem csinál",
+  "hiány": "A fül minden vezérlője lemegy a beallitasok.json-ba, de öt közülük soha nem kerül visszaolvasásra sehol a programban: `autoThreshold`, `keepKey`, `replaceAmounts`, `shiftDates`, és részben `autoDetect`. A `themeId` és a `mode` sem érvényesül induláskor, mert az App.tsx bedrótozott kezdőértékkel indul, és csak akkor frissül, ha a felhasználó ugyanabban a munkamenetben megnyitja a Beállításokat. A `replaceAmounts` és a `shiftDates` külön fájdalmas: ez volt a megbízásban kimondott kérés („az összegeket és dátumokat is lehet, hogy át kell írni\"), a felületen ott a két kapcsoló magyarázó szöveggel, de a `src/`-ben nincs se összeg-, se dátumcsere-motor, az `ExportOptions` típusban sincs ilyen mező. A jogász bekapcsolja, ment, és semmi nem történik – anélkül, hogy bármi jelezné.",
+  "bizonyíték": "Az `autoThreshold`, `replaceAmounts`, `shiftDates` a teljes repóban CSAK a src/app/settings.ts-ben (definíció + validálás) és a ui/src/settings.tsx-ben (a vezérlő) fordul elő – egyetlen olvasó sincs a src/app/session.ts vagy electron/main.ts oldalon. A `keepKey`-t a src/app/session.ts:363 az `ExportOptions`-ból olvassa, viszont ui/src/dialogs.tsx:379 `const [keepKey, setKeepKey] = useState(true);` – bedrótozva, a beállítás soha nem jut el ide. ui/src/App.tsx:47-48 `useState('kokorszak')` és `useState<ReplacementMode>('theme')` – az App sosem hívja az `api.getSettings()`-et. src/app/types.ts:123-129 `ExportOptions`: nincs benne összeg vagy dátum mező.",
+  "súly": "blokkoló",
+  "munka": "nagy",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/ui/src/settings.tsx",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/App.tsx",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/dialogs.tsx",
+   "F:/Projects/Szivecske-Anonymizer/src/app/settings.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/app/types.ts"
+  ],
+  "ellenőrizve": false
+ },
+ {
+  "terület": "felulet",
+  "cím": "Nyers fejlesztői hibaüzenetek jutnak ki a jogászhoz, angolul és kódrészletekkel",
+  "hiány": "Nincs hibaüzenet-fordító réteg: minden hiba nyers `Error.message`-ként megy a felhasználói hibaablakba (App.tsx:66/97/119/132/190, settings.tsx:56). Az Electron `ipcRenderer.invoke` elutasításai emiatt az angol `Error invoking remote method 'doc:open': …` előtaggal jelennek meg. Az alattuk lévő szövegek fejlesztőknek szólnak: a változáskövetés-kapu a `<w:del>` blokkokat és a `resolveRevisions()` hívást emlegeti; a jelszóval védett PDF a pdf-lib angol üzenetét adja tovább (a `PDFDocument.load` körül nincs try/catch); a modell-letöltés hálózati hibája nyers fetch-üzenet. A legrosszabb eset megerősítve: a saját „Megszakítás” gomb (`models:cancel` → `AbortController.abort()`) elutasítása végigfut a download handleren, és sikeres, szándékos művelet után piros hibadobozként landol a Beállításokban.",
+  "bizonyíték": "ui/src/App.tsx:96-97, 118-119, 189-190 mind `setError((e as Error).message)`. src/docx/anonymize.ts:200-205 `throw new Error('Az export leállt: … A <w:del> blokkokban … Előbb futtasd a resolveRevisions() hívást elfogadás vagy elutasítás módban.')`. src/app/session.ts:151 `PDFDocument.load(this.bytes)` – nincs try/catch, titkosított PDF-nél a pdf-lib angol üzenete megy tovább. src/app/models.ts:263 `await fetch(url, { signal, redirect: 'follow' })` megszakításkor AbortError-t dob, amit ui/src/settings.tsx:55-57 `catch { setError((e as Error).message) }` kirak.",
+  "súly": "blokkoló",
+  "munka": "közepes",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/ui/src/App.tsx",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/settings.tsx",
+   "F:/Projects/Szivecske-Anonymizer/src/docx/anonymize.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/app/session.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "felulet",
+  "cím": "A telepítő és a Start menü mojibake névvel jelenik meg: „Szivecske AnonimizĂˇlĂł\"",
+  "hiány": "A package.json `build.productName` mezője kétszeresen kódolt UTF-8-cal került a fájlba. Ez az a szöveg, amit az electron-builder az NSIS telepítőbe, az Asztal és a Start menü parancsikonjába, valamint a Windows „Alkalmazások és szolgáltatások\" listájába ír. A barátnő tehát „Szivecske AnonimizĂˇlĂł\" néven kapja meg a programot az asztalára, mielőtt egyáltalán elindítaná. A hiba a fájl bájtjaiban van, nem a megjelenítésben (ellenőrizve: 0xC4 0x82 0xCB 0x87 az „á\" helyén).",
+  "bizonyíték": "package.json:55 `\"productName\": \"Szivecske AnonimizĂˇlĂł\",` – nyers bájtok: `Anonimiz\\xc4\\x82\\xcb\\x87l\\xc4\\x82\\xc5\\x82`. Ugyanez a kettős kódolás megvan a ui/src/styles.css:1169-1170 megjegyzésekben is (ott csak fejlesztői zaj, nem látszik a felületen).",
+  "súly": "blokkoló",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/package.json",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/styles.css"
+  ],
+  "ellenőrizve": false
+ },
+ {
+  "terület": "felulet",
+  "cím": "A telepített programból hiányzik az alapértelmezett magyar modell, és a felület zsákutcába vezet",
+  "hiány": "Az alapértelmezett `nytk-nerkor-hubert` modell `source: 'converted'`, azaz a programmal kellene érkeznie, de a package.json:66-75 `extraResources` csak a `data` és `build` könyvtárat másolja — a modellmappát nem, és a `files` tömb sem tartalmazza. Telepítve a `bundledModelDir()` (main.ts:53-61) egyik jelöltje sem létezik. A zsákutca kétszeresen zárt: a `ModelStore.download()` a 'converted' forrásra kifejezetten hibát dob, a settings.tsx:357-366 pedig ilyenkor letöltés gomb helyett csak a „telepítsd újra a programot” szöveget mutatja — az újratelepítés viszont ugyanezt adja.",
+  "bizonyíték": "package.json:64-75 `extraResources`: csak `{from:'data'}` és `{from:'build'}`. electron/main.ts:53-61 `bundledModelDir()` a `join(process.resourcesPath, 'modellek')` útvonalat keresi. src/app/settings.ts:49 `modelId: 'nytk-nerkor-hubert'`, src/app/models.ts:69-92 ehhez `source: 'converted'`, `recommended: true`. ui/src/settings.tsx:362-366 `{!installed && bundled && (<span className=\"hint\">Ez a modell a programmal érkezik. Ha hiányzik, telepítsd újra a programot.</span>)}` – letöltés gomb nélkül.",
+  "súly": "blokkoló",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/package.json",
+   "F:/Projects/Szivecske-Anonymizer/electron/main.ts",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/settings.tsx",
+   "F:/Projects/Szivecske-Anonymizer/src/app/models.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "felulet",
+  "cím": "Nincs menüsor és nincs billentyűparancs – helyette az angol Electron-alapmenü marad bent, benne a Ctrl+R-rel, ami törli a munkát",
+  "hiány": "Az electron/main.ts sehol nem hív `Menu.setApplicationMenu()`-t (a `Menu` importálva sincs), csak `autoHideMenuBar: true`-t állít, ezért az Electron beépített angol alapmenüje marad érvényben. A lényeges kár nem a menüsor láthatósága — `titleBarStyle: 'hidden'` mellett az Alt-ra való előbukkanás bizonytalan —, hanem hogy az alapmenü gyorsbillentyűi élnek: a Ctrl+R újratölti a renderert, és figyelmeztetés nélkül eldobja a megnyitott iratot, a felvitt feleket és minden egyenkénti döntést. Ezt csak `Menu.setApplicationMenu(null)` vagy saját magyar menü szünteti meg. Közben a várt Ctrl+O / Ctrl+S nem létezik; az egyetlen billentyűkezelő az egész projektben a dialogs.tsx:5-11 Escape-figyelője.",
+  "bizonyíték": "electron/main.ts:138 `autoHideMenuBar: true` – a `Menu` nincs is importálva (electron/main.ts:9 `import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';`). A `Menu`, `globalShortcut`, `accelerator` szavak nulla találat az electron/ és ui/src/ alatt. Az egyetlen globális billentyűkezelő: ui/src/dialogs.tsx:5-11 (Escape).",
+  "súly": "blokkoló",
+  "munka": "közepes",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/electron/main.ts",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/dialogs.tsx"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "felulet",
+  "cím": "Nincs figyelmeztetés kilépéskor, se másik irat megnyitásakor – az elvégzett átnézés szó nélkül elvész",
+  "hiány": "Nincs `win.on('close')` az electron/main.ts:130-166 `createWindow()`-ban és nincs `beforeunload` a felületen, tehát az X-re kattintva a program azonnal kilép, akkor is, ha a felhasználó órákat töltött a találatok átnézésével. Ugyanez a lépéssáv „Másik irat” gombjával: az `openDocument` (App.tsx:105-122) kérdés nélkül nullázza az elemzést, a döntéseket és a kijelölést.",
+  "bizonyíték": "electron/main.ts:130-166 `createWindow()`: csak `setWindowOpenHandler` van, nincs `win.on('close', ...)`. A `'close'` és `beforeunload` szavak nulla találat az electron/ és ui/src/ alatt. ui/src/App.tsx:105-122 `openDocument` – nincs megerősítő kérdés, csak `setAnalysis(null); setDecisions({}); setSelected(null);`.",
+  "súly": "fontos",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/electron/main.ts",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/App.tsx"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "felulet",
+  "cím": "A behúzott fájl nem nyílik meg, az ablakra ejtve pedig szétesik a program",
+  "hiány": "A nyitóképernyő ejtőmezője figyelmen kívül hagyja az `e.dataTransfer.files`-t (App.tsx:437-441), és csak a tallózó ablakot nyitja meg — a behúzott irat nem nyílik meg. Emellett nincs globális drop-védelem: a `preventDefault` csak a dropzone elemre van kötve, `window`-szintű `dragover`/`drop` kezelő nincs, és a főfolyamatban nincs `will-navigate` kapu (main.ts:159-162 csak `setWindowOpenHandler`-t regisztrál). Ha a fájl az ejtőmezőn kívül ér földet — márpedig megnyitott iratnál a mező nem is létezik, App.tsx:275 —, a Chromium elnavigálja a BrowserWindow-t a `file://` URL-re, és menü híján nincs mivel visszamenni.",
+  "bizonyíték": "ui/src/App.tsx:436-441 `onDrop={(e) => { e.preventDefault(); setOver(false); onOpen(); }}` – az `e.dataTransfer` sehol nincs kiolvasva. A `dragover` és `will-navigate` szavak nulla találat az egész ui/src/ és electron/ alatt; electron/main.ts:159-162 csak `setWindowOpenHandler`-t regisztrál. ui/src/App.tsx:275 `{!doc && <Welcome onOpen={openDocument} />}` – megnyitott iratnál nincs is ejtőmező.",
+  "súly": "fontos",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/ui/src/App.tsx",
+   "F:/Projects/Szivecske-Anonymizer/electron/main.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "felulet",
+  "cím": "Nincs képernyő a kulcsfájl visszafejtésére, pedig a mentés ezt ígéri – és a kulcs útvonalát sem mondja meg",
+  "hiány": "A `readKeyFile` (src/app/keyfile.ts:63) kész és működő visszafejtő, de a programon belül semmi nem hívja: csak a test/app-integration.ts:57-58 használja. Nincs hozzá IPC-csatorna a main.ts `registerHandlers()`-ében (183-346), nincs preload-metódus, nincs gomb vagy menüpont. Így a `.szkulcs` fájl (keyfile.ts:40) a felhasználó számára megnyithatatlan. Tetézi, hogy az eredményképernyő a `result.keyPath` értékét csak logikai feltételként használja (dialogs.tsx:436-447), az útvonalat soha nem írja ki, a „Mappa megnyitása” gomb pedig a kimeneti iratot mutatja meg (dialogs.tsx:450), nem a kulcsot.",
+  "bizonyíték": "src/app/keyfile.ts:63 `export function readKeyFile(keyPath, passphrase): KeyPayload` – a `readKeyFile` az electron/, ui/src/ és a src/app/session.ts alatt nulla találat (csak a `writeKeyFile` van használva, src/app/session.ts:364). electron/main.ts:183-346 `registerHandlers()`: nincs kulcsolvasó csatorna. ui/src/dialogs.tsx:479-485 „Ezzel később vissza tudod nézni, ki kicsoda volt.\" ui/src/dialogs.tsx:436-447 csak `result.keyPath ? … : …` logikai vizsgálat, az útvonal nincs kiírva. ui/src/dialogs.tsx:450 `onClick={() => onReveal(result.outputPath)}`.",
+  "súly": "fontos",
+  "munka": "nagy",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/app/keyfile.ts",
+   "F:/Projects/Szivecske-Anonymizer/electron/main.ts",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/dialogs.tsx",
+   "F:/Projects/Szivecske-Anonymizer/electron/preload.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "felulet",
+  "cím": "Nincs előnézet az álnevesített iratról, és nincs nyomtatás",
+  "hiány": "Az anonimizált szöveg legyártása kész (session.ts:325 `anonymizedText()`) és ki is van vezetve a hídon (main.ts:302-305, preload.ts:34), de a felület soha nem hívja meg — valódi hívóhely csak a devMock.ts:223-ban van. Fontos pontosítás: az `AnalysisResult.previewText` mező, amit a panels.tsx:77 TextView használ, NEM az anonimizált szöveg, hanem az eredeti (session.ts:303) `<mark>` kiemelésekkel — tehát valóban nincs „előtte/utána” nézet, a felhasználó a mentés pillanatáig nem látja az eredményt. Nyomtatás sincs sehol: se menüpont, se gomb, se Ctrl+P, se `webContents.print()`.",
+  "bizonyíték": "electron/main.ts:302-305 `ipcMain.handle('doc:previewText', ...)` és electron/preload.ts:34 `previewText: () => ipcRenderer.invoke('doc:previewText')` megvannak, de a `previewText()` hívás a ui/src/ alatt csak a típusdefinícióban (ui/src/api.ts:104) és a fejlesztői helyettesítőben (ui/src/devMock.ts:223) szerepel – valódi hívóhely nincs. A `print` szó nulla találat az electron/ és ui/src/ alatt. ui/src/panels.tsx:46 `<img src={p.dataUrl} …>` – az eredeti lapkép.",
+  "súly": "fontos",
+  "munka": "közepes",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/ui/src/App.tsx",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/panels.tsx",
+   "F:/Projects/Szivecske-Anonymizer/electron/main.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "felulet",
+  "cím": "Új irat megnyitásakor bent maradnak az előző ügy felei és az ügyazonosító titok",
+  "hiány": "Az `openDocument` (App.tsx:105-122) nullázza az elemzést, a döntéseket és a kijelölést, de a `parties` tömböt nem, ezért a második irat megnyitása után a lépéssáv „N fél megadva”-t ír, a PartiesDialog pedig (dialogs.tsx:60) az ELŐZŐ ügy valódi neveivel nyílik — az egyik ügy nevei átszivárognak a másik munkamenetébe. A `caseSecret` (App.tsx:57) setter nélküli `useState`, tehát a program indulásakor egyszer képződik és minden iratra ugyanaz. Ez ténylegesen a leképezést vezérli (session.ts:215 → src/pseudonym.ts:183/198/220/248/280 `deterministicIndex`), tehát két különböző ügyben ugyanaz a valódi név ugyanazt az álnevet kapja — a kiosztások korrelálnak. (Megjegyzés: egy ügy több iratára ez a viselkedés kívánatos is lehet, a hiba az, hogy nincs mód új ügyet kezdeni.)",
+  "bizonyíték": "ui/src/App.tsx:105-122 `openDocument`: `setDoc(info); setAnalysis(null); setDecisions({}); setSelected(null);` – nincs `setParties([])`. ui/src/App.tsx:57 `const [caseSecret] = useState(() => Math.random().toString(36).slice(2) + Date.now().toString(36));` – setter sincs hozzá, iratváltáskor nem képződik újra. ui/src/dialogs.tsx:60 `useState<PartyInput[]>(parties.length ? parties : [emptyParty()])` – az örökölt feleket veszi át.",
+  "súly": "fontos",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/ui/src/App.tsx",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/dialogs.tsx"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "felulet",
+  "cím": "A változáskövetés-párbeszéd „Mégse\" gombja zsákutcába enged, és a hiba csak a fájlnév megadása UTÁN csap le",
+  "hiány": "A párbeszéd maga leszögezi, hogy „Amíg ez fennáll, nem mentünk\" – a felület viszont nem tartja be. A „Mégse\" bezárja az ablakot, a felhasználó felviszi a feleket, végigrágja a találatokat, rákattint a „Mentés másként…\"-re, jelszót ad a kulcsfájlhoz, a natív mentés-ablakban kiválasztja a fájlnevet, és CSAK EKKOR dob hibát a motor, egy fejlesztőknek szóló üzenettel. A blokkoló állapotot a felületnek kellene fenntartania (letiltott mentés gomb és látható figyelmeztetés a lépéssávban), nem a mentési folyamat legvégén kellene kiderülnie.",
+  "bizonyíték": "ui/src/dialogs.tsx:558-560 „Amíg ez fennáll, nem mentünk.\", de ui/src/dialogs.tsx:575-577 `<button className=\"btn ghost\" onClick={onClose}>Mégse</button>`, és ui/src/App.tsx:353 `onClose={() => setDialog(null)}` – utána semmi nem tiltja. ui/src/App.tsx:262-271 a „Mentés másként…\" csak `disabled={!analysis}`, a `doc.pendingRevisions`-t nem nézi. ui/src/App.tsx:181-187 `doExport` először `chooseSaveTarget`-et hív, és csak az `exportDocument` bukik el src/docx/anonymize.ts:200-205 alatt.",
+  "súly": "fontos",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/ui/src/App.tsx",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/dialogs.tsx",
+   "F:/Projects/Szivecske-Anonymizer/src/docx/anonymize.ts"
+  ],
+  "ellenőrizve": false
+ },
+ {
+  "terület": "felulet",
+  "cím": "A „Gyanús maradvány átnézésre: N\" szám zsákutca – a lista megvan, de nincs kirajzolva",
+  "hiány": "Az eredményképernyő kiírja, hány gyanús maradványt talált az ellenőrzés, de a tételeket nem mutatja meg, és nincs semmilyen gomb, amivel elő lehetne hozni őket. A motor pedig legfeljebb 40 tételt átad, `surface` és `detail` mezővel – pontosan úgy, ahogy a `leaks` lista, amit viszont KI IS rajzol a felület pár sorral feljebb. Egy jogásznak a „7 gyanús maradvány\" szám önmagában használhatatlan: vagy megnézi őket, vagy nem mer kiadni az iratot.",
+  "bizonyíték": "ui/src/dialogs.tsx:420-423 `<span>Gyanús maradvány átnézésre</span><span className=\"v\">{r.residual.length}</span>` – az `r.residual` sehol máshol nincs használva a dialogs.tsx-ben. Összevetve: ui/src/dialogs.tsx:425-434 a `r.leaks.slice(0, 8)` tételesen ki van rajzolva. src/app/session.ts:374 `residual: report.residual.slice(0, 40).map((l) => ({ surface: l.surface, detail: l.detail }))` – az adat megvan.",
+  "súly": "fontos",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/ui/src/dialogs.tsx",
+   "F:/Projects/Szivecske-Anonymizer/src/app/session.ts"
+  ],
+  "ellenőrizve": false
+ },
+ {
+  "terület": "felulet",
+  "cím": "A szkennelt PDF-ről csak a folyamat legvégén, apró állapotsor-szövegben derül ki, hogy nem olvasható",
+  "hiány": "A `looksScanned` és a `loadWarnings` már megnyitáskor eldől és a `DocumentInfo`-ban vissza is jut a felülethez, de a felület csak az elemzés UTÁN mutatja meg: a szkennelt-jelzés az egyetlen helyen, az állapotsor vékony narancssárga szövegében jelenik meg (App.tsx:323-330), a `{doc && analysis}` feltétel mögött. A felhasználó tehát előbb végigmegy a Felek párbeszéden és begépeli a neveket, mielőtt megtudná, hogy az iratból nincs mit kiolvasni. A betöltéskori figyelmeztetések ugyanígy: a session.ts:297 az `analysis.warnings`-hoz fűzi őket, és a panels.tsx csak a Szereplap „Felek” fülén rajzolja ki. Mivel az OCR szándékosan a jövőbeli bővítésbe került, ez az eset elő fog fordulni, és már megnyitáskor egyértelmű ablakkal kellene kommunikálni.",
+  "bizonyíték": "src/app/session.ts:142-144 `info.looksScanned = format === 'pdf' && info.charCount < 40 * info.pageCount; info.loadWarnings = session.loadWarnings;` – megnyitáskor kész. ui/src/App.tsx:323-330 az egyetlen megjelenítés, a `<footer className=\"statusbar\">`-ban, `analysis.doc.looksScanned` feltétellel – azaz csak elemzés után. src/app/session.ts:297 `warnings: [...ctx.warnings, ...this.loadWarnings, ...this.exportWarnings]`, kirajzolva: ui/src/panels.tsx:160-164, csak a `tab === 'cast'` ágban.",
+  "súly": "fontos",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/ui/src/App.tsx",
+   "F:/Projects/Szivecske-Anonymizer/src/app/session.ts",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/panels.tsx"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "felulet",
+  "cím": "A jegyzőkönyv-fájl láthatatlanul készül el a kimenet mellé, és szó nélkül felülír",
+  "hiány": "Minden mentéskor keletkezik egy `-jegyzokonyv.txt` a kimeneti irat mellett (main.ts:318-321), de a felhasználó erről sehol nem kap tájékoztatást: az `ExportResult.certificate` eljut a felületig, de a `certificate` szó elő sem fordul a ui/src-ben, az eredményképernyő (dialogs.tsx:382-457) csak a kimenetről és a kulcsfájlról beszél. Pont az a dokumentum marad láthatatlan, ami egy ügyvédnek a legtöbbet érne — a session.ts:499-től induló `certificate()` tartalmazza a csere módját, a lecserélt előfordulások és eldöntetlen találatok számát, az ellenőrző kör eredményét és a teljes szereplapot. Ráadásul a `writeFileSync` létezés-ellenőrzés nélkül, kérdés nélkül felülír egy azonos nevű meglévő fájlt, és a `certPath` nem kerül bele a felületnek visszaadott eredménybe.",
+  "bizonyíték": "electron/main.ts:318-321 `const certPath = `${opts.outputPath.replace(/\\.[^.]+$/, '')}-jegyzokonyv.txt`; writeFileSync(certPath, result.certificate, 'utf8');` – se létezés-ellenőrzés, se visszajelzés a felületnek (a `certPath` nincs benne a visszatérési értékben). ui/src/dialogs.tsx:382-457 az eredményképernyő: a `certificate` szó nem szerepel benne. src/app/session.ts:379 és src/app/session.ts:499 – a jegyzőkönyv tartalma megvan.",
+  "súly": "fontos",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/electron/main.ts",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/dialogs.tsx",
+   "F:/Projects/Szivecske-Anonymizer/src/app/session.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "felulet",
+  "cím": "A Beállítások ablak kilóg a többi közül: az Esc nem zárja, és a betöltési hibái némán elnyelődnek",
+  "hiány": "A SettingsDialog egyedüliként nem a közös `Overlay`-t (dialogs.tsx:4-17) használja, hanem saját `div.overlay`-t rajzol (settings.tsx:68), és nincs benne semmilyen billentyűkezelő — így minden más párbeszéd bezárul Escape-re, ez nem. Emellett a betöltés két hívása `.catch()` nélküli (settings.tsx:37-38): elutasításkor a `settings`/`models` null marad, és a fül némán, üresen jelenik meg (a 142. sor `settings &&` és a 103. sor `models?.models ?? []` miatt). A modelltörlés (settings.tsx:62-65) try/catch nélküli, tehát hiba esetén a Törlés gombra szó szerint nem történik semmi, csak egy kezeletlen ígéret-elutasítás.",
+  "bizonyíték": "ui/src/settings.tsx:68 `<div className=\"overlay\" onMouseDown={...}>` – nem a ui/src/dialogs.tsx:4-17 `Overlay`-t használja, amiben az Escape-figyelő van. ui/src/settings.tsx:37-38 `void api.getSettings().then(setSettings); void api.listModels().then(setModels);` – nincs `.catch`. ui/src/settings.tsx:62-65 `const remove = async (id) => { await api.removeModel(id); setModels(await api.listModels()); }` – nincs try/catch, elutasításkor kezeletlen ígéret.",
+  "súly": "jó-lenne",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/ui/src/settings.tsx",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/dialogs.tsx"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "felulet",
+  "cím": "Magyar helyesírási és tipográfiai hibák a legfontosabb képernyőkön",
+  "hiány": "A mentés utáni eredményképernyő címe – az utolsó dolog, amit a felhasználó lát – nyelvtanilag hibás: „Elkészült, de maradt bennmaradt név” (dialogs.tsx:388), a „maradt bennmaradt” tautológia. Az idézőjel-hiba bájtszinten megerősítve és a becsültnél szélesebb: a felhasználónak megjelenő szövegekben 11 nyitó U+201E („) áll — dialogs.tsx 4, App.tsx 3, settings.tsx 4 — és NULLA helyes záró U+201D (”); mindegyik ASCII egyenes idézőjellel zárul. A devMock.ts:202 ezzel szemben helyes párt használ, tehát ez következetlenség, nem szándékos döntés.",
+  "bizonyíték": "ui/src/dialogs.tsx:388 `<h2>{r.ok ? 'Kész — az irat tiszta' : 'Elkészült, de maradt bennmaradt név'}</h2>`. Nyitó „ + ASCII záró \": ui/src/App.tsx:462, ui/src/dialogs.tsx:82-83, ui/src/settings.tsx:97, ui/src/settings.tsx:133. Helyesen: ui/src/devMock.ts:202 `evidence: '„Felperes:\" rovat'`.",
+  "súly": "jó-lenne",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/ui/src/dialogs.tsx",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/App.tsx",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/settings.tsx"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "felulet",
+  "cím": "A mentés folyamatjelzője már akkor pörög, amikor a program még a fájlnevet várja",
+  "hiány": "A `doExport` (App.tsx:178-194) a 179. sorban beállítja a teljes képernyős, „Mentés és ellenőrzés…” feliratú várakozó fátylat (App.tsx:388-394), és csak a 182. sorban nyitja meg a natív „Mentés másként” ablakot (`chooseSaveTarget` → main.ts:307 `dialog.showSaveDialog`). A felhasználó tehát „mentés folyamatban” pörgőt lát a háttérben, miközben a program valójában őrá vár, hogy adjon egy fájlnevet. A fátylat a fájlnév megadása UTÁN kellene beállítani.",
+  "bizonyíték": "ui/src/App.tsx:178-194 `doExport`: `setBusy('Mentés és ellenőrzés…');` a 179. sorban, majd `await api.suggestOutputPath(mode)` és `await api.chooseSaveTarget(suggested)` a 181-182. sorban – a natív ablak a fátyol beállítása után nyílik. A fátyol: ui/src/App.tsx:388-394.",
+  "súly": "jó-lenne",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/ui/src/App.tsx"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "felulet",
+  "cím": "A `parties:suggest` IPC-csatorna üres csonk, ami mindig üres listát ad",
+  "hiány": "Az electron/main.ts:337-343 `parties:suggest` handlere két ágban is ugyanazt az üres tömböt adja vissza (`if (!lastAnalysis && !session) return []; return [];`), miközben egy hosszú megjegyzés azt ígéri, hogy a „Felperes:”, „I. rendű alperes:” rovatok mögötti neveket ajánlaná. Ki van vezetve a preload.ts:35-ön és a ui/src/api.ts:105 típusban is, hívója viszont nincs — bekötésre kész félkész funkciónak látszik. Vagy meg kell írni (a src/app/detect.ts:194 `detectParties` már tudja a szerkezeti rovatfelismerést), vagy ki kell venni a main.ts-ből, a preloadból és az api-típusból, mert most félrevezeti a kódolvasót és feleslegesen tágítja a felület felé nyitott felületet.",
+  "bizonyíték": "electron/main.ts:337-343 `ipcMain.handle('parties:suggest', () => { … if (!lastAnalysis && !session) return [] as PartyInput[]; return [] as PartyInput[]; });` – mindkét ág üres tömb. Kivezetve: electron/preload.ts:35, ui/src/api.ts:105. Hívó sehol nincs.",
+  "súly": "jó-lenne",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/electron/main.ts",
+   "F:/Projects/Szivecske-Anonymizer/electron/preload.ts",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/api.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "szallitas",
+  "cím": "A 440 MB-os magyar modell nem kerül bele a telepítőbe",
+  "hiány": "Pontos, egy kiegészítéssel: van egy kézi menekülőút, amit a másik ügynök nem említett. A `ModelStore.dirFor()`/`rootFor()` (models.ts:176-191) ELŐBB a felhasználói mappát nézi (`%APPDATA%/<app>/modellek/NYTK/named-entity-recognition-nerkor-hubert-hungarian/`), és csak utána a szállítottat. Tehát ha valaki kézzel odamásolja a model.onnx + tokenizer.json + config.json + tokenizer_config.json négyest, a program megtalálja és működik. Ez viszont csak a fejlesztőnek járható út — a felhasználónak sem a felület, sem a dokumentáció nem mondja el, és a Beállítások lapon konkrétan az ellenkezőjét állítja („telepítsd újra a programot\"). A hiány tehát valós, csak nem abszolút zsákutca: a javításnak vagy a csomagolást kell megoldania (extraResources + a 440 MB-os NSIS-telepítő vállalása, vagy külön modell-telepítő), vagy a `source: 'converted'` ág letöltővé alakítása.",
+  "bizonyíték": "Lefuttattam a teljes csomagolást (`npx electron-builder --win --dir`, majd `--win nsis`, mindkettő exit 0). A kimenetben: `ls dist/telepito/win-unpacked/resources/` → csak `app.asar`, `app.asar.unpacked`, `build`, `data`. A `resources/modellek` NEM létezik („ls: cannot access 'resources/modellek': No such file or directory\"). Forrás: package.json:66-75 (`extraResources`: csak data és build) vs. electron/main.ts:55 (`join(process.resourcesPath ?? HERE, 'modellek')`) és src/app/models.ts `download()`: `if (spec.source === 'converted') throw new Error(...)`. A `.modellek/NYTK/named-entity-recognition-nerkor-hubert-hungarian/model.onnx` 440 342 356 bájt, megvan a gépen, csak nincs becsomagolva.",
+  "súly": "blokkoló",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:\\Projects\\Szivecske-Anonymizer\\package.json",
+   "F:\\Projects\\Szivecske-Anonymizer\\electron\\main.ts",
+   "F:\\Projects\\Szivecske-Anonymizer\\src\\app\\models.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "szallitas",
+  "cím": "PDF-et nem lehet megnyitni a telepített programban (pdf-to-img hiányzik a csomagból)",
+  "hiány": "Pontos. Két megerősítő részlet, amit érdemes a javításhoz tudni: (1) a `build:electron` script kifejezetten `--external:pdf-to-img`-gel fordít (package.json:12), tehát az esbuild NEM bundle-eli be — futásidejű `require`-ré marad, ami a csomagban elhasal; (2) a `renderPdfPages` catch-ága már most is „a megjelenítés hibája nem akadályozhatja meg az anonimizálást\" elven némán nyeli a hibát, tehát a szándék egyértelműen az, hogy az import is a try-on belül legyen — ez egy elcsúszott sor, nem tervezési döntés. A legkisebb javítás az import behúzása a try-ba; a teljes javítás mellé a `pdf-to-img` (és a hozzá tartozó @napi-rs/canvas) átmozgatása a dependencies-be.",
+  "bizonyíték": "A becsomagolt app.asar-ból ellenőriztem a modulfeloldást a telepített Electronnal (ELECTRON_RUN_AS_NODE=1, createRequire a `app.asar/dist-electron/main.js`-ből): `RESOLVE FAIL  pdf-to-img -> MODULE_NOT_FOUND`, miközben `RESOLVE OK @napi-rs/canvas / pdfjs-dist / onnxruntime-node / @huggingface/transformers`. Az asar tartalomlistájában a `pdf-to-img` egyáltalán nem szerepel (0 találat 4804 bejegyzés között). Kód: src/app/session.ts:716 `const { pdf } = await import('pdf-to-img');` — a rákövetkező `try {` csak a 718. sorban kezdődik; hívó: session.ts:166 `this.pages = await renderPdfPages(...)` a `loadPdf()`-ben, ami nincs védve.",
+  "súly": "blokkoló",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:\\Projects\\Szivecske-Anonymizer\\src\\app\\session.ts",
+   "F:\\Projects\\Szivecske-Anonymizer\\package.json"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "szallitas",
+  "cím": "A program neve elrontott kódolással kerül mindenhová (Szivecske AnonimizĂˇlĂł)",
+  "hiány": "Pontos, semmit nem kell javítani rajta. Kiegészítés a hatókörhöz: a BrowserWindow `title` (electron/main.ts:137 `'Szivecske Anonimizáló'`) és a README címe helyes, tehát a futó ablakban jó név áll — a mojibake kizárólag a csomagolási rétegben látszik (EXE- és telepítőfájlnév, Start menü, asztali parancsikon, Programok és szolgáltatások, telepítési könyvtár, verzióerőforrás). Egy fontos következmény, amit a másik ügynök csak a 11. pontban említ: emiatt az alapértelmezett telepítési útvonal is nem-ASCII lesz, ami a modellbetöltési útvonal-kezelést fölöslegesen kockázatnak teszi ki.",
+  "bizonyíték": "Nyers bájtok: `\"productName\": \"Szivecske Anonimiz\\xc4\\x82\\xcb\\x87l\\xc4\\x82\\xc5\\x82\"` (package.json:55), szemben a helyes `\"description\": \"...dokumentum-\\xc3\\xa1lneves\\xc3\\xadt\\xc5\\x91\"`-vel (package.json:5). A tényleges build kimenete: `dist/telepito/win-unpacked/Szivecske AnonimizĂˇlĂł.exe` és `dist/telepito/Szivecske AnonimizĂˇlĂł Setup 0.1.0.exe`. Az EXE verzióadatai (Get-Item .VersionInfo): `ProductName : Szivecske AnonimizĂˇlĂł`, `InternalName : Szivecske AnonimizĂˇlĂł`, `LegalCopyright : Copyright © 2026 Szivecske AnonimizĂˇlĂł`.",
+  "súly": "blokkoló",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:\\Projects\\Szivecske-Anonymizer\\package.json"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "szallitas",
+  "cím": "Az EXE gyártója „GitHub, Inc.\" — hiányzik az author a package.json-ból",
+  "hiány": "Pontos. Kiegészítés: a `CompanyName` a legláthatóbb tünet, de a `LegalCopyright` is származékos hiba — az author megadása egyszerre javítja mindkettőt, mert az electron-builder a copyrightot `Copyright © <év> <author>` alakban generálja. A `license` mező hiánya a `private: true` miatt önmagában nem hiba (npm nem panaszkodik rá), de a 12. pont „Névjegy\" szakaszához úgyis kell egy licencállítás, érdemes egyszerre rendezni.",
+  "bizonyíték": "Az electron-builder mindkét futásnál kiírta: `• author is missed in the package.json  appPackageFile=F:\\Projects\\Szivecske-Anonymizer\\package.json`. A lefordított EXE verzióadatai (PowerShell Get-Item ... .VersionInfo): `CompanyName : GitHub, Inc.` — a telepítő EXE-nél pedig `CompanyName :` (üres). A package.json 1-52. sorai között nincs `author`, `homepage` vagy `license` kulcs.",
+  "súly": "fontos",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:\\Projects\\Szivecske-Anonymizer\\package.json"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "szallitas",
+  "cím": "Nincs kódaláírás — a Windows SmartScreen le fogja tiltani az első indítást",
+  "hiány": "Pontos. Egy pontosítás a súlyozáshoz: ez nem programhiba, hanem beszerzési/folyamati döntés, amit be kell tervezni — kódaláírás nélkül nem lehet „megjavítani\" a kódban. A reális opciók: (a) Azure Trusted Signing (havidíjas, EV-szintű hírnév, nem kell hardveres kulcs), (b) OV tanúsítvány hardveres tokenen (olcsóbb, de a SmartScreen-hírnevet nulláról kell felépíteni), vagy (c) aláírás nélkül szállítás + egy dokumentált kézi lépés a felhasználónak („További információ → Futtatás mindenképp\"). A (c) esetben a lépést képernyőképpel érdemes leírni, mert pont ezen a ponton adja fel a nem műszaki felhasználó. Megjegyzés: a mojibake productName (3. pont) rontja a helyzetet, mert a SmartScreen-ablakban is a torz név fog megjelenni.",
+  "bizonyíték": "`Get-AuthenticodeSignature 'dist/telepito/win-unpacked/Szivecske AnonimizĂˇlĂł.exe'` → `Status : NotSigned`. Ugyanez a telepítőre: `Get-AuthenticodeSignature 'dist/telepito/Szivecske AnonimizĂˇlĂł Setup 0.1.0.exe'` → `NotSigned`. A build log `signing with signtool.exe` sorai csak az erőforrás-átírást jelentik, valódi aláírás nem történt. package.json:76-86 (`build.win`) csak `target` és `icon` kulcsot tartalmaz.",
+  "súly": "fontos",
+  "munka": "közepes",
+  "fájlok": [
+   "F:\\Projects\\Szivecske-Anonymizer\\package.json"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "szallitas",
+  "cím": "Nincs kiadási npm script — a telepítő elavult kódot csomagolhat be",
+  "hiány": "Pontos, egy pontosítással a súlyosságról. A másik ügynök nem említi, hogy a `start` script (package.json:16) MÁR lefuttatja mind a négy fordítási lépést (`build:electron && build:preload && build:aiworker && build:ui`) az `electron .` előtt — tehát a helyes lépéssor létezik és bevált, csak nincs rákötve a csomagolásra. A javítás ezért triviális: egy `\"dist\"` script, ami ugyanazt a négy lépést futtatja, majd `electron-builder --win nsis`-t hív, plusz a README:15 átírása `npm run dist`-re. Alternatívaként egy `build.beforeBuild` hook is megteszi, de a külön script átláthatóbb, mert a fejlesztő is ugyanazt írja be, amit a dokumentáció mond.",
+  "bizonyíték": "package.json `scripts` (6-24. sor): spike1, spike2, test, typecheck, build:electron, build:preload, build:ui, dev, start, app, test:app, test:docx, icon, build:aiworker, test:detect, test:quant, test:all — egyik sem hívja az electron-buildert. README.md:15: „telepítő készítéséhez `npx electron-builder`\". Az én futtatásom is így ment: az electron-builder a lemezen talált `dist-electron/main.js`-t (aug. 25. 17:43) csomagolta be anélkül, hogy újrafordította volna.",
+  "súly": "fontos",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:\\Projects\\Szivecske-Anonymizer\\package.json",
+   "F:\\Projects\\Szivecske-Anonymizer\\README.md"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "szallitas",
+  "cím": "1,1 GB telepített méret modell NÉLKÜL — a files szűrő nem szűr semmit",
+  "hiány": "A mérések és a fő állítás pontosak, két oksági pontosítással. (1) A @napi-rs/canvas NEM azért került be, mert devDependency — az electron-builder devDependency-t sosem másol (lásd a pdf-to-img esetét, 0 bejegyzés). Tranzitív opcionális függőségként jött be (pdfjs-dist / pdf-to-img vonalon), és mivel a pdf-to-img épp KIMARADT a csomagból, a 37 MB-os @napi-rs most tiszta halott súly: nincs a csomagban semmi, ami használná. Ugyanez a sharp/@img 19 MB-ra a @huggingface/transformers alól. (2) A `files` viselkedése nem hiba, hanem dokumentált electron-builder-működés: a node_modules-t a production dependency fából gyűjti, és a `files` node_modules-mintái nem allowlist-ként, hanem a már összegyűjtött fára alkalmazott szűrőként hatnak. A helyes eszköz ezért a KIZÁRÁS: `!node_modules/onnxruntime-node/bin/napi-v6/{darwin,linux}/**`, `!node_modules/**/onnxruntime-web/**`, `!node_modules/{react,react-dom,scheduler}/**`, `!node_modules/@types/**`, plusz a duplikált beágyazott onnxruntime-node kezelése (npm `overrides`-szal egyetlen példányra hozva). A ~250 MB megtakarítás reális becslés.",
+  "bizonyíték": "Mérések a tényleges buildből: `du -sm dist/telepito/win-unpacked` → 1108 MB (modell nélkül); app.asar = 224 674 558 bájt; app.asar.unpacked = 549 MB. Platformonként: onnxruntime-node/bin/napi-v6 → darwin 84 MB, linux 67 MB, win32 132 MB; a @huggingface/transformers alatti MÁSODIK példány → darwin 35 MB, linux 53 MB, win32 124 MB. Ezen felül @img (sharp) 19 MB, @napi-rs 37 MB. Az asar 67 db legfelső szintű node_modules csomagot tartalmaz (react, react-dom, onnxruntime-web, protobufjs, @types/node stb.), pedig a `files` csak kettőt sorol fel. A kész telepítő már így is 276 648 982 bájt (264 MB).",
+  "súly": "fontos",
+  "munka": "közepes",
+  "fájlok": [
+   "F:\\Projects\\Szivecske-Anonymizer\\package.json"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "szallitas",
+  "cím": "Első indítás: semmi nem mondja meg, hogy a nyelvi modell nem működik",
+  "hiány": "Valós hiány, de át kell fogalmazni, mert a legerősebb állítása hamis. NEM igaz, hogy a modell hiánya némán vagy mellékesen közlődik: a dialogs.tsx:94-111 már ma is félkövér figyelmeztetést és „Modell letöltése\" gombot mutat a felek áttekintésénél. A tényleges hiba ennél konkrétabb és rosszabb: a figyelmeztetés gombja ZSÁKUTCÁBA VEZET. A gomb a Beállítások → Nyelvi modellek lapra visz, ahol a magyar modellnél (`bundled === true`, settings.tsx:322) nincs letöltés-gomb, csak a „telepítsd újra a programot\" mondat (settings.tsx:362-366) — az újratelepítés pedig az 1. pont miatt nem hozza meg a modellt. A felhasználó tehát pontosan tudja, hogy baj van, és semmit nem tud tenni. Ez a hurok az igazi hiány, nem a jelzés hiánya. Emellett valós, önálló hiányok: (1) a `Welcome` képernyőn nincs modell-státusz és nincs indulási ellenőrzés, tehát a felhasználó csak az első irat felek-áttekintésénél szembesül vele; (2) a nyitóképernyő drop-zónája eldobja a behúzott iratot és fájlválasztót nyit helyette (App.tsx:437-441) — ez független UX-hiba, érdemes külön kezelni.",
+  "bizonyíték": "ui/src/App.tsx:420-476 (`Welcome`) — nincs semmilyen modell-státusz. ui/src/settings.tsx:322 `const bundled = model.source === 'converted';` és 362-366: `{!installed && bundled && (<span className=\"hint\">Ez a modell a programmal érkezik. Ha hiányzik, telepítsd újra a programot.</span>)}` — nincs letöltés-gomb. electron/main.ts:258-261: modell hiányában csak egy `modelNote` szöveg. Az alapértelmezett `modelId` a `nytk-nerkor-hubert` (src/app/settings.ts, DEFAULT_SETTINGS), tehát pont a hiányzó modell az aktív. Mellékes megjegyzés ugyanitt: a nyitóképernyő drop-zónája eldobja a behúzott fájlt — az `onDrop` csak `onOpen()`-t hív (App.tsx:445-449), vagyis fájlválasztót nyit a behúzott irat helyett.",
+  "súly": "fontos",
+  "munka": "közepes",
+  "fájlok": [
+   "F:\\Projects\\Szivecske-Anonymizer\\ui\\src\\App.tsx",
+   "F:\\Projects\\Szivecske-Anonymizer\\ui\\src\\settings.tsx",
+   "F:\\Projects\\Szivecske-Anonymizer\\electron\\main.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "szallitas",
+  "cím": "A nsis.language: \"1038\" nem teszi magyarrá a telepítőt",
+  "hiány": "Pontos, technikailag hibátlan. Egy súlyozási pontosítás: a `language: \"1038\"` nem KÁROS, csak nem azt csinálja, amit a neve sugall — a verzióerőforrás LCID-jét helyesen állítja magyarra, tehát nem kell törölni, hanem KIEGÉSZÍTENI `installerLanguages: [\"hu_HU\"]`-val. A célgép egyébként magyar Windows, tehát a telepítő ma is magyarul jönne fel — a hiba akkor csap le, ha bárki angol vagy más nyelvű gépen futtatja. A `perMachine: false` (alapértelmezés) sem egyértelműen hiba: a `%LOCALAPPDATA%\\Programs` alá telepítés épp azt kerüli el, hogy UAC-emelés kelljen — aláírás nélkül (5. pont) ez inkább előny. A `shortcutName` viszont valódi mulasztás, mert e nélkül a parancsikon a mojibake productName-et örökli (3. pont).",
+  "bizonyíték": "node_modules/app-builder-lib/out/targets/nsis/NsisTarget.js:385: `const localeId = this.options.language || \"1033\";` — és az egyetlen felhasználása a `computeVersionKey()`-ben a `/LANG=${localeId} ProductName ...` sorokban. A generált NSIS szkriptben (dist/telepito/builder-debug.yml) 26 db `!insertmacro MUI_LANGUAGE` sor van (72-97. sor, köztük a 93.: \"Hungarian\"), és az `1038` string sehol nem fordul elő a fájlban. A build log: `oneClick=false perMachine=false`.",
+  "súly": "jó-lenne",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:\\Projects\\Szivecske-Anonymizer\\package.json"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "szallitas",
+  "cím": "Hiányzik a setAppUserModelId és a single-instance zár",
+  "hiány": "Pontos. Egy pontosítás a felülíródó beállításokról: a `SettingsStore.load()` (src/app/settings.ts:63-73) minden hibát elnyel és `DEFAULT_SETTINGS`-re esik vissza, tehát két párhuzamos példány nem korrumpálja tartósan a fájlt — a rosszabbik eset az, hogy a felhasználó beállítása (pl. az átállított téma vagy modell) csendben visszaáll. Ez bosszantó, nem adatvesztő. A `setAppUserModelId` viszont fontosabb, mint amilyennek hangzik: az `appId` (`hu.szivecske.anonimizalo`) már megvan a build-konfigban, tehát a javítás egyetlen sor az `app.whenReady()` elején, és ez köti össze a tálcaikont a Start menü parancsikonnal — pont a kifejezetten kért „szivecskés tálcaikon\" működéséhez.",
+  "bizonyíték": "`grep -n \"Tray|Menu|setAppUserModelId|getVersion|requestSingleInstance\" electron/main.ts` → egyetlen találat: `electron/main.ts:138: autoHideMenuBar: true`. Az `app.whenReady().then(...)` blokk (main.ts:168-177) csak loadData / ModelStore / SettingsStore / registerHandlers / createWindow hívásokat tartalmaz. Az ikonoldal egyébként rendben van: a build/icon.ico 7 méretet tartalmaz (16, 24, 32, 48, 64, 128, 256 px, mind 32 bpp), és a csomagolt `resources/build/icon.ico` létezik, tehát az `appIcon()` (main.ts:26-33) telepítve is megtalálja.",
+  "súly": "jó-lenne",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:\\Projects\\Szivecske-Anonymizer\\electron\\main.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "szallitas",
+  "cím": "Ékezetes útvonal: a jelenlegi modellel működik, de az ONNX külső-adat útvonal elromlik",
+  "hiány": "Valós, de PREVENTÍV tétel, nem jelenlegi hiba — a másik ügynök is ezt mondja, csak a lista többi pontjával azonos súlyúnak tűnik. Amit hozzá kell tenni: már MA is van egy részleges védőháló, amit a másik ügynök nem vett észre. A `ModelStore.list()` (src/app/models.ts:200-215) fájlonként ellenőrzi, hogy a méret eléri-e a várt érték 98%-át (`model.onnx` → 440 342 356 bájt, models.ts:87). Ha egy újraexportálás külső-adatos modellt állítana elő, a model.onnx mérete drasztikusan leesne, a modell `partial`/`missing` állapotba kerülne, és a program a szabályalapú felismerésre esne vissza a jelenlegi HIBAÜZENETTEL — tehát nem néma összeomlás lenne, hanem a 8. pontban tárgyalt (kiemelt) figyelmeztetés. A tényleges teendő ezért kicsi: (a) takarítsd ki a projekt gyökeréből a három ottfelejtett .data fájlt és a sym_shape_infer_temp.onnx-et (1,3 GB szemét), (b) a kiadási scriptbe (6. pont) tegyél egy SHA256SUMS.json-ellenőrzést, ami egyben az önállóságot is bizonyítja. A nem-ASCII telepítési útvonal kockázatát pedig a 3. pont javítása magától megszünteti.",
+  "bizonyíték": "1. teszt (önálló modell, ékezet + szóköz): `C:\\Users\\...\\Temp\\Kovács Anna ékezetes mappa\\model.int8.onnx` → `ACCENTED PATH: OK  inputs= [ 'input_ids', 'attention_mask', 'token_type_ids' ]`. 2. teszt (külső adatos ONNX ugyanabban a mappában): `FAIL -> External data path validation failed ... External data path does not exist: \"C:\\\\Users\\\\Foltin Csaba\\\\AppData\\\\Local\\\\Temp\\\\Kov?cs Anna ?kezet teszt\\\\...\"` — az „á\" és az „é\" kérdőjellé torzult a hibaüzenetben, miközben ASCII útvonalról ugyanaz a fájl `OK`. A PROVENANCE.md megerősíti, hogy a szállítandó model.onnx egyetlen 440 342 356 bájtos fájl. Jó hír még: a natív függőség csomagolása RENDBEN van — az `onnxruntime_binding.node` és mellette az `onnxruntime.dll` automatikusan az `app.asar.unpacked`-be került, és a csomagolt asar-ból be is töltődik (`ORT LOADED FROM ASAR ok, version= {\"common\":\"1.29.0\",\"node\":\"1.29.0\"}`, `ai-worker.cjs required OK from asar`).",
+  "súly": "jó-lenne",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:\\Projects\\Szivecske-Anonymizer\\src\\ai\\hubertNer.ts",
+   "F:\\Projects\\Szivecske-Anonymizer\\scripts\\quantize-nytk.py",
+   ".modellek\\NYTK\\named-entity-recognition-nerkor-hubert-hungarian\\PROVENANCE.md"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "szallitas",
+  "cím": "Nincs verziószám és névjegy sehol a felületen",
+  "hiány": "Pontos. Kiegészítés a tartalomhoz: a „Névjegy\" szakasznak a `app.getVersion()` mellett érdemes megmutatnia a BETÖLTÖTT MODELL azonosítóját és állapotát is, mert a `HubertNer.load()` (src/ai/hubertNer.ts:86-88) csendben a `model.int8.onnx`-re esik vissza, ha a pontos `model.onnx` nincs a gépen — a `test/quant-compare.ts` mérése szerint pedig a 8 bites változat elveszít egy csupa nagybetűs aláírásban álló személynevet. Egy hibajelentésnél tehát nem elég tudni, melyik PROGRAMverzió fut: azt is tudni kell, melyik HÁLÓ futott. Ez ugyanaz az adat, amire a 8. pont indulási modell-ellenőrzésének is szüksége van, érdemes egy IPC-hívásból kiszolgálni mindkettőt.",
+  "bizonyíték": "`grep -n \"version|Névjegy|About\" ui/src/settings.tsx` → nincs verziómegjelenítés. `grep -n \"getVersion\" electron/main.ts` → nincs találat. A package.json-ban nincs `build.publish` blokk, tehát frissítési csatorna sincs. A verzió jelenleg `0.1.0` (package.json:3), ami az EXE-ben `FileVersion : 0.1.0` / `ProductVersion : 0.1.0.0`-ként meg is jelenik — csak épp a programban nem látható.",
+  "súly": "jó-lenne",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:\\Projects\\Szivecske-Anonymizer\\ui\\src\\settings.tsx",
+   "F:\\Projects\\Szivecske-Anonymizer\\electron\\main.ts",
+   "F:\\Projects\\Szivecske-Anonymizer\\package.json"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "helyesseg",
+  "cím": "A jegyzőkönyv titkosítatlanul kiírja a teljes szereplapot a kimenet mellé",
+  "hiány": "Az `ipcMain.handle('doc:export')` (electron/main.ts:315-322) minden mentésnél, feltétel nélkül a kimenet mellé írja a `<fájlnév>-jegyzokonyv.txt`-t, amelynek 'SZEREPLAP' szakasza sima szövegként soronként tartalmazza az `eredeti név → álnév` párokat (src/app/session.ts:501-524). Ez ugyanaz a leképezési tábla, amit a keyfile.ts scrypt+AES-256-GCM-mel titkosít, és amiről a fájl fejléce azt állítja, hogy soha nem kerül a kimenet mellé. Akkor is kiíródik, ha a felhasználó kikapcsolta a kulcsfájlt (`keepKey: false`), tehát a „visszafordíthatatlan” anonimizálás mellé odakerül a teljes visszafejtő tábla. Javítás: a szereplapot vagy hagyjuk ki a jegyzőkönyvből (csak darabszámok), vagy tegyük a titkosított kulcsfájlba, vagy külön, kifejezett felhasználói döntéshez és figyelmeztetéshez kössük.",
+  "bizonyíték": "electron/main.ts:319-320: `const certPath = \\`${opts.outputPath.replace(/\\.[^.]+$/, '')}-jegyzokonyv.txt\\`; writeFileSync(certPath, result.certificate, 'utf8');` — a tartalom src/app/session.ts:518-522: `'SZEREPLAP'` majd `lines.push(\\`  ${a.original.padEnd(34)} → ${a.display}\\`)`. Szemben ezzel src/app/keyfile.ts:4-6: „soha nem kerül a kimeneti dokumentumba, hanem külön fájlba, jelszóval titkosítva\".",
+  "súly": "blokkoló",
+  "munka": "kicsi",
+  "fájlok": [
+   "electron/main.ts",
+   "src/app/session.ts",
+   "src/app/keyfile.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "helyesseg",
+  "cím": "A PDF-export csak az Info szótárat törli — az XMP metaadat, a jegyzetek, az űrlapmezők és a mellékletek bennmaradnak",
+  "hiány": "A PDF-metaadat-tisztítás (src/app/session.ts:485-495) hat `doc.set*()` hívásból áll, amelyek a pdf-lib-ben kizárólag az /Info szótárat írják — ellenőrizve node_modules/pdf-lib/cjs/api/PDFDocument.js:59-60 és :1335, ahol az `updateMetadata` csak `updateInfoDict()`-et hív, és a katalógus /Metadata XMP-csomagja soha nem íródik felül. A Wordből/Acrobatból mentett PDF XMP-jében ott marad a `dc:creator`, `xmp:CreatorTool`, sokszor az eredeti fájlútvonal a Windows-felhasználónévvel. Ezen felül semmi nem nyúl a `/Annots` jegyzetekhez (`/T` szerző, `/Contents` szöveg), az AcroForm mezőértékekhez (`/V`), a `/Names /EmbeddedFiles` mellékletekhez és az `/Outlines /Title` könyvjelzőkhöz — a `doc.save()` mindezt változatlanul átmásolja. Az egész kódbázison nulla találat van ezekre a kulcsokra. A DOCX-oldalon ugyanez a hibaosztály végig van gondolva (src/docx/sanitize.ts), a PDF-oldalon nincs.",
+  "bizonyíték": "src/app/session.ts:485-495 — a teljes PDF-metaadat-tisztítás hat `doc.set*()` hívás, majd `doc.save()`. A `grep -rn \"Annot|AcroForm|EmbeddedFiles|Outlines|Metadata|XMP\" src/ electron/` nulla találatot ad a PDF-útvonalon.",
+  "súly": "blokkoló",
+  "munka": "közepes",
+  "fájlok": [
+   "src/app/session.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "helyesseg",
+  "cím": "A felületen látható „visszaolvastuk a mentett fájlt\" állítás nem igaz — a saját munkánkat igazoljuk vissza",
+  "hiány": "Az exportálás után a felület kiírja: „Visszaolvastuk a mentett fájlt, és egyetlen eredeti név sem maradt benne — sem a szövegben, sem a metaadatban.\" Valójában a `verifyOutput` NEM a mentett fájlt kapja, hanem az `outputText`-et, amit maga az exportáló állított elő ugyanabból az offszettérképből, amiből a cserét is számolta. Ha a keresés nem látott egy szöveghelyet (Form XObject, jegyzet, XMP, kép), akkor az `outputText`-ben sincs benne, tehát a keresés ott sem talál semmit — az ellenőrzés definíció szerint nem tud megbukni. A DOCX-oldalon a `findResidue` pont ezt a csapdát kerüli el a nyers bájtokon (sanitize.ts:390-394: „A saját szövegkinyerőnk ugyanazokat a helyeket nézné, ahol cserélt — ezzel saját magát igazolná vissza\"), a PDF-oldalon viszont NINCS ilyen bájtszintű ellenőrzés. Ráadásul a `writeFileSync` a `verifyOutput` ELŐTT fut, tehát a fájl akkor is a lemezen marad, ha az ellenőrzés szivárgást talál — pedig a verify.ts fejléce azt írja, „Amíg ez nem tiszta, az exportot tiltjuk\". Egy nem műszaki felhasználó ezt a zöld pipát hitelesítésnek olvassa.",
+  "bizonyíték": "src/app/session.ts:356-360: `writeFileSync(opts.outputPath, outputBytes);` majd UTÁNA `const report = verifyOutput(outputText, ...)`. Az `outputText` forrása PDF-nél `producedText.join('\\n\\n')` (session.ts:496), DOCX-nél `texts.join('\\n\\n')` (session.ts:421) — mindkettő a mi saját kimenetünk. A felületi szöveg: ui/src/dialogs.tsx:395-398.",
+  "súly": "blokkoló",
+  "munka": "közepes",
+  "fájlok": [
+   "src/app/session.ts",
+   "src/verify.ts",
+   "ui/src/dialogs.tsx"
+  ],
+  "ellenőrizve": false
+ },
+ {
+  "terület": "helyesseg",
+  "cím": "A PDF Form XObjectjeibe (Do operátor) a program soha nem lép be — az ott lévő nevek láthatatlanok maradnak",
+  "hiány": "Az `extractTextSegments` (src/pdf/textRuns.ts:140-238) nem kezeli a `Do` operátort: a `default` ág csak a `SHOW_OPS` halmazt (82. sor: Tj, TJ, ', \") nézi, abban `Do` nincs, és sehol a kódbázisban nincs XObject-kezelés (nulla grep-találat). Ezért a Form XObjectbe csomagolt szöveg — fejléc, lábléc, iratsablon, bélyegző, aláírásblokk, sok generátornál a törzs egy része — soha nem kerül a lapos szövegbe. A `baseCtm` paraméter (textRuns.ts:88) mutatja, hogy a rekurzió terve megvolt, de a hívó (src/app/session.ts:153-155 → `readPageContent` 641-661) csak a `Contents`-t adja át, a `readPageFonts` (664-680) is csak a /Font erőforrást olvassa, az /XObject szótárat nem. Következmény: a matcher nem látja, a felületen nem jelenik meg találatként, a `deleteRanges` nem törli, és mivel az ellenőrzés is a mi kimenetünkön fut, semmi nem jelez. Minimum egy hangos figyelmeztetés kell, ha az oldal tartalmaz `Do`-t egy Form XObjectre.",
+  "bizonyíték": "src/pdf/textRuns.ts:140-238 — a `switch (op.operator)` ágai: q, Q, cm, BT, ET, Tf, TL, Tm, Td, TD, T*, Tj, ', \", TJ, default. `Do` nincs köztük. A `grep -n \"'Do'|XObject\" src/pdf/*.ts` nulla találat. A hívó: src/app/session.ts:642-662 (`readPageContent`) csak a `Contents`-t olvassa.",
+  "súly": "blokkoló",
+  "munka": "nagy",
+  "fájlok": [
+   "src/pdf/textRuns.ts",
+   "src/app/session.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "helyesseg",
+  "cím": "Három beállítás a Beállítások ablakban semmit nem csinál: összegek, dátumeltolás, automatikus küszöb",
+  "hiány": "A `replaceAmounts`, `shiftDates` és `autoThreshold` beállítás definiálva, alapértékkel ellátva, validálva (src/app/settings.ts:33-37, 50-52, 97-101) és a felületen kapcsolóként/csúszkaként megjelenítve van (ui/src/settings.tsx:175-186 a csúszka, 220-245 a két kapcsoló saját magyarázó szöveggel: „Az összegeket is írja át”, „A dátumokat tolja el ügyenként”), a beallitasok.json-ba mentődik és visszaolvasódik — de a teljes grep szerint EGYETLEN olvasójuk sincs a felismerési vagy cserefolyamatban. Az automatikus küszöb ténylegesen bedrótozott: src/hu/matcher.ts:67 `AUTO_REPLACE_THRESHOLD = 0.8`, amit a matcher négy helyen (74, 253, 457, 469) konstansként használ, és a felhasználó csúszkája sosem jut el hozzá. Összeg- és dátumkezelés a kódban egyáltalán nincs (src/hu/identifiers.ts-ben nulla találat). Ez egy kitakaró programban a legveszélyesebb hibaosztály: a felhasználó bekapcsolja, elhiszi, hogy megtörtént, és kiadja az iratot a valódi összegekkel. Vagy meg kell írni a funkciót, vagy azonnal ki kell venni a felületről.",
+  "bizonyíték": "src/app/settings.ts:34-37, 51-52, 100-101 (definíció és validáció); ui/src/settings.tsx:175-186 (csúszka), 220-245 (két kapcsoló, magyarázó szöveggel). A bedrótozott küszöb: src/hu/matcher.ts:67 `export const AUTO_REPLACE_THRESHOLD = 0.8;`. A `grep -rn \"replaceAmounts|shiftDates|autoThreshold\" src/ electron/` a definíción kívül egyetlen olvasót sem talál.",
+  "súly": "blokkoló",
+  "munka": "nagy",
+  "fájlok": [
+   "src/app/settings.ts",
+   "ui/src/settings.tsx",
+   "src/hu/matcher.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "helyesseg",
+  "cím": "A modell találata csendben eltűnik, ha a címkéje nincs a labelMap-ben — a többnyelvű modell összeg/dátum/azonosító találatai így vesznek el",
+  "hiány": "Mindkét futtatóban némán eldobjuk a modell találatát, ha a nyers címkéjéhez nincs bejegyzés a `labelMap`-ben: src/ai/hubertNer.ts:214-217 (`if (label && trimmed && cur.score >= minScore)`, különben `cur = null`) és src/ai/tokenClassifier.ts:141-142 (`if (!label) continue;`) — nincs napló, figyelmeztetés vagy számláló. Az `eu-pii-multilang` leírása (src/app/models.ts:99-102) viszont azt ígéri a felhasználónak, hogy összegeket, dátumokat és azonosítókat is felismer, miközben a hozzá tartozó labelMap (models.ts:115-123) csak hét személy/szervezet/hely címkét tartalmaz. KIEGÉSZÍTÉS a másik ügynök leírásához: ez nem pusztán hiányzó labelMap-bejegyzés — az `EntityLabel` típus maga (src/ai/types.ts:10) csak `'person' | 'org' | 'place' | 'other'` értéket enged, tehát a program adatmodelljében nincs hova betenni az összeget, dátumot vagy azonosítót. A javítás ezért kétlépcsős: (1) a felületre kell egy összesítés („a modell N találatát nem tudtuk értelmezni, címkék: …”), (2) vagy bővíteni kell az EntityLabel típust, vagy a models.ts:99-102 leírásából ki kell venni a nem támogatott adatfajtákat.",
+  "bizonyíték": "src/ai/hubertNer.ts:215-217: `const label = this.cfg.labelMap[cur.type]; ... if (label && trimmed && cur.score >= minScore)` — különben `cur = null`, vége. Ugyanez src/ai/tokenClassifier.ts:141-142: `const label = this.cfg.labelMap[t.label]; if (!label) continue;`. Az ígéret: src/app/models.ts:101; a hiányos térkép: src/app/models.ts:114-122. A típus kommentje is kimondja (tokenClassifier.ts:22): „Ami nincs benne, azt eldobjuk.\"",
+  "súly": "fontos",
+  "munka": "közepes",
+  "fájlok": [
+   "src/ai/hubertNer.ts",
+   "src/ai/tokenClassifier.ts",
+   "src/app/models.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "helyesseg",
+  "cím": "ToUnicode nélküli PDF-betűkészletnél a szöveg némán eltűnik, és a felhasználó nem kap róla jelzést",
+  "hiány": "Két helyen nyelődik el csendben karakter a PDF-olvasásban. (1) A `show()` a `if (!font?.cmap) continue;` sorral (src/pdf/textRuns.ts:131) egy egész rajzolási lépést kihagy ToUnicode tábla nélküli betűkészletnél — a szándék helyes (ne állítsunk valótlant arról, mit olvastunk ki), de a kihagyás sehol nem számítódik, és a `TextSegment` nem hordoz erről mezőt. (2) A `decodeWithCMap` a hiányzó kódot `?? ''`-tal pótolja (src/pdf/toUnicode.ts:83), tehát hiányos ToUnicode táblánál (részhalmazolt betűkészletnél ez gyakori) a „Kovács János”-ból „Kovcs Jnos” lesz, amire a matcher soha nem illeszkedik. A `looksScanned` heurisztika (src/app/session.ts:143, `charCount < 40 * pageCount`) csak a teljesen olvashatatlan PDF-et fogja meg. MEGERŐSÍTÉS: a src/pdf/ könyvtárban nulla figyelmeztetés-kód van, és a `loadWarnings` getter (session.ts:80-85) csak a DOCX-elemzés figyelmeztetéseit adja tovább — PDF-nél a felület felé vezető figyelmeztetési csatorna teljesen üres. Oldalanként számolni kell a kihagyott rajzolási lépéseket és a kiüresedett glifákat, és ezt fel kell vinni a felületre.",
+  "bizonyíték": "src/pdf/textRuns.ts:129-133: `// ToUnicode nélkül csak nyers bájtokat látnánk ... if (!font?.cmap) continue;` — a kihagyás nem számítódik sehol. src/pdf/toUnicode.ts:83: `out.push({ code, text: cmap.map.get(code) ?? '' });`. A heurisztika: src/app/session.ts:143.",
+  "súly": "fontos",
+  "munka": "közepes",
+  "fájlok": [
+   "src/pdf/textRuns.ts",
+   "src/pdf/toUnicode.ts",
+   "src/app/session.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "helyesseg",
+  "cím": "A DOCX bájtszintű maradványellenőrzése kikapcsol, amint egyetlen találat eldöntetlen",
+  "hiány": "Az `exportDocx` csak akkor tölti fel a `forbidden` listát, ha `pendingMatches.length === 0` (src/app/session.ts:410-417); bármelyik találat eldöntetlensége esetén a lista üres marad, és a `writeDocxDetailed` a `if (opts.forbidden !== undefined && opts.forbidden.length > 0)` feltétel miatt (src/docx/anonymize.ts:239) a `findResidue`-t egyáltalán nem futtatja le — ez az egyetlen éles hívási helye a függvénynek az egész kódbázison. Az indoklás a kódban le van írva (session.ts:404-409: egy szándékosan bent hagyott hosszabb alak, pl. „Kovács Jánosné”, tartalmazhat egy lecserélt rövidebbet, ami hamis riasztást adna), de a következmény aránytalan: a rejtett ágakban (szövegdoboz mc:Fallback, beágyazott objektum, régi bináris rész UTF-16LE-ben) bennmaradt név egyetlen elkapó mechanizmusa épp a félkész átnézésnél — a leggyakoribb valós helyzetben — van kikapcsolva. Helyette azokat a felszíni alakokat kellene tiltani, amikhez ténylegesen tartozik elfogadott csere, a bent hagyottakat pedig kizárni a listából, nem az egész kaput kinyitni.",
+  "bizonyíték": "src/app/session.ts:411-417: `const pendingMatches = this.lastMatches.filter(({ row }) => !isAccepted(row)); const forbidden: string[] = []; if (pendingMatches.length === 0) { ... }`. A kapu a másik oldalon: src/docx/anonymize.ts:239 `if (opts.forbidden !== undefined && opts.forbidden.length > 0)`.",
+  "súly": "fontos",
+  "munka": "közepes",
+  "fájlok": [
+   "src/app/session.ts",
+   "src/docx/anonymize.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "helyesseg",
+  "cím": "Hiányzó DOCX attribútum-hordozók: egyszerű mezőkód, könyvjelzőnév, hivatkozás-buboréksúgó, táblázatleírás",
+  "hiány": "A `WML_PROFILE` attribútumtérképe (src/docx/text.ts:127-135) pontosan négy elemet ismer — `wp:docPr` (descr, title), `pic:cNvPr` (descr, title), `v:textpath` (string), `w:comment` (w:author, w:initials) —, és a `grep -rni \"fldSimple|bookmarkStart|tooltip|tblCaption|tblDescription|o:title|v:shape\" src/` az egész forrásfán nulla találatot ad, tehát máshol sincs kompenzáló kezelés. Hiányzó, magyar jogi iratokban rendszeresen névvel telt hordozók: (a) `<w:fldSimple w:instr=\" HYPERLINK \\\"mailto:...\\\" \">` — az egyszerű mező ATTRIBÚTUMBAN hordozza a kódját, miközben a mezőkód-kezelés csak elemekre néz (text.ts:122-126: w:instrText, w:delInstrText), tehát teljesen kimarad; (b) `<w:bookmarkStart w:name=\"Kovacs_Janos_nyilatkozata\">` — a Word a címsor szövegéből gyárt könyvjelzőnevet; (c) `<w:hyperlink w:tooltip=\"…\">`; (d) `<w:tblCaption>` / `<w:tblDescription>` akadálymentesítési leírás; (e) a `wp:docPr` `name` attribútuma (a descr és title be van véve, a name nem — OLE-nál ide kerül a fájlnév); (f) a VML `v:shape/@alt` és `o:title`. Egyik sem látszik a Wordben, kicsomagolva mind olvasható.",
+  "bizonyíték": "src/docx/text.ts:128-135 — a teljes attribútumlista: `['wp:docPr', ['descr','title']], ['pic:cNvPr', ['descr','title']], ['v:textpath', ['string']], ['w:comment', ['w:author','w:initials']]`. A `grep -rn \"fldSimple|bookmarkStart|tooltip|tblCaption|tblDescription|o:title\" src/` nulla találat.",
+  "súly": "fontos",
+  "munka": "közepes",
+  "fájlok": [
+   "src/docx/text.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "helyesseg",
+  "cím": "A DOCX-be ágyazott képekről se figyelmeztetés, se EXIF-tisztítás nincs",
+  "hiány": "A `word/media/` alá eső részek `kind: 'media'` besorolást és `EMPTY_PROFILE`-t kapnak `note` mező nélkül (src/docx/parts.ts:134) — szemben a környező szabályokkal (parts.ts:100-133), ahol a styles, numbering, embeddings és thumbnail mind kapott indokoló megjegyzést. Emiatt kétszeresen kimaradnak: nem szöveghordozók (ez rendben, OCR nincs a hatókörben), de NEM esnek az `unclassifiedParts` alá sem, mert az csak a `kind === 'other'` részeket gyűjti (parts.ts:187-191) — így a felhasználó egyetlen sort sem lát róluk, miközben a beágyazott OLE-objektumokról és az ismeretlen részekről kap figyelmeztetést (src/docx/anonymize.ts:120-128). Egy iratban a beszkennelt aláírás, a fényképezett tanúsítvány vagy egy képernyőkép ugyanúgy tartalmazza a nevet, mint a törzsszöveg, a JPEG EXIF-je ráadásul hordozhat szerzőt, gépnevet és GPS-koordinátát — EXIF-kezelés az egész src/docx/ fában nincs (nulla grep-találat). Ellenpont ugyanebben a fájlban: a `docProps/thumbnail`-t helyesen töröljük, épp azzal az indokkal, hogy „a neveket KÉPKÉNT tartalmazza” (parts.ts:128-133) — ugyanez az érv áll a `word/media/` tartalmára.",
+  "bizonyíték": "src/docx/parts.ts:134: `{ test: /^word\\/media\\//i, kind: 'media', profile: EMPTY_PROFILE }` — nincs `note` mező. A figyelmeztetések forrása src/docx/anonymize.ts:121-129, ami csak az `embedding` és az `unclassified` részekre ír ki sort. Ellenpont ugyanott: parts.ts:128-133 (thumbnail, „a neveket KÉPKÉNT tartalmazza, ezért töröljük\").",
+  "súly": "fontos",
+  "munka": "kicsi",
+  "fájlok": [
+   "src/docx/parts.ts",
+   "src/docx/anonymize.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "helyesseg",
+  "cím": "A nyelvi modell hibája csendben visszaesik a szabályalapú felismerésre",
+  "hiány": "Ha a modell betöltése vagy futtatása elszáll, a `catch` (electron/main.ts:267-275) csak beír egy `modelNote` szöveget, a `finally` elengedi a klienst, és a 279. sor `detectParties(text, { modelEntities, homonyms })` `modelEntities: undefined`-dal fut tovább — pontosan ugyanaz a kódág, mint amikor a modell nincs is letöltve (main.ts:257-260). A 280. sorbeli `modelUsed: Boolean(modelEntities)` a két esetet a felület felé megkülönböztethetetlenné teszi. A modell viszont a felismerés MOTORJA: nélküle csak a szerkezeti minták („Felperes:”, „anyja neve:”) találnak feleket, tehát a szövegben elszórt nevek jó része felfedezetlen marad. PONTOSÍTÁS a másik ügynökhöz képest: a felületen a hiba nem pontosan ugyanolyan súlyú, mint a siker — ui/src/dialogs.tsx:95 a `note ${detected.modelUsed ? 'good' : ''}` osztályt adja, tehát a siker zöld, a hiba semleges szürke doboz (nem 'bad' piros). A lényeg viszont áll: a `grep -rn \"modelNote|modelUsed\" ui/src/` szerint ez az egyetlen megjelenítési pont az egész felületen, a fél-jóváhagyó ablakban, és sem az exportgombig, sem az exportablakig, sem a jegyzőkönyvig nem jut el a jelzés. Egy kitakaró programban a felismerő motor kiesése megállító esemény, nem lábjegyzet.",
+  "bizonyíték": "electron/main.ts:267-275: `} catch (err) { modelNote = \\`A nyelvi modell nem futott le: ...\\`; } finally { await modelClient?.dispose().catch(() => undefined); ... }` majd 279. sor: `const result = detectParties(text, { modelEntities, homonyms });` változatlanul lefut. A megjelenítés: ui/src/dialogs.tsx:100-103.",
+  "súly": "fontos",
+  "munka": "kicsi",
+  "fájlok": [
+   "electron/main.ts",
+   "ui/src/dialogs.tsx"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "helyesseg",
+  "cím": "A kulcsfájl jelszavát csak a felület ellenőrzi, a főfolyamat üres jelszót is elfogad",
+  "hiány": "A `session.export` a `writeKeyFile(opts.outputPath, this.lastAssignments, opts.keyPassphrase ?? '')` hívással (src/app/session.ts:365) üres karakterláncot ad tovább, ha nem érkezett jelszó, és a `writeKeyFile` (src/app/keyfile.ts:26-46) ezt kérdés nélkül elfogadja: a `passphrase` paraméter validálás nélkül megy a 43. sorbeli `scryptSync`-be. A kulcsfájl formálisan AES-256-GCM-mel titkosított lesz, valójában bárki kinyithatja, hiszen az üres jelszó az első tipp. A 8 karakteres minimumot kizárólag a React gomb `disabled` feltétele érvényesíti (ui/src/dialogs.tsx:518), a bizalmi határ rossz oldalán — a `doc:export` IPC-kezelő (electron/main.ts:315-322) tetszőleges `ExportOptions`-t elfogad, és sem ott, sem a `session.export`-ban nincs ellenőrzés. A `writeKeyFile`-nak magának kell megtagadnia a rövid vagy üres jelszót (és érdemes a `readKeyFile`-t is megnézni, az sem validál).",
+  "bizonyíték": "src/app/session.ts:365: `keyPath = await writeKeyFile(opts.outputPath, this.lastAssignments, opts.keyPassphrase ?? '');`. src/app/keyfile.ts:26-43 — a `passphrase: string` paramétert semmi nem validálja, egyenesen a `scryptSync`-be megy. Az egyetlen ellenőrzés: ui/src/dialogs.tsx:518 `disabled={busy || (keepKey && pass.length < 8)}`.",
+  "súly": "fontos",
+  "munka": "kicsi",
+  "fájlok": [
+   "src/app/session.ts",
+   "src/app/keyfile.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "helyesseg",
+  "cím": "Megíratlan ág: a parties:suggest kezelő mindig üres listát ad vissza",
+  "hiány": "A `parties:suggest` IPC-kezelő (electron/main.ts:337-343) fölött háromsoros magyar kommentár írja le, mit kellene csinálnia („a 'Felperes:', 'I. rendű alperes:' típusú rovatok mögötti neveket”), a törzse viszont két azonos ágból áll — `if (!lastAnalysis && !session) return []` majd `return []` —, tehát a feltétel teljesen felesleges. A `void lastInput;` (main.ts:345) ugyanennek a félkész állapotnak a nyoma. PONTOSÍTÁS a másik ügynökhöz képest: a `suggestParties` név tényleg ki van vezetve a preload-on (electron/preload.ts:35) és az api-típuson (ui/src/api.ts:105), de EGYETLEN felületi komponens sem hívja meg (a teljes grep három találata: api.ts típus, devMock.ts:224 mock, preload bridge) — a felhasználó tehát nem lát elromlott funkciót, ez döglött kód és befejezetlen csonk, nem aktív hibaforrás. Vagy meg kell írni (a src/app/detect.ts már tudja, amire szükség van), vagy le kell venni a preload-ról és az api-típusról, hogy ne látsszon meglévő funkciónak.",
+  "bizonyíték": "electron/main.ts:337-343: `ipcMain.handle('parties:suggest', () => { ... if (!lastAnalysis && !session) return [] as PartyInput[]; return [] as PartyInput[]; });` — a két ág azonos. Kivezetve: electron/preload.ts:35, ui/src/api.ts:105.",
+  "súly": "jó-lenne",
+  "munka": "kicsi",
+  "fájlok": [
+   "electron/main.ts",
+   "electron/preload.ts",
+   "ui/src/api.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "helyesseg",
+  "cím": "Minden nem .pdf és nem .docx fájl UTF-8 szövegként olvasódik be, ellenőrzés nélkül",
+  "hiány": "A formátum meghatározása pusztán a kiterjesztésből történik (src/app/session.ts:122), és minden más eset a `txt` ágra esik, ami a nyers bájtokat `Buffer.from(this.bytes).toString('utf8')`-cal szöveggé alakítja (session.ts:169-172) — semmilyen bájtaláírás-ellenőrzés nincs. Egy .doc, .rtf vagy .odt fájl esetén ez értelmezhetetlen kacatot ad, amiben a matcher semmit nem talál, a program viszont végigmegy a folyamaton, és 0 találattal, „tiszta” ellenőrzéssel ír ki egy szöveges fájlt. A `doc:open` IPC (electron/main.ts:234-238) bármilyen útvonalat elfogad, ellenőrzés nélkül. PONTOSÍTÁS a másik ügynök leírásához: a megnyitó párbeszéd szűrői (main.ts:220-232) csak pdf/docx/txt változatokat kínálnak, „minden fájl” lehetőség NINCS köztük — a valós elérési út az, hogy a Windows fájlpárbeszédbe a felhasználó begépelhet tetszőleges fájlnevet vagy helyettesítő karaktert, illetve átnevezett fájlt választ; a felületi dropzone (ui/src/App.tsx:430-441) nem ad át útvonalat, csak megnyitja a párbeszédet. Az ellenpélda a helyes viselkedésre igazolt: src/docx/zip.ts:288-291, :298-300, :309-311 és a src/docx/parts.ts:194-203 `assertDocx` mind hangosan elszáll — de csak a .docx ágon. A `fromBytes`-nak fel kell ismernie a bájtaláírásból (pl. `D0CF11E0` OLE, `{\\rtf`, `PK` ZIP), hogy amit kapott, nem sima szöveg, és ugyanígy el kell szállnia.",
+  "bizonyíték": "src/app/session.ts:122-123: `const format = ext === '.pdf' ? 'pdf' : ext === '.docx' ? 'docx' : 'txt';` és 170-172: `if (format === 'txt') { this.units.push({ page: 0, text: Buffer.from(this.bytes).toString('utf8') }); return; }`. Ellenpélda a helyes viselkedésre: src/docx/zip.ts:288-291 és 302-306.",
+  "súly": "jó-lenne",
+  "munka": "kicsi",
+  "fájlok": [
+   "src/app/session.ts",
+   "electron/main.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "azonositok",
+  "cím": "Nincs SEMMILYEN számformátumú azonosító-felismerés a kódban (adóazonosító, TAJ, bankszámla, adószám, hrsz, telefonszám)",
+  "hiány": "Helytálló. Két pontosítás. (a) A src/hu/identifiers.ts nem 'félrevezető nevű üres modul': egy valódi, végig bekötött funkciója van (névrészlet átírása e-mailben/URL-ben), a lánc matcher.ts:322 findEmbeddedIdentifiers → Match.core='identifier' → pseudonym.ts:435 rewriteEmbeddedIdentifier. Csak épp ez NEM azonosító-felismerés, hanem név-felismerés azonosítón belül. (b) A 'nulla darab [0-9]' megfogalmazás pontatlan: `0-9` szerepel az IDENTIFIER_TOKEN karakterosztályában és a matcher.ts:61-62 szóhatár-lookaroundjaiban is — csak épp egyik sem AZONOSÍTÓT keres. A következtetés (minden számjegy-azonosító változatlanul átmegy a kimeneten) változatlanul igaz.",
+  "bizonyíték": "src/hu/identifiers.ts:43 — `export const IDENTIFIER_TOKEN = /[...]+@[...]|(?:https?:\\/\\/|www\\.)[^\\s,;)]+/g;` — ez a program EGYETLEN azonosító-mintája. samples/kolcsonszerzodes.txt: „adóazonosító jel: 8442130976; bankszámlaszám: 10402142-49575354-56561008; IBAN: HU42 1040 2142 4957 5354 5656 1008; telefonszám: +36 30 412 7758”",
+  "súly": "blokkoló",
+  "munka": "nagy",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/hu/identifiers.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/hu/matcher.ts",
+   "F:/Projects/Szivecske-Anonymizer/samples/kolcsonszerzodes.txt"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "azonositok",
+  "cím": "Adóazonosító jel és TAJ-szám: nincs felismerés és nincs ellenőrzőszám-számítás (mod-11, illetve CDV)",
+  "hiány": "Helytálló, de egy KRITIKUS gyakorlati kiegészítéssel: a program saját mintairataiban szereplő azonosítók többsége ÉRVÉNYTELEN ellenőrzőszámú. Kiszámoltam: adóazonosító 8442130976 → mod-11 számított 7, tényleges 6 (érvénytelen); 8391764205 → számított 6, tényleges 5 (érvénytelen); 8517029364 → számított 4, tényleges 4 (érvényes). TAJ 041 273 856 → CDV 6 = tényleges 6 (érvényes). Vagyis ha az ellenőrzőszámot HARD KAPUKÉNT építik be (csak érvényes szám a találat), a saját mintairat három adóazonosítójából kettőt nem talál meg a program, és a fejlesztő azt hiszi, működik. Az ellenőrzőszám tehát MEGBÍZHATÓSÁGI PONT legyen (érvényes → auto, érvénytelen de kontextusban áll → review), ne szűrő — vagy előbb újra kell generálni a mintairatok számait érvényes ellenőrzőszámmal. A címke-kontextus ('adóazonosító jel:', 'TAJ szám:') önmagában erősebb jel, mint az ellenőrzőszám. A szóközös TAJ-alakra vonatkozó megjegyzés helyes (a mintában '041 273 856').",
+  "bizonyíték": "samples/kolcsonszerzodes.txt: „adóazonosító jel: 8442130976”, „TAJ szám: 041 273 856”; samples/itelet.txt: „adóazonosító jel: 8442130976 …; TAJ szám: 041 273 856”. A kódban a „TAJ”, „adóazonosító” szó SEHOL nem szerepel keresőmintaként — egyetlen előfordulása egy megbízhatósági pontszám-heurisztika: src/hu/matcher.ts:414 `/szül|anyja neve|lakcím|lakos|adóazonosító/i.test(after)` — ez csak a NÉV magabiztosságát növeli, magát az azonosítót nem érinti.",
+  "súly": "blokkoló",
+  "munka": "közepes",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/hu/identifiers.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/hu/matcher.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "azonositok",
+  "cím": "Az ellenőrző kör (verify.ts) VAK a számokra — a kiszivárgott azonosítót nem látja, mégis tisztát jelent",
+  "hiány": "Helytálló, sorszám-pontosítással: az `ok: leaks.length === 0` a src/verify.ts:115 (nem 127). Két apró technikai pontosítás a minta-elemzésben: (a) a '356214KA'-t nem csak a lookbehind zárja ki, hanem a `{2,}` is — a 'K' után csak EGY betű ('A') áll, tehát a minta kétszeresen is elbukik; (b) ugyanez igaz a 'HU42'-re. A következtetés így még erősebb. Érdemes hozzátenni, hogy a hamis biztonság végpontja a src/app/session.ts:516 certificate() sora, ami szó szerint 'tiszta'-t ír a jegyzőkönyvbe.",
+  "bizonyíték": "src/verify.ts:63-66 — `const CAPITALIZED = new RegExp(`(?<![${HU_LETTER_CLASS}0-9])([A-ZÁÉÍÓÖŐÚÜŰ][${HU_LETTER_CLASS}]{2,})`, 'g');` és src/hu/phonology.ts:34 — `HU_LETTER_CLASS = 'A-Za-zÁÉÍÓÖŐÚÜŰáéíóöőúüű'` (számjegy NINCS benne). src/verify.ts:127 — `ok: leaks.length === 0` — a leaks csak a SeedMatcher névtalálataiból áll.",
+  "súly": "blokkoló",
+  "munka": "közepes",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/verify.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/hu/phonology.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "azonositok",
+  "cím": "Lakcím, irányítószám és telefonszám: nincs felismerés — a helységnevet lecseréljük, a házszámot bent hagyjuk",
+  "hiány": "Helytálló. Kiegészítés a hatás pontosításához: a helységnév cseréje a modelltől függ (src/app/detect.ts:548-553), tehát ha a useModel ki van kapcsolva vagy a modell nincs letöltve, még a településnév sem cserélődik — akkor a cím teljes egészében bent marad. A 'félig cserélt' forgatókönyv tehát a JÓ eset. Az irányítószám kiemelten fontos: nem elég a helységnevet cserélni, mert a 2000/2011 irányítószám önmagában visszaadja Szentendrét/Budakalászt, és a program jelenleg még a helyettesített helységnév mellett is bent hagyja.",
+  "bizonyíték": "samples/kolcsonszerzodes.txt: „lakcím: 2011 Budakalász, Szentendrei út 78/B. II. em. 5.; … telefonszám: +36 20 336 4471”. A kódban a „lakcím” szó egyetlen működő előfordulása egy magabiztosság-növelő heurisztika (src/hu/matcher.ts:414), a másik kettő puszta kommentár (src/pseudonym.ts:538, src/verify.ts:101). Cserélő ág sehol.",
+  "súly": "blokkoló",
+  "munka": "közepes",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/hu/identifiers.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/hu/matcher.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "azonositok",
+  "cím": "Bankszámlaszám és IBAN: nincs felismerés, pedig mindkettőnek van ellenőrzőszáma",
+  "hiány": "A hiány valós, de az ELLENŐRZŐSZÁMRA vonatkozó rész gyakorlatilag megbukik a saját mintairaton. Kiszámoltam: a 10402142-49575354-56561008 három 8-as blokkjából csak az ELSŐ (10402142) érvényes GIRO-ellenőrzőszámú, a 49575354 és az 56561008 nem; ugyanez a 10300002-10517493-49020015-nél (csak az első blokk jó). Az IBAN HU42 1040 2142 4957 5354 5656 1008 mod-97 maradéka 64, nem 1 — tehát ÉRVÉNYTELEN. Vagyis a 'az IBAN mod-97 gyakorlatilag hamis találat nélkül működik' állítás igaz elvben, de ha kapuként építik be, a program a saját mintairatának IBAN-ját NEM fogja megtalálni, és a fejlesztő tesztje zölden fut, miközben a funkció nem véd. Konklúzió: vagy a mintairatok számait kell újragenerálni érvényes ellenőrzőszámmal (ez a helyes lépés, hiszen fiktív irat), vagy az ellenőrzőszám csak magabiztossági pont lehet a formátum + címke-kontextus mellett.",
+  "bizonyíték": "samples/kolcsonszerzodes.txt: „bankszámlaszám: 10402142-49575354-56561008; IBAN: HU42 1040 2142 4957 5354 5656 1008”, valamint „…10300002-10517493-49020015 számú bankszámlájára”; samples/itelet.txt: „a felperes 10402142-49575354-56561008 számú bankszámlájára”. Kódbeli felismerés: nincs.",
+  "súly": "blokkoló",
+  "munka": "közepes",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/hu/identifiers.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "azonositok",
+  "cím": "Cégjegyzékszám és adószám: nincs felismerés (az adószámnak is van mod-11 ellenőrzőszáma)",
+  "hiány": "Helytálló, ugyanazzal az ellenőrzőszám-figyelmeztetéssel, mint a 2. és 5. pontnál: a mintairat 24817350-2-13 adószámának törzsszáma mod-11 szerint 6-os ellenőrzőjegyet kívánna, de 0 áll a 8. helyen — vagyis ÉRVÉNYTELEN. Ellenőrzőszám-kapuval a program a saját mintairatának adószámát sem találná meg. A cégjegyzékszámnak (13-09-184627) egyébként NINCS ellenőrzőszáma, ott a cégbíróság-kód (01-20) és a cégforma-kód érvényessége az egyetlen szűrő — ezt a leírás helyesen írja. A konzisztens csere követelménye (ugyanaz a cég = ugyanaz az álszám) helyes, de ehhez előbb a 11. pont szerinti `identifier` entitásfajta kell.",
+  "bizonyíték": "samples/kolcsonszerzodes.txt: „az Aranykalász Agrár Kft. (székhely: 2011 Budakalász, Malom köz 6.; cégjegyzékszám: 13-09-184627; adószám: 24817350-2-13; képviseli: ifj. Balogh Gábor ügyvezető)”; samples/itelet.txt ugyanezekkel a számokkal. A kódban a `COMPANY_FORM` minta (src/app/detect.ts) csak a cég NEVÉT ismeri fel, a zárójeles azonosítókat nem.",
+  "súly": "fontos",
+  "munka": "közepes",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/hu/identifiers.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/app/detect.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "azonositok",
+  "cím": "Helyrajzi szám: nincs felismerés — a település álnevesítése után is egyértelműen azonosítja az ingatlant",
+  "hiány": "Helytálló, változtatás nélkül. Egy technikai megjegyzés a megvalósításhoz: mivel a településnevet a modell külön entitásként ('place') már cseréli, a hrsz-mintának a településnévvel EGYBEN, egyetlen átfedő találatként kell indulnia, különben a matcher.ts covered-tömbje (isCovered/mark, matcher.ts:462-470) az egyiket eldobja — a hrsz-találatot a helynév-találat ELŐTT kell felvenni, hogy a hosszabb tartomány nyerjen.",
+  "bizonyíték": "samples/itelet.txt: „a Szentendre belterület 4127/8. hrsz. alatti ingatlanát”; samples/kolcsonszerzodes.txt: „a Budakalász belterület 2318/4. hrsz. alatti ingatlan az ő tulajdonában áll”. A „hrsz” karaktersor a teljes src/ fában nem fordul elő.",
+  "súly": "fontos",
+  "munka": "közepes",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/hu/identifiers.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "azonositok",
+  "cím": "Személyazonosító igazolvány és jogosítvány száma: nincs felismerés (6 jegy + 2 betű)",
+  "hiány": "Helytálló. Egy pontosítás: a magyar személyazonosító igazolvány száma 6 számjegy + 2 betű, a vezetői engedélyé viszont ma jellemzően 2 betű + 6 számjegy (régi kártyákon fordítva) — a mintát mindkét sorrendre érdemes vinni. A kontextushoz kötés indoklása helyes és fontos, mert ellenőrzőszám tényleg nincs; a horgonyszavak közé az 'szig. sz.', 'ig. sz.', 'okmányazonosító' alakok is kellenek.",
+  "bizonyíték": "samples/kolcsonszerzodes.txt vége: „1. tanú / neve: KISS ERIKA / lakcíme: 2000 Szentendre, Kőzúzó utca 3. / személyazonosító igazolvány száma: 356214KA” és „2. tanú … személyazonosító igazolvány száma: 481029ZE”. A kódban „igazolvány” sehol nem szerepel.",
+  "súly": "fontos",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/hu/identifiers.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "azonositok",
+  "cím": "Bírósági ügyszám: nincs felismerés — pedig egyetlen ügyszámból az egész per visszakereshető",
+  "hiány": "Helytálló. A 'tudatos döntés kell' keretezés a leglényegesebb rész: a `role` (OBH) módban az ügyszám jellemzően BENT MARAD az anonimizált határozaton (a BHGY-ben közzétett határozatokon is szerepel), a `theme` módban (belső/LLM-es használat) viszont ki kell cserélni. Jelenleg egyik sem történik, mert a program nem is tudja, hogy ügyszámot lát — a kimaradás tehát nem 'megtartás', hanem vakfolt. A minta ügyszak-betűlistája helyes; a lajstromszám előtti bíróságkód és a záró sorszám ('/8.') is a mintához tartozik.",
+  "bizonyíték": "samples/itelet.txt első két sora: „Szentendrei Járásbíróság” / „12.P.20.845/2026/8.”. Az „ügyszám” szó a teljes src/ fában nem fordul elő; a verify.ts sem jelöli meg, mert számjeggyel kezdődik.",
+  "súly": "fontos",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/hu/identifiers.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/verify.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "azonositok",
+  "cím": "A születési dátum és az összegek kapcsolója HALOTT: a beállítás létezik, a UI-ban ki-be kapcsolható, de a motor soha nem olvassa",
+  "hiány": "Helytálló, és a leírt súlyosság indokolt: ez az egyetlen tétel a listán, ami AKTÍVAN téveszt, nem csak hiányzik. A beállítás nem 'félkész', hanem teljesen halott: bekapcsolva elmentődik a beállításfájlba, visszaolvasódik, a checkbox pipálva marad — a felhasználó minden visszajelzést megkap arról, hogy a funkció él. Két lehetséges javítás, és a döntés sürgős: (a) a kapcsolók azonnali eltávolítása / letiltása 'hamarosan' felirattal, vagy (b) a funkció megírása. A (a) egy órás munka és azonnal megszünteti a megtévesztést; a (b) hetes nagyságrend. A dátumeltolás egyébként a legkényesebb: a settings.tsx szövege maga figyelmeztet arra, hogy a határidő-számítás elcsúszik — ez a figyelmeztetés jelenleg egy nem létező funkcióról szól.",
+  "bizonyíték": "src/app/settings.ts:35 `replaceAmounts: boolean;` és :37 `shiftDates: boolean;`; ui/src/settings.tsx:223 és :238 a két checkbox. A `grep -rn \"replaceAmounts|shiftDates\" src/ electron/ ui/src/` KIZÁRÓLAG a definíciót, a `pick()` validálót, a devMock-ot és a két checkboxot adja vissza — sem a session.ts, sem a pseudonym.ts, sem az electron/main.ts nem olvassa. samples/kolcsonszerzodes.txt: „születési hely és idő: Vác, 1968. április 3.”",
+  "súly": "fontos",
+  "munka": "nagy",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/app/settings.ts",
+   "F:/Projects/Szivecske-Anonymizer/ui/src/settings.tsx",
+   "F:/Projects/Szivecske-Anonymizer/src/pseudonym.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/app/session.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "azonositok",
+  "cím": "A „type” (adatfajta) csere-mód nem tud azonosító-címkét adni — a saját dokumentációjában szereplő [lakcím] címkét a kód nem képes előállítani",
+  "hiány": "A `pseudonym.ts` fejléc-kommentje és a `bracketed()` doksija is `[lakcím]`-mel példálózik, a verify.ts kommentje szintén („A szögletes zárójeles címkék ([NÉV-1], [lakcím]) a mi cseréink”). A valóságban a `TYPE_LABEL` tábla mindössze három bejegyzést tartalmaz — person/org/place —, és a `SeedEntity['kind']` típus is csak ezt a hármat engedi. Vagyis az OBH 4/2021 §10(2) szerinti adatfajta-megjelölés (`[lakcím]`, `[adóazonosító jel]`, `[TAJ-szám]`, `[bankszámlaszám]`) SZERKEZETILEG nem hozható létre. Ez mutatja, hogy az azonosító mint önálló entitásfajta végig hiányzik a modellből: a `MatchRow`/`SeedEntity` láncot ki kell egészíteni egy `identifier` fajtával és annak altípusaival, mielőtt bármelyik minta bekerülhetne.",
+  "bizonyíték": "src/pseudonym.ts:414-418 — `const TYPE_LABEL: Record<SeedEntity['kind'], string> = { person: 'név', org: 'szervezet', place: 'helység' };` szemben a src/pseudonym.ts:7 kommenttel: „ 'type' adatfajta neve ([lakcím]) — védett adatokra, OBH 4/2021 §10(2)”. src/app/types.ts:8 — `export type EntityKind = 'person' | 'org' | 'place';`",
+  "súly": "fontos",
+  "munka": "nagy",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/pseudonym.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/app/types.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/verify.ts"
+  ],
+  "ellenőrizve": false
+ },
+ {
+  "terület": "azonositok",
+  "cím": "Az EU PII-modell azonosító-találatait a labelMap némán eldobja — a modell leírása azonosítókat ígér, a kód kidobja őket",
+  "hiány": "Helytálló, de a 'majdnem ingyen elérhető nyereség' megállapítás TÚLZOTTAN OPTIMISTA — találtam egy harmadik dobási pontot, amit a másik ügynök kihagyott: src/app/detect.ts:548 `if (e.label === 'other') continue;`. Vagyis még ha a labelMapba fel is vennénk az EMAIL/PHONE/ID_NUMBER címkéket, a src/ai/types.ts:10 EntityLabel csak 'person'|'org'|'place'|'other' értéket enged, az 'other' pedig a detect.ts-ben azonnal eldobódik; a detect.ts:553 sor ráadásul minden nem-person/nem-org címkét 'place'-re kényszerít. A bekötés tehát NÉGY helyen igényel változtatást (EntityLabel bővítés, labelMap, a két extractor, detect.ts), és előfeltétele a 11. pont szerinti EntityKind-bővítés. A UI-jelzés igénye (melyik modell mit tud) jogos: a models.ts:101 leírás jelenleg olyat ígér, amit a program eldob.",
+  "bizonyíték": "src/app/models.ts:100-101 (leírás: „összegeket, dátumokat és azonosítókat”) szemben src/app/models.ts:114-122 (labelMap, csak névjellegű címkék). A dobás helye: src/ai/tokenClassifier.ts:141-142 — `const label = this.cfg.labelMap[t.label]; if (!label) continue;` és ugyanez src/ai/hubertNer.ts:215.",
+  "súly": "fontos",
+  "munka": "közepes",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/app/models.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/ai/tokenClassifier.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/ai/hubertNer.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "azonositok",
+  "cím": "Az e-mail cím csak akkor kerül elő, ha egy fél neve van benne — és a 4 betűs alsó korlát miatt a rövid magyar vezetéknevek kiesnek",
+  "hiány": "A hiány valós, de a PÉLDÁK EGYIKE HIBÁS. Az `info@aranykalasz.hu` MEG LENNE találva: az Aranykalász Agrár Kft. org-entitás, a stripCompanyForm után az 'aranykalasz' (11 betű) és 'agrar' (5 betű) is fragmentként bekerül, a domain pedig tartalmazza az 'aranykalasz'-t — a szűrés a TOKEN egészére, nem csak a helyi részre néz. Helyes példák a valóban kieső esetekre: `iroda@sarkoziugyved.hu` (az ügyvéd a keepList-en van, nem félként, ezért nincs is fragmentje), `titkarsag@drhorvathiroda.hu`, és bármely harmadik személy címe. A MIN_FRAGMENT = 4 küszöbre vonatkozó rész pontos és önállóan is valós szivárgás: a Kis/Tar/Bán/Vas/Tót/Kun vezetéknév 3 betűs, tehát soha nem kerül be a fragments listába — ez nem csak az e-mailt érinti, hanem a matcher.ts:277 findAccentStripped ékezettelen keresését is. Az ajánlott kétlépcsős megoldás (az e-mail önálló azonosítóként való felismerése, utána a névtöredékes átírás vagy teljes csere) helyes.",
+  "bizonyíték": "src/hu/identifiers.ts:54 `const MIN_FRAGMENT = 4;` és :65 `if (needle.length >= MIN_FRAGMENT) out.push(...)`; src/hu/matcher.ts findEmbeddedIdentifiers — csak `findIdentifiersWithNames(norm.text, this.fragments)` találatait veszi át, tehát fragment-egyezés nélkül nincs találat. samples/itelet.txt: „dr. Sárközi Tamás ügyvéd (Sárközi Ügyvédi Iroda, …)” — az ilyen iroda-e-mailek egy valós iratban végig ott vannak a fejlécben.",
+  "súly": "fontos",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/hu/identifiers.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/hu/matcher.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "azonositok",
+  "cím": "Rendszám: nincs felismerés (a régi ABC-123 és az új AABB-123 alak sem)",
+  "hiány": "A hiány valós, de a BIZONYÍTÉK NEM AZ: a samples/itelet.txt:50 idézett mondata ('Fehér színű tehergépjárművének értékesítésére az I. rendű alperes ígéretet tett') semmilyen rendszámot NEM tartalmaz — a program mintairataiban egyetlen rendszám sincs. Ez tehát tisztán jövőbeli lefedettségi hiány, nem mérhető szivárgás a jelenlegi mintákon, és emiatt a lista alsó felébe való. A prioritás így egyértelműen a mérhető szivárgást okozó tételek (1-9) mögé kerül. A kontextushoz kötés indoklása ('rendszám', 'forgalmi rendszám', 'frsz.') helyes és szükséges. Külön figyelmeztetés: a mondatban szereplő 'Fehér' szó a mintairat egy VALÓDI szereplőjének (anyja neve: Fehér Ilona) vezetéknevével azonos alakú — ez a homonima-kezelés (matcher.ts homonyms + scoreContext) tesztesete, nem rendszám-ügy.",
+  "bizonyíték": "samples/itelet.txt 14. pont: „Fehér színű tehergépjárművének értékesítésére az I. rendű alperes ígéretet tett”. A „rendszám” karaktersor a teljes src/ fában nem fordul elő.",
+  "súly": "jó-lenne",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/hu/identifiers.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "azonositok",
+  "cím": "KASZ (ügyvédi kamarai azonosító): nincs felismerés — tudatos döntés kell, nem véletlen kimaradás",
+  "hiány": "Helytálló, és a másik ügynök helyesen minősíti a lista legalacsonyabb prioritású elemének: itt a MEGTARTÁS a valószínűleg helyes válasz (Bszi. 166. § (2) alapján az eljáró ügyvéd neve bent marad, tehát a KASZ-a is). A valódi tétel nem szivárgás, hanem LÁTHATÓSÁG: a KASZ jelenleg nem jelenik meg a keepList-en tudatosan meghagyott elemként. A leírás egy dolgot alábecsül: az irodacím (samples/itelet.txt:4 '1052 Budapest, Városház utca 12.') ugyanúgy kezeletlenül marad, mint a KASZ, és ott ugyanez a 'megtartás vagy csere' döntés áll fenn — a két dolgot együtt kell eldönteni. A 8 jegyű puszta szám mintája önmagában használhatatlan (ráugrana mindenre), kizárólag a 'KASZ:' horgonyszóhoz kötve működik.",
+  "bizonyíték": "samples/itelet.txt: „dr. Sárközi Tamás ügyvéd (Sárközi Ügyvédi Iroda, 1052 Budapest, Városház utca 12., KASZ: 36114927)” és „dr. Illés Katalin ügyvéd (…, KASZ: 36207518)”. src/app/detect.ts a `lawyerRe` mintával csak az ügyvéd NEVÉT teszi a keepList-re, a zárójeles KASZ-t és irodacímet nem érinti.",
+  "súly": "jó-lenne",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/app/detect.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/hu/identifiers.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "azonositok",
+  "cím": "Az „anyja neve” felismerés MŰKÖDIK, de csak a kettőspontos rovatalakra — a gyakori változatokra nem",
+  "hiány": "Ez a lista egyetlen olyan eleme, ami valóban működik: a `motherRe` megtalálja az „anyja neve: Fehér Ilona” rovatot, félként veszi fel „anyja neve” szereppel, és a leánykori név önálló előfordulását is kezeli (src/hu/names.ts:239). Ezt nem kell újraírni. A minta viszont kötelezően megköveteli a kettőspontot és a pontos „anyja neve” szókapcsolatot, így nem fogja meg a szintén gyakori „anyja születési neve:”, „an.:”, „a. n.:”, „szül. anyja neve” és a kettőspont nélküli, táblázatcellás alakot. Ezekben az esetekben a védőháló a nyelvi modell (a nevet személyként megtalálja), de a SZEREP elveszik — az „anyja neve” rovat tartalma pedig az egyik legérzékenyebb adat, amit nem szabad az „egyéb” kategóriára bízni.",
+  "bizonyíték": "src/app/detect.ts:278 — `const motherRe = new RegExp(`anyja[ \\t]+neve[ \\t]*:[ \\t]*(${NAME_WORD}(?:[ \\t]+${NAME_WORD}){1,2})`, 'g');` — a `:` kötelező, és a „születési” szó beékelődése esetén a minta nem illeszkedik. samples/kolcsonszerzodes.txt: „anyja neve: Fehér Ilona” (ez illeszkedik).",
+  "súly": "jó-lenne",
+  "munka": "kicsi",
+  "fájlok": [
+   "F:/Projects/Szivecske-Anonymizer/src/app/detect.ts",
+   "F:/Projects/Szivecske-Anonymizer/src/hu/names.ts"
+  ],
+  "ellenőrizve": false
+ },
+ {
+  "terület": "jogi",
+  "cím": "A jegyzőkönyv-fájl titkosítatlanul a kimenet mellé írja a teljes ki-kicsoda táblát",
+  "hiány": "Megerősítve, sőt a helyzet a leírtnál élesebb: a jegyzőkönyv MAGA mondja ki ugyanazon a lapon az ellentmondást — a session.ts:508 sora `Kulcsfájl: nem készült (visszafordíthatatlan)` szöveget ír, majd 12 sorral lejjebb kiírja a teljes `eredeti név → álnév` SZEREPLAP-ot titkosítatlanul. A fájl kitalálható néven (`<kimenet>-jegyzokonyv.txt`), a kimenet mellé, mindkét módban elkészül, és sem az ExportResult, sem a mentés utáni párbeszédablak nem említi a létezését.",
+  "bizonyíték": "electron/main.ts:318-321: `const certPath = `${opts.outputPath.replace(/\\.[^.]+$/, '')}-jegyzokonyv.txt`; writeFileSync(certPath, result.certificate, 'utf8');` — nincs `if (opts.keepKey)` őr. A tartalom src/app/session.ts:521-522: `for (const a of this.lastAssignments.values()) { lines.push(`  ${a.original.padEnd(34)} → ${a.display}`); }`. Ellentmondó felületi szöveg: ui/src/dialogs.tsx:444 „Kulcsfájl nem készült: a csere visszafordíthatatlan.\"",
+  "súly": "blokkoló",
+  "munka": "kicsi",
+  "fájlok": [
+   "electron/main.ts",
+   "src/app/session.ts",
+   "ui/src/dialogs.tsx",
+   "src/app/types.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "jogi",
+  "cím": "Az ellenőrző kör PDF-nél nem a kész fájlt olvassa vissza, de a felület azt állítja, hogy igen",
+  "hiány": "Megerősítve. Pontosítás: nemcsak PDF-nél — a `verifyOutput` MINDEN formátumnál a szándékszöveget kapja (DOCX-nél is a `texts.join('\\n\\n')` a memóriából, session.ts:391-419; TXT-nél az `anonymizedText()`). A kész fájl bájtjait egyedül a DOCX `findResidue` nézi, az viszont a 3. találat szerint feltételes. A metaadat-ígéret pedig egyik formátumnál sem teljesül: a PDF Info dictet a kód tisztítja (session.ts:485-491), de utána senki nem ellenőrzi, és XMP streamhez hozzá sem nyúl.",
+  "bizonyíték": "src/app/session.ts:464 `producedText.push(lines.join('\\n'));` majd :495 `const bytes = await doc.save(...)` és :496 `return { bytes, text: producedText.join('\\n\\n') };` — a szöveg a mentés ELŐTT áll elő. Ezt kapja a :358 `verifyOutput(outputText, ...)`. Ezzel szemben ui/src/dialogs.tsx:390: „Az ellenőrzés a <b>kész fájlt</b> olvasta vissza, nem azt, amit beleírtunk.\" és :397-398: „egyetlen eredeti név sem maradt benne — sem a szövegben, sem a metaadatban.\"",
+  "súly": "blokkoló",
+  "munka": "nagy",
+  "fájlok": [
+   "src/app/session.ts",
+   "src/verify.ts",
+   "ui/src/dialogs.tsx"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "jogi",
+  "cím": "A DOCX nyers-bájtos szivárgásvizsgálat csak akkor fut le, ha egyetlen eldöntetlen találat sincs",
+  "hiány": "Megerősítve, változtatás nélkül. Kiegészítés: mivel a helyette futó `verifyOutput` a memóriabeli szándékszöveget kapja (lásd 2. pont), részlegesen átnézett iratnál a mentés a szövegdobozok, fejlécek és OLE-részek felől NULLA tényleges ellenőrzéssel fut le.",
+  "bizonyíték": "src/app/session.ts:411-414: `const pendingMatches = this.lastMatches.filter(({ row }) => !isAccepted(row)); const forbidden: string[] = []; if (pendingMatches.length === 0) { ... }` — üres `forbidden` esetén src/docx/anonymize.ts:239 `if (opts.forbidden !== undefined && opts.forbidden.length > 0)` miatt a :242 `findResidue(ZipArchive.open(out), opts.forbidden)` el sem indul.",
+  "súly": "fontos",
+  "munka": "közepes",
+  "fájlok": [
+   "src/app/session.ts",
+   "src/docx/anonymize.ts",
+   "src/docx/sanitize.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "jogi",
+  "cím": "A Bszi. szerinti megtartandó névlista soha nem jut el az ellenőrző körhöz, és a maradványlista 40-nél némán csonkul",
+  "hiány": "Megerősítve, de a UI-oldali következmény rosszabb a leírtnál: a mentés utáni ablak a maradványTÉTELEKET egyáltalán nem mutatja (ui/src/dialogs.tsx:420-421 csak a `r.residual.length` számot írja ki; tételesen csak a `leaks` első 8 eleme jelenik meg, :423-432). Mivel a szám a slice(0,40) UTÁN keletkezik, maga a szám is 40-nél megáll — a felhasználó nem is látja, hogy csonkolás történt. Kisebb pontosítás a hamis riasztásokhoz: a `isSentenceStart` heurisztika (verify.ts:132-135) a „dr.\" utáni pontot mondatvégnek nézi, ezért a bíró vezetéknevét véletlenül átugorja, a keresztnevét viszont már maradványként jelenti — a zaj tehát valós, csak részleges.",
+  "bizonyíték": "src/app/session.ts:358-360: `const report = verifyOutput(outputText, this.lastEntities, { pseudonyms: [...this.lastAssignments.values()].map((a) => a.display) });` — se `keepList`, se `safeWords`. A fogadóoldal src/verify.ts:44 `keepList?: string[]` és :92 `for (const k of opts.keepList ?? [])`. Csonkolás: src/app/session.ts:374 `residual: report.residual.slice(0, 40)`. A keepList a `grep -rn keepList` szerint csak detect.ts-ben, api.ts-ben és dialogs.tsx:190-192-ben fordul elő, a session.ts-ben egyszer sem.",
+  "súly": "fontos",
+  "munka": "kicsi",
+  "fájlok": [
+   "src/app/session.ts",
+   "src/verify.ts",
+   "src/app/detect.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "jogi",
+  "cím": "A Bszi. 166. § (2) szerepfelismerés hiányos: kimaradt az ülnök, és csak a „név, majd szerep\" sorrendet ismeri",
+  "hiány": "Megerősítve, méréssel is. Két pontosítás: (1) az „ülnök\" esete kicsit más úton bukik el — a jelöltállításban nincs is minta rá (a titledRe „dr.\" előtagot vár), így az „Ulrich Béla ülnök\" a szerkezeti körben se félként, se megtartandóként nem jelenik meg; félként a nyelvi modell (NER) hozza be, és mivel a keepList-en nincs, lecseréljük. (2) A „A tanács elnöke: …\" alak azért marad ki, mert a lawyerRe csak az egybeírt „tanácselnök\" alakot ismeri, a szétírt birtokos szerkezetet nem.",
+  "bizonyíték": "src/app/detect.ts:319-327, a `lawyerRe` szerepcsoportja: `([Üü]gyvéd|[Üü]gyvédnő|[Vv]édő|[Jj]ogtanácsos|[Bb]író|[Bb]írónő|[Tt]anácselnök|[Bb]írósági[ \\t]+titkár|[Üü]gyész|[Kk]özjegyző|[Vv]égrehajtó)(?![L])` — a minta a névvel KEZDŐDIK: `(${TITLES}${NAME_WORD}(?:[ \\t]+${NAME_WORD}){1,2})[ \\t]+,?[ \\t]*${SIGNED}` + szerep. A következmény src/app/detect.ts:355-356: „Aki a megtartandó listán van (eljáró ügyvéd, bíró), az nem fél.\" — tehát aki nincs rajta, az fél lesz.",
+  "súly": "fontos",
+  "munka": "közepes",
+  "fájlok": [
+   "src/app/detect.ts",
+   "src/verify.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "jogi",
+  "cím": "A beágyazott objektumokról szóló figyelmeztetés mentéskor nem jut el a felhasználóhoz",
+  "hiány": "Megerősítve, változtatás nélkül. Gyakorlatilag: a figyelmeztetés csak akkor bukkanna fel, ha a felhasználó a mentés után ugyanabban a munkamenetben ismét lefuttatja az elemzést — a mentés utáni „Kész — az irat tiszta\" ablak (dialogs.tsx:386-388) sosem mutatja.",
+  "bizonyíték": "src/docx/sanitize.ts:295 `report.warnings.push(...)` a beágyazott objektumokról. src/app/session.ts:420 `this.exportWarnings = result.warnings;` — de ez csak a src/app/session.ts:297 `warnings: [...ctx.warnings, ...this.loadWarnings, ...this.exportWarnings]` útján, az `analyze()`-ból jön ki. Az src/app/types.ts:139-146 `ExportResult` mezői: `outputPath`, `keyPath`, `report`, `certificate` — nincs `warnings`.",
+  "súly": "fontos",
+  "munka": "kicsi",
+  "fájlok": [
+   "src/app/types.ts",
+   "src/app/session.ts",
+   "src/docx/sanitize.ts",
+   "ui/src/dialogs.tsx"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "jogi",
+  "cím": "A kulcsfájl írása üres jelszót is elfogad a magban, a 8 karakteres minimum csak a felületen él",
+  "hiány": "Megerősítve, változtatás nélkül. Az egyetlen érdemi kiegészítés: a validáció hiánya kétrétegű — sem a `writeKeyFile`, sem az IPC-határ (electron/main.ts doc:export) nem ellenőriz, tehát nemcsak a jövőbeli kötegelt mód, hanem bármely renderer-oldali hívás is átcsúszhat rajta.",
+  "bizonyíték": "src/app/session.ts:365: `keyPath = await writeKeyFile(opts.outputPath, this.lastAssignments, opts.keyPassphrase ?? '');`. A src/app/keyfile.ts:26-43 `writeKeyFile` semmilyen hosszellenőrzést nem végez, egyenesen `scryptSync(passphrase, salt, ...)`-ot hív. A jelenlegi egyetlen korlát ui/src/dialogs.tsx:518: `disabled={busy || (keepKey && pass.length < 8)}`, és src/app/types.ts:126 `keyPassphrase?: string` — opcionális.",
+  "súly": "fontos",
+  "munka": "kicsi",
+  "fájlok": [
+   "src/app/keyfile.ts",
+   "src/app/session.ts",
+   "src/app/types.ts"
+  ],
+  "ellenőrizve": true
+ },
+ {
+  "terület": "jogi",
+  "cím": "A szerepcímke-fertőtlenítés csak a felismert felek nevére néz, harmadik személy nevére nem",
+  "hiány": "A kódbeli hézag valós (a `sanitizeRoleLabel` tényleg csak a felismert felek nevét szűri, és mérve is átengedi egy nem-entitás cégnevét változatlanul), DE a leírt kárkép a szállított felületen ma nem érhető el: a szerep vagy a dialogs.tsx zárt ROLES legördülőjéből, vagy a detect.ts zárt szókincséből jön, szabad szöveges szerepleírás nem keletkezik. Ez tehát nem aktív szivárgás, hanem védelmi-mélység hézag ugyanabban az osztályban, mint a 7. találat: a `PartyInput.role` típusa `string` (types.ts:21), az IPC nem validál, így minden nem-UI hívó (teszt, szkript, jövőbeli kötegelt mód) fel nem ismert nevet tehet vissza a dokumentumba. A javasolt zárt szótár helyes, de a prioritása alacsonyabb, mint a leírás sugallja.",
+  "bizonyíték": "src/pseudonym.ts:397-399: `const matcher = new SeedMatcher(entities); if (matcher.find(role).length === 0) return { label: role, warning: null };` — a nem-entitás nevekre nincs semmilyen szűrő, a `role` változatlanul csereszöveg lesz. A felhasználás src/pseudonym.ts:442-454, a `case 'role'` ág: `body = inflectRoleLabel(role, caseTag);`.",
+  "súly": "jó-lenne",
+  "munka": "közepes",
+  "fájlok": [
+   "src/pseudonym.ts",
+   "src/app/detect.ts"
+  ],
+  "ellenőrizve": true
+ }
+]

@@ -1,0 +1,445 @@
+{
+ "id": "asvanyok",
+ "lang": "hu",
+ "family": "asvanyok",
+ "name_hu": "Kövek és ásványok",
+ "description_hu": "Ásvány-, kőzet- és drágakőnevek magyar névsorrendbe rendezve: az utónevek maguk az ásványnevek (Bazalt, Gránit, Ametiszt, Borostyán), a vezetéknevek pedig belőlük képzett, magyaros -s és -i képzős, illetve összetett alakok (Kvarcos, Mészpáti, Csillámkő). Komoly, szikár hangzású csomag, amely peres iratban is jól olvasható, mégis azonnal látszik róla, hogy álnév.",
+ "license_note": "Ásvány-, kőzet- és drágakőnevek: köznyelvi szakszavak, nem állnak szerzői jogi vagy védjegyoltalom alatt, semmilyen franchise-hoz nem kötődnek. A vezetéknevek saját képzésűek (-s, -i, -kő utótag), nem valós magyar cégnevek másolatai. A gyakori valós magyar vezetéknévvé vált alakokat (Gyöngyösi, Kőbányai) szándékosan kihagytuk, hogy a pszeudonim ne ütközzön valós féllel vagy létező céggel.",
+ "given_names": [
+  {
+   "form": "Bazalt",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Gránit",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "Az utolsó magánhangzó semleges i, de a szó mély hangrendű: Gránitnak, Gránittal, Gránithoz."
+  },
+  {
+   "form": "Obszidián",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Kvarc",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Ónix",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "x-re végződik: a -val alakja Ónixszal (nem Ónixval és nem Ónixxal), mert az x [ksz] hangértékű."
+  },
+  {
+   "form": "Márvány",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "ny digráfra végződik: a -val alakja Márvánnyal."
+  },
+  {
+   "form": "Jáspis",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Topáz",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Opál",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Malachit",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Cirkon",
+   "gender": "M",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Kristály",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "ly digráfra végződik: a -val alakja Kristállyal."
+  },
+  {
+   "form": "Pirit",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": "Csupa semleges magánhangzó, magas toldalékot kap: Piritnek, Pirittel, Pirithez."
+  },
+  {
+   "form": "Tűzkő",
+   "gender": "M",
+   "harmony": "front_rounded",
+   "notes": ""
+  },
+  {
+   "form": "Ametiszt",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": "Vegyes hangrendű (a-e-i), de magas, kerekítetlen toldalékot kap: Ametiszttel, Ametiszthez, Ametisztnek."
+  },
+  {
+   "form": "Szelenit",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Berill",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": "Kettőzött mássalhangzóra végződik: a -vel kötőjeles alakú (Berill-lel). Egyébként szabályos: Berillnek, Berillhez."
+  },
+  {
+   "form": "Türkiz",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": "Vegyes: ü + záró semleges i. A -nak/-nek és -val/-vel egyértelmű (Türkiznek, Türkizzel), a -hoz/-hez/-höz sorból a -hez alakot ajánljuk (Türkizhez), a Petőfihez, sütihez mintájára – ez a pont bizonytalan, a -höz is előfordul."
+  },
+  {
+   "form": "Kalcit",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Csillám",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Azurit",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Smaragd",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Zafír",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Ámbra",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Borostyán",
+   "gender": "F",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Korall",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "Kettőzött mássalhangzóra végződik: a -val kötőjeles alakú (Korall-lal). Egyébként szabályos: Korallnak, Korallhoz."
+  }
+ ],
+ "surnames": [
+  {
+   "form": "Kvarcos",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Palás",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Márványi",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Kristályos",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Kőpát",
+   "harmony": "back",
+   "notes": "Vegyes hangrendű összetétel, az utótag (pát) mély hangrendje dönt: Kőpátnak, Kőpáttal, Kőpáthoz."
+  },
+  {
+   "form": "Mészpáti",
+   "harmony": "back",
+   "notes": "Vegyes hangrendű, mély toldalékot kap: Mészpátinak, Mészpátival, Mészpátihoz."
+  },
+  {
+   "form": "Földpáti",
+   "harmony": "back",
+   "notes": "Vegyes hangrendű, mély toldalékot kap: Földpátinak, Földpátival, Földpátihoz."
+  },
+  {
+   "form": "Achátfalvi",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Obszidiános",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Kavicsvári",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Gyémántos",
+   "harmony": "back",
+   "notes": "Vegyes hangrendű (é + á), mély toldalékot kap: Gyémántosnak, Gyémántoshoz."
+  },
+  {
+   "form": "Rubintos",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Smaragdos",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Csillámos",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Opálos",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Ónixos",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Ércbányai",
+   "harmony": "back",
+   "notes": "Vegyes hangrendű összetétel, az utótag (bánya) mély hangrendje dönt: Ércbányainak, Ércbányaihoz."
+  },
+  {
+   "form": "Gránitfalvi",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Kavicsbányai",
+   "harmony": "back",
+   "notes": ""
+  },
+  {
+   "form": "Érces",
+   "harmony": "front_unrounded",
+   "notes": ""
+  },
+  {
+   "form": "Kőzeti",
+   "harmony": "front_unrounded",
+   "notes": "Vegyes hangrendű, magas kerekítetlen toldalékot kap: Kőzetinek, Kőzetivel, Kőzetihez."
+  },
+  {
+   "form": "Bazaltbérci",
+   "harmony": "front_unrounded",
+   "notes": "Vegyes hangrendű, az utótag (bérc) miatt magas kerekítetlen toldalék: Bazaltbércinek, Bazaltbércihez."
+  },
+  {
+   "form": "Tűzkőhegyi",
+   "harmony": "front_unrounded",
+   "notes": "Az utótag (hegy) miatt magas kerekítetlen toldalék: Tűzkőhegyinek, Tűzkőhegyihez."
+  },
+  {
+   "form": "Kőszirti",
+   "harmony": "front_unrounded",
+   "notes": "Vegyes: ő + záró semleges i; magas kerekítetlen toldalékot kap: Kőszirtinek, Kőszirtivel, Kőszirtihez."
+  },
+  {
+   "form": "Bányavölgyi",
+   "harmony": "front_unrounded",
+   "notes": "Vegyes: az utótag (völgy) magas, a záró semleges i miatt kerekítetlen toldalék: Bányavölgyinek, Bányavölgyihez."
+  },
+  {
+   "form": "Csillámkő",
+   "harmony": "front_rounded",
+   "notes": "Vegyes hangrendű összetétel, az utótag (kő) dönt: Csillámkőnek, Csillámkővel, Csillámkőhöz."
+  },
+  {
+   "form": "Zafírkő",
+   "harmony": "front_rounded",
+   "notes": "Vegyes hangrendű összetétel, az utótag (kő) dönt: Zafírkőnek, Zafírkőhöz."
+  },
+  {
+   "form": "Kőfejtő",
+   "harmony": "front_rounded",
+   "notes": ""
+  },
+  {
+   "form": "Bazaltrög",
+   "harmony": "front_rounded",
+   "notes": "Vegyes hangrendű összetétel, az utótag (rög) dönt: Bazaltrögnek, Bazaltröggel, Bazaltröghöz."
+  }
+ ],
+ "org_parts": [
+  "Bazalt",
+  "Kvarc",
+  "Obszidián",
+  "Márvány",
+  "Kristály",
+  "Ásvány",
+  "Kőpát",
+  "Zafír",
+  "Smaragd",
+  "Csillám",
+  "Ércbánya",
+  "Kőfejtő",
+  "Opál"
+ ],
+ "org_names": [
+  {
+   "form": "Kvarcvölgy Kft.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Gránitkő Zrt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Bazaltmező Bt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Márványpart Kft.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Achátliget Zrt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Tűzkőhegy Bt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Kvarcvölgyi Általános Iskola",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Bazaltmezei Kórház",
+   "kind": "institution",
+   "notes": "A -ház tárgyesete kötőhangzós: Kórházat, nem Kórházt.",
+   "overrides": {
+    "acc": "Kórházat"
+   }
+  },
+  {
+   "form": "Márványparti Óvoda",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Gránitkői Alapítvány",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Achátligeti Egyesület",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Topázhegyi Szakrendelő",
+   "kind": "institution",
+   "notes": ""
+  }
+ ],
+ "place_names": [
+  {
+   "form": "Bazaltfalva",
+   "locative": "sup"
+  },
+  {
+   "form": "Gránitháza",
+   "locative": "sup"
+  },
+  {
+   "form": "Kvarcvár",
+   "locative": "sup"
+  },
+  {
+   "form": "Márványszeg",
+   "locative": "sup"
+  },
+  {
+   "form": "Obszidiánhalom",
+   "locative": "sup",
+   "overrides": {
+    "stemAlt": "Obszidiánhalm"
+   }
+  },
+  {
+   "form": "Kvarckövesd",
+   "locative": "sup"
+  },
+  {
+   "form": "Zafírfalva",
+   "locative": "sup"
+  },
+  {
+   "form": "Csillámháza",
+   "locative": "sup"
+  },
+  {
+   "form": "Opálszeg",
+   "locative": "sup"
+  },
+  {
+   "form": "Smaragdvár",
+   "locative": "sup"
+  },
+  {
+   "form": "Kőpáthalom",
+   "locative": "sup",
+   "overrides": {
+    "stemAlt": "Kőpáthalm"
+   }
+  }
+ ]
+}

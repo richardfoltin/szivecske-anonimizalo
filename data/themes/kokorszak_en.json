@@ -1,0 +1,471 @@
+{
+ "id": "kokorszak_en",
+ "lang": "en",
+ "family": "kokorszak",
+ "name_hu": "Kőkorszak – angol nevek",
+ "description_hu": "A „Kőkorszak” készlet angol névsora: a The Flintstones EREDETI, angol szereplőnevei — Flintstone, Rubble, Slate, Rockhead, Hatrock, Slaghoople, Quartz. 19 vezetéknév × 25 utónév = 475 teljes névpár. Magyar iratba való: minden név magyar toldalékot kap, a KIEJTÉSE szerint, nem az írásképe szerint — Flintstone-nal, Rubble-lal, Slate-tel, Quartzcal, Bettyvel, Pebblesszel.",
+ "license_note": "A NEVEK VÉDJEGYZETT MŰBŐL SZÁRMAZNAK — ez nem tiltás, hanem tény, hogy később se érje meglepetés azt, aki a csomagot továbbadja. A The Flintstones a Hanna-Barbera, ma a Warner Bros. Discovery műve; a cím, a szereplőnevek és a figurák védjegy- és szerzői jogi oltalom alatt állnak. Saját, belső anonimizáláshoz ez a névhasználat rendszerint nem kifogásolható; nyilvánosan terjesztett vagy értékesített termékben a jogosult engedélye nélkül igen. Ha ez kockázat, a másik három szállított készlet (Ásványok, Növények, Semleges magyar) egyetlen védett nevet sem tartalmaz. Az 1994-es élőszereplős film külön névkészletéből (Vandercave, Dictabird) nincs benne semmi. A cégformák (Kft., Zrt., Bt.) és az intézménymegjelölések magyarok, mert a pszeudonim magyar iratba kerül; a megkülönböztető előtagok a sorozat angolul dokumentált cég-, intézmény- és helynevei. A ragozási kivételeket — kiejtés szerinti hangrend, néma szó végi e, kötőjeles kapcsolás, az x/tz/y hangértéke — alakonként ember ellenőrizte a program ragozó motorjával.",
+ "given_names": [
+  {
+   "form": "Fred",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": "A d után kötőhangzó kell: Fredet; a d kettőződik: Freddel."
+  },
+  {
+   "form": "Barney",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "Kiejtve [bárni]: mély hangrend. A szó végi y magánhangzót jelöl, ezért a toldalék kötőjel nélkül, hasonulás nélkül kapcsolódik — Barneyval, Barneyt, Barneyn.",
+   "overrides": {
+    "acc": "Barneyt",
+    "ins": "Barneyval",
+    "forms": {
+     "SUP": "Barneyn",
+     "PL": "Barneyk"
+    }
+   }
+  },
+  {
+   "form": "Bamm-Bamm",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "Eleve kettőzött m: a -val alakja kötőjeles, Bamm-Bamm-mal. A kötőjel a névben nem toldalékhatár, a rag a szó végére kerül: Bamm-Bammnak, Bamm-Bammot."
+  },
+  {
+   "form": "Arnold",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "Arnoldot, Arnolddal."
+  },
+  {
+   "form": "Joe",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "Kiejtve [dzsó]: mély, és a szó végi e néma, ezért a toldalék kötőjellel kapcsolódik — Joe-val, Joe-t, mint Poe-val. A kiejtett véghang magánhangzó, ezért a felszíni eset -n, nem -on.",
+   "overrides": {
+    "hyphenate": true,
+    "forms": {
+     "SUP": "Joe-n",
+     "PL": "Joe-k"
+    }
+   }
+  },
+  {
+   "form": "Tex",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": "Az x [ksz] hangértékű: a -val alakja Texszel, nem Texxel; a tárgyeset Texet."
+  },
+  {
+   "form": "Bobby",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "Kiejtve [bobi]: a szó végi y magánhangzót jelöl — Bobbyval, Bobbyt, Bobbyn.",
+   "overrides": {
+    "acc": "Bobbyt",
+    "ins": "Bobbyval",
+    "forms": {
+     "SUP": "Bobbyn",
+     "PL": "Bobbyk"
+    }
+   }
+  },
+  {
+   "form": "Mortimer",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": "Az utolsó szótag magas: Mortimernek, Mortimerrel, Mortimert."
+  },
+  {
+   "form": "Ben",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": "Egytagú, n végű: a tárgyeset kötőhangzó nélküli, Bent — a motor egytagú névnél alapból kötőhangzót tenne.",
+   "overrides": {
+    "acc": "Bent"
+   }
+  },
+  {
+   "form": "Sam",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "A magyar olvasat [szam]: mély. Samnak, Sammal, Samot."
+  },
+  {
+   "form": "Zack",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "A ck egyetlen [k] hang: Zackkal, Zackot."
+  },
+  {
+   "form": "Slab",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "Slabbal, Slabot."
+  },
+  {
+   "form": "Benji",
+   "gender": "M",
+   "harmony": "front_unrounded",
+   "notes": "Magánhangzóra végződik: Benjivel, Benjit, Benjin."
+  },
+  {
+   "form": "Gazoo",
+   "gender": "M",
+   "harmony": "back",
+   "notes": "Kiejtve [gazú]: a szó végi oo magánhangzó, ezért nincs hasonulás és nincs kötőhangzó — Gazooval, Gazoot, Gazoon."
+  },
+  {
+   "form": "Wilma",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "A szóvégi rövid a megnyúlik: Wilmának, Wilmával, Wilmát."
+  },
+  {
+   "form": "Betty",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": "Kiejtve [beti]: a szó végi y magánhangzót jelöl — Bettyvel, Bettyt, Bettyn.",
+   "overrides": {
+    "acc": "Bettyt",
+    "ins": "Bettyvel",
+    "forms": {
+     "SUP": "Bettyn",
+     "PL": "Bettyk"
+    }
+   }
+  },
+  {
+   "form": "Pebbles",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": "A szó végi s hangértéke [sz], nem a magyar [s]: a -val alakja Pebblesszel, mint Charlesszal. A tárgyeset kötőhangzó nélküli: Pebblest.",
+   "overrides": {
+    "ins": "Pebblesszel"
+   }
+  },
+  {
+   "form": "Pearl",
+   "gender": "F",
+   "harmony": "front_rounded",
+   "notes": "Kiejtve [pőrl]: ajakkerekítéses magas hangrend, ezért Pearlhöz és Pearlön. Az l után nem kell kötőhangzó: Pearlt."
+  },
+  {
+   "form": "Zaza",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "A szóvégi rövid a megnyúlik: Zazának, Zazával."
+  },
+  {
+   "form": "Edna",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "Az e ellenére mély, mert az utolsó magánhangzó a: Ednának, Ednával."
+  },
+  {
+   "form": "Daisy",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": "Kiejtve [dézi]: magas, noha a-t írunk benne. A szó végi y magánhangzót jelöl — Daisyvel, Daisyt, Daisyn.",
+   "overrides": {
+    "acc": "Daisyt",
+    "ins": "Daisyvel",
+    "forms": {
+     "SUP": "Daisyn",
+     "PL": "Daisyk"
+    }
+   }
+  },
+  {
+   "form": "Gwen",
+   "gender": "F",
+   "harmony": "front_unrounded",
+   "notes": "Egytagú, n végű: a tárgyeset kötőhangzó nélküli, Gwent.",
+   "overrides": {
+    "acc": "Gwent"
+   }
+  },
+  {
+   "form": "Dagmar",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "Az r hasonul és kettőződik: Dagmarral; a tárgyeset kötőhangzó nélküli: Dagmart."
+  },
+  {
+   "form": "Gravella",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "A szóvégi rövid a megnyúlik: Gravellának, Gravellával."
+  },
+  {
+   "form": "Creepella",
+   "gender": "F",
+   "harmony": "back",
+   "notes": "Az ee semleges [í], a mély a dönt: Creepellának, Creepellával."
+  }
+ ],
+ "surnames": [
+  {
+   "form": "Flintstone",
+   "harmony": "back",
+   "notes": "Kiejtve [flintsztón]: a szó végi e néma, a kiejtett véghang [n], ezért a toldalék kötőjellel kapcsolódik és a v ahhoz hasonul — Flintstone-nal, Flintstone-nak, Flintstone-t.",
+   "overrides": {
+    "hyphenate": true,
+    "ins": "Flintstone-nal"
+   }
+  },
+  {
+   "form": "Rubble",
+   "harmony": "back",
+   "notes": "Kiejtve [rabl]: MÉLY hangrend, noha a leírt utolsó magánhangzó e — az e néma. A kiejtett véghang [l]: Rubble-lal, Rubble-nak.",
+   "overrides": {
+    "hyphenate": true,
+    "ins": "Rubble-lal"
+   }
+  },
+  {
+   "form": "Slate",
+   "harmony": "front_unrounded",
+   "notes": "Kiejtve [szlét]: néma szó végi e, a véghang [t] — Slate-tel. A [t] után a tárgyeset kötőhangzós: Slate-et.",
+   "overrides": {
+    "hyphenate": true,
+    "ins": "Slate-tel",
+    "acc": "Slate-et"
+   }
+  },
+  {
+   "form": "Rockhead",
+   "harmony": "front_unrounded",
+   "notes": "Kiejtve [rokhed]: az utolsó szótag magas. Rockheadnek, Rockheaddel, Rockheadet."
+  },
+  {
+   "form": "Hardrock",
+   "harmony": "back",
+   "notes": "A ck egyetlen [k] hang: Hardrockkal, Hardrockot."
+  },
+  {
+   "form": "Hatrock",
+   "harmony": "back",
+   "notes": "A sorozat Hatrock családja; magyarul Kőkalap. Hatrockkal, Hatrockot."
+  },
+  {
+   "form": "Slaghoople",
+   "harmony": "back",
+   "notes": "Pearl Slaghoople, Vilma anyja. Kiejtve [szleghúpl]: néma szó végi e, a véghang [l] — Slaghoople-lal, Slaghoople-nak.",
+   "overrides": {
+    "hyphenate": true,
+    "ins": "Slaghoople-lal"
+   }
+  },
+  {
+   "form": "Rockley",
+   "harmony": "back",
+   "notes": "Kiejtve [rokli]: a szó végi y magánhangzót jelöl — Rockleyval, Rockleyt, Rockleyn.",
+   "overrides": {
+    "acc": "Rockleyt",
+    "ins": "Rockleyval",
+    "forms": {
+     "SUP": "Rockleyn",
+     "PL": "Rockleyk"
+    }
+   }
+  },
+  {
+   "form": "Stoneface",
+   "harmony": "back",
+   "notes": "Kiejtve [sztónfész]: az é semleges, a mély ó dönt. Néma szó végi e, a véghang [sz] — Stoneface-szal, Stoneface-t.",
+   "overrides": {
+    "hyphenate": true,
+    "ins": "Stoneface-szal"
+   }
+  },
+  {
+   "form": "Boulder",
+   "harmony": "front_unrounded",
+   "notes": "A magyar olvasat utolsó szótagja magas: Bouldernek, Boulderrel, Bouldert."
+  },
+  {
+   "form": "Stone",
+   "harmony": "back",
+   "notes": "Kiejtve [sztón]: néma szó végi e, a véghang [n] — Stone-nal, Stone-nak, Stone-t.",
+   "overrides": {
+    "hyphenate": true,
+    "ins": "Stone-nal"
+   }
+  },
+  {
+   "form": "Loudrock",
+   "harmony": "back",
+   "notes": "Loudrockkal, Loudrockot."
+  },
+  {
+   "form": "Goldbrick",
+   "harmony": "back",
+   "notes": "Az i semleges, a mély o dönt: Goldbricknak, Goldbrickkal, Goldbrickot."
+  },
+  {
+   "form": "Granite",
+   "harmony": "front_unrounded",
+   "notes": "Kiejtve [grenit]: néma szó végi e, a véghang [t] — Granite-tel; a [t] után a tárgyeset kötőhangzós: Granite-et.",
+   "overrides": {
+    "hyphenate": true,
+    "ins": "Granite-tel",
+    "acc": "Granite-et"
+   }
+  },
+  {
+   "form": "Cavity",
+   "harmony": "front_unrounded",
+   "notes": "Dr. Ben Cavity, a fogorvos. A szó végi y magánhangzót jelöl — Cavityvel, Cavityt, Cavityn.",
+   "overrides": {
+    "acc": "Cavityt",
+    "ins": "Cavityvel",
+    "forms": {
+     "SUP": "Cavityn",
+     "PL": "Cavityk"
+    }
+   }
+  },
+  {
+   "form": "Hannigan",
+   "harmony": "back",
+   "notes": "Az n hasonul és kettőződik: Hannigannal; a tárgyeset kötőhangzó nélküli: Hannigant."
+  },
+  {
+   "form": "Quartz",
+   "harmony": "back",
+   "notes": "Kiejtve [kvarc]: a szó végi tz hangértéke [c], ezért a -val alakja Quartzcal, mint Móriczcal. A [c] után a tárgyeset kötőhangzós: Quartzot — az írott z-t a motor magától kötőhangzó nélkül hagyná.",
+   "overrides": {
+    "acc": "Quartzot"
+   }
+  },
+  {
+   "form": "Shale",
+   "harmony": "front_unrounded",
+   "notes": "Kiejtve [séjl]: néma szó végi e, a véghang [l] — Shale-lel, Shale-t.",
+   "overrides": {
+    "hyphenate": true,
+    "ins": "Shale-lel"
+   }
+  },
+  {
+   "form": "Slagheap",
+   "harmony": "back",
+   "notes": "Sam Slagheap, a páholy Nagy Vezére. A p kettőződik: Slagheappal; a tárgyeset Slagheapot."
+  }
+ ],
+ "org_parts": [
+  "Slate",
+  "Bedrock",
+  "Rockhead",
+  "Quarry",
+  "Gravel",
+  "Granite",
+  "Shale",
+  "Prinstone",
+  "Macyrock",
+  "Gimbelstone",
+  "Hollyrock",
+  "Bronto"
+ ],
+ "org_names": [
+  {
+   "form": "Slate Rock Kft.",
+   "kind": "company",
+   "notes": "Frédi munkahelye az eredetiben Slate Rock and Gravel Company; a magyar cégforma azért kell, mert az álnév magyar iratba kerül."
+  },
+  {
+   "form": "Rockhead Quarry Zrt.",
+   "kind": "company",
+   "notes": "Rockhead and Quarry Cave Construction Company."
+  },
+  {
+   "form": "Bronto King Bt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Macyrock Kft.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Gimbelstone Zrt.",
+   "kind": "company",
+   "notes": ""
+  },
+  {
+   "form": "Abbadabba Bt.",
+   "kind": "company",
+   "notes": "Abbadabba Broadcasting Company."
+  },
+  {
+   "form": "Bedrock Általános Iskola",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Rockapedic Kórház",
+   "kind": "institution",
+   "notes": "Bedrock Rockapedic Hospital. A -ház tárgyesete kötőhangzós: Kórházat, nem Kórházt.",
+   "overrides": {
+    "acc": "Kórházat"
+   }
+  },
+  {
+   "form": "Shale Alapítvány",
+   "kind": "institution",
+   "notes": "Shale University."
+  },
+  {
+   "form": "Hollyrock Óvoda",
+   "kind": "institution",
+   "notes": ""
+  },
+  {
+   "form": "Water Buffalo Egyesület",
+   "kind": "institution",
+   "notes": "A sorozat páholya: Loyal Order of Water Buffaloes, magyarul Ökör-kör. A rag az utolsó névelemre kerül: Water Buffalo Egyesületnek."
+  },
+  {
+   "form": "Prinstone Idősek Otthona",
+   "kind": "institution",
+   "notes": "Prinstone University. A szóvégi rövid a megnyúlik: Prinstone Idősek Otthonát."
+  }
+ ],
+ "place_names": [
+  {
+   "form": "Bedrock",
+   "locative": "ine"
+  },
+  {
+   "form": "Arkanstone",
+   "locative": "ine",
+   "overrides": {
+    "harmony": "back",
+    "hyphenate": true,
+    "ins": "Arkanstone-nal"
+   }
+  },
+  {
+   "form": "Hollyrock",
+   "locative": "ine"
+  },
+  {
+   "form": "Stoneyford",
+   "locative": "ine"
+  },
+  {
+   "form": "Rock Vegas",
+   "locative": "ine",
+   "overrides": {
+    "ins": "Vegasszal"
+   }
+  },
+  {
+   "form": "San Cemente",
+   "locative": "ine"
+  }
+ ]
+}

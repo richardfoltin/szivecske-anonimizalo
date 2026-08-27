@@ -1,0 +1,1342 @@
+import { useId, useRef, useState } from 'react';
+import type { PartyInput, ReplacementMode, ThemeSummaryUi } from './api';
+import { FelismeroSav, NevkeszletRacs } from './dialogs';
+
+/*
+  A MEGNYITÁS UTÁNI BEÁLLÍTÓ OLDAL.
+
+  Az iratra vonatkozó döntések IDE kerültek, a Beállítások „Alapértelmezések”
+  fülétől elvéve. Azért nem maradhattak ott, mert egyik sem programbeállítás:
+  egy peres iratot másképp kell álnevesíteni, mint egy szerződést, és a
+  felhasználó a döntést akkor tudja meghozni, amikor már látja, mi van az
+  iratban. Amíg ugyanaz a kapcsoló két helyen állt, a Beállításokban beállított
+  érték és a dokumentumra érvényes érték csendben szétcsúszott — a felhasználó
+  pedig azt hitte, azt állította be, amit lát.
+
+  A lap KÉT FÜLBŐL áll, és ez a kettő a munka két kérdése:
+
+    „Mire cseréljük?”  — mi kerüljön a nevek helyére: címke vagy fedőnév.
+    „Mit cserélünk?”   — mihez nyúljunk hozzá az iratban, és mihez ne.
+
+  A „Hogyan cseréljük?” fül megszűnt. Öt kapcsoló állt rajta, és egyik sem
+  tartozott össze a másikkal: kettő (összeg, dátum) arról szólt, MIT cserélünk
+  — annak a második fülön a helye, a többi találat mellett, ugyanazokkal a
+  gombokkal. Kettő (küszöb, kulcsfájl) a második fül fejlécébe került, mert
+  ott van hatásuk. Az ötödik, a „kérdezés nélkül menjen végig”, egy KAPCSOLÓ
+  volt egy MŰVELETRE: nem állapot, hanem tett — ma gomb a lista fölött
+  („Mindent cserélünk”), ott, ahol látszik is, mit csinál.
+
+  A komponens semmit nem tárol magának a nyitott fülön kívül — minden érték
+  propként érkezik, minden változás visszahíváson megy vissza. A nyitott fül
+  azért kivétel, mert az nem az irat adata: ha a hívó tárolná, egy tetszőleges
+  másik állapotváltozás visszaugrasztaná a felhasználót az első fülre.
+*/
+
+/* ─────────────────────────── amit a lap kap ─────────────────────────── */
+
+/**
+ * A találat fajtája.
+ *
+ * A motor típusából SZÁRMAZTATVA, nem lemásolva: ha a motorban új fajta
+ * születik, itt fordítási hiba lesz belőle (a `FAJTA_CIM` táblázat hiányos
+ * lesz), nem pedig egy néma, címke nélkül megjelenő csoport a felületen.
+ *
+ * A két saját fajta (`amount`, `date`) NEM félfajta, és nincs is a motor
+ * `EntityKind`-jában: az összeg és a dátum nem entitás, hanem az iratban
+ * megtalált érték. A LAPON viszont ugyanúgy kell viselkedniük, mint a
+ * neveknek — a felhasználó kérése szó szerint az volt, hogy „ugyanúgy legyen
+ * kezelve” —, ezért kapnak sort a listán, ugyanazokkal a gombokkal.
+ */
+export type Fajta = PartyInput['kind'] | 'amount' | 'date' | 'hivatalos';
+
+/**
+ * Az EBBEN AZ IRATBAN érvényes beállítások.
+ *
+ * Szándékosan ugyanazok a mezőnevek, mint az `AppSettings` megfelelő mezőin:
+ * a hívó a legutóbbi beállításokból egy az egyben fel tudja tölteni, és a
+ * mentéskor egy az egyben vissza tudja írni. Külön névvel a két oldal
+ * összepárosítása kézi munka volna, és pont ott hibázna, ahol nem látszik.
+ */
+export interface DokumentumBeallitasok {
+  mode: ReplacementMode;
+  themeId: string;
+  /** A címkék nyelve a szerep-, adatfajta- és számozott módban. */
+  labelLang: 'hu' | 'en';
+  autoThreshold: number;
+  keepKey: boolean;
+  replaceAmounts: boolean;
+  shiftDates: boolean;
+  /**
+   * A törvény szerint bent maradó neveket (eljáró bíró, ügyvéd, bíróság) is
+   * lecseréljük-e.
+   *
+   * ALAPBÓL HAMIS, és ez nem óvatoskodás: a Bszi. 166. § (2) szerint ezeknek a
+   * neveknek bent kell maradniuk. A kapcsoló azért létezik mégis, mert nem
+   * minden irat megy bíróságra — egy belső feljegyzésben vagy egy nyelvi
+   * modellnek átadott másolatban a bíró neve ugyanolyan személyes adat, mint
+   * bárkié. A felelősség viszont a felhasználóé, ezért a kapcsoló mellett
+   * kimondjuk, mit jelent bekapcsolni.
+   *
+   * SOHA NEM JEGYEZZÜK MEG a következő iratra: egy alapból kikapcsolt,
+   * jogszabályi következménnyel járó kapcsolót nem szabad csendben átvinni egy
+   * másik iratra, amit a felhasználó esetleg épp a bíróságra küld.
+   */
+  replaceOfficials: boolean;
+}
+
+/**
+ * Hogyan végződött a megnyitás után magától elinduló vizsgálat.
+ *
+ * Négy külön eset, mert négy külön teendő tartozik hozzájuk. A „nem talált
+ * semmit” és a „meg lett szakítva” a képernyőn ugyanúgy üres listának
+ * látszik — a kettő közül viszont csak az egyik jelenti azt, hogy az irat
+ * tényleg nem tartalmaz nevet. Ha nem mondjuk meg, melyik történt, a
+ * felhasználó a félbehagyott vizsgálat után adja ki az iratot.
+ */
+export type VizsgalatAllapot = 'kesz' | 'megszakitva' | 'hiba' | 'kihagyva';
+
+/** Egy találat úgy, ahogy a „Mit cserélünk?” fülön áll. */
+export interface TalaltTetel {
+  id: string;
+  fajta: Fajta;
+  /** Ahogy az iratban szerepel. */
+  eredeti: string;
+  /** Eljárási szerep („I. r. alperes”) vagy azonosítónál az adatfajta („adószám”). */
+  szerep: string;
+  /** Hány helyen fordul elő az iratban. */
+  elofordulas: number;
+  /**
+   * Hány előfordulása cserélődik le a MOSTANI állással.
+   *
+   * Ez a szám mondja meg, melyik gomb aktív a soron — nem egy külön tárolt
+   * kapcsolóállás. Külön tárolva a kettő szétcsúszhatna, és a felhasználó egy
+   * „cserélünk” feliratú sor mellett kapna változatlan iratot.
+   */
+  cserelodik: number;
+  /** Amit a program a helyére írna a mostani beállításokkal. */
+  csere: string;
+  /** Ha a felhasználó ezen a lapon átírta a csereszöveget. */
+  sajatCsere?: string;
+  /**
+   * Hány előfordulása vár még emberi döntésre.
+   *
+   * KÜLÖN a `cserelodik`-tól, mert a „nem cserélődik” két teljesen különböző
+   * dolgot jelenthet: vagy MEGMONDTUK, hogy maradjon (döntés), vagy még senki
+   * nem nyilatkozott róla (bizonytalan). A régi kapcsoló ezt a kettőt
+   * összemosta, és a képernyőn a „Nincs csere” állás bekapcsolva látszott
+   * olyan névnél is, amiről a felhasználó soha nem döntött — vagyis a program
+   * a saját tétlenségét mutatta be az ő döntéseként.
+   */
+  bizonytalanDb: number;
+  /** A küszöb alatti találat: emberi döntésre várna. */
+  bizonytalan?: boolean;
+  /**
+   * Van-e még olyan előfordulása, amit a „Csere a következőt” bekapcsolhat.
+   *
+   * A gomb enélkül ott is aktív maradna, ahol már nincs mit bekapcsolni, és a
+   * felhasználó azt hinné, hogy a program nem reagál a kattintására.
+   */
+  vanKovetkezo: boolean;
+  /**
+   * Kézzel felvett név: a lista a vizsgálatot pótolja vele.
+   *
+   * A csereszöveg-mezője ugyanúgy szerkeszthető, de a „bizonytalan” jelvény
+   * nem tartozik rá: nem a program ítélte bizonytalannak, hanem a felhasználó
+   * írta be.
+   */
+  kezi?: boolean;
+}
+
+/** Egy név, ami a törvény szerint bent marad. */
+export interface BentMarado {
+  name: string;
+  why: string;
+}
+
+export interface DocumentSetupProps {
+  /*
+    A FÁJLNÉV NEM SZEREPEL A LAPON.
+
+    A lap a kétpaneles elrendezésben jobb oldali panel lett, az irat pedig
+    mellette áll, a saját fejlécén a nevével. Másodszor kiírva egy sort venne
+    el a magyarázatoktól, cserébe semmi újat nem mondana.
+  */
+  beallitasok: DokumentumBeallitasok;
+  temak: ThemeSummaryUi[];
+  tetelek: TalaltTetel[];
+  bentMaradok: BentMarado[];
+  /**
+   * Tudja-e a híd kész félként átadni a megtartandó neveket
+   * (`DetectionResult.officials`).
+   *
+   * Régebbi hídon nincs meg, és ilyenkor a kapcsolót MEG SEM MUTATJUK: egy
+   * gomb, ami semmit nem tud lecserélni, rosszabb, mint a hiánya.
+   */
+  hivatalosCserelheto: boolean;
+  vizsgalat: VizsgalatAllapot;
+  /**
+   * Éppen fut-e a vizsgálat.
+   *
+   * A lapot a felhasználó akkor is nézheti, amikor a modell újraolvassa az
+   * iratot (a vizsgálat innen is indítható). Ilyenkor a modellsáv gombjai
+   * tiltottak: egy második indítás vagy egy modellváltás menet közben a futó
+   * vizsgálat eredményét dobná el, szó nélkül.
+   */
+  vizsgalatFut: boolean;
+  /** Hiba esetén a hiba szövege; egyébként bármi, amit a vizsgálatról tudni kell. */
+  vizsgalatUzenet?: string;
+  onBeallitas: (valtozas: Partial<DokumentumBeallitasok>) => void;
+  /**
+   * A csereszöveg kézi átírása.
+   *
+   * ÜRES SZÖVEG = vissza az alapértelmezetthez. Így a mező kiürítése nem
+   * eredményez üres álnevet — az ugyanis a nevet nem álnevesítené, hanem
+   * kitörölné, és a mondat helyén hézag maradna.
+   */
+  onCsereSzoveg: (id: string, szoveg: string) => void;
+  /** Cseréljük le ennek a tételnek MINDEN előfordulását. */
+  onMind: (id: string) => void;
+  /** Cseréljük le a KÖVETKEZŐ előfordulását — és mutassuk meg az iratban. */
+  onKovetkezo: (id: string) => void;
+  /** Ne cseréljük le egyiket sem: az eredeti szöveg marad. */
+  onNincs: (id: string) => void;
+  /** Mindent, ami az iratban találat: egyetlen kattintással cserére. */
+  onUjraVizsgalat: () => void;
+  onKeziFelvitel: () => void;
+  /**
+   * Új névkészlet gyártása — a „Mire cseréljük?” fül hozzáadó kártyájáról.
+   *
+   * A gyártás nem az irat dolga (a készlet minden ügyben ugyanaz, és percekbe
+   * telik előállítani), a KÉRÉS viszont itt születik: a felhasználó a rácsot
+   * nézve jön rá, hogy egyik készlet sem jó neki. Ezért nem maga a lap nyitja
+   * meg az ablakot, hanem szól a főfolyamatnak.
+   */
+  onUjKeszlet: () => void;
+  onKeszletTorles: (id: string) => void;
+  onTovabb: () => void;
+  /*
+    AZ `onMegse` INNEN ELTŰNT.
+
+    A „Másik iratot nyitok" gombot vitte, az pedig ugyanoda vezetett, ahova a
+    fejléc megnyitás ikonja — csak a lap alján, a legfontosabb gomb mellől
+    elvéve a figyelmet. A megnyitás útja egy maradt: a fejléc (és vele a menü
+    meg a Ctrl+O).
+  */
+}
+
+/* ─────────────────────────── szövegtáblák ─────────────────────────── */
+
+/**
+ * A csere-módok nevei.
+ *
+ * Táblázatban állnak, mert nem csak a kártya hivatkozik rájuk: a lépéssáv is
+ * ezen a néven nevezi az érvényes módot. Két külön leírt szöveg előbb-utóbb
+ * kétféle nevet adna ugyanannak a döntésnek.
+ *
+ * A 'theme' azért maradt bent, mert a lépéssáv továbbra is használja — a
+ * kártyák között viszont NINCS „Fedőnevek” kártya: azt a névkészlet-kártyák
+ * MAGUK jelentik. Egy külön „Fedőnevek” kártya mellett a felhasználónak
+ * kétszer kellene választania ugyanazt (előbb a módot, aztán a készletet),
+ * pedig a kettő egyetlen döntés.
+ */
+const MODE_LABEL: Record<ReplacementMode, string> = {
+  theme: 'Fedőnevek',
+  role: 'Hivatalos (OBH) — eljárási szerep',
+  type: 'Adatfajta neve',
+  numbered: 'Számozott címke',
+};
+
+/**
+ * A MÓD NEVE ÖNMAGÁBAN NEM MOND SEMMIT — a kártyán ezért PÉLDA áll.
+ *
+ * „Adatfajta neve” és „Számozott címke” két olyan megnevezés, amiből egy
+ * ügyvéd nem tudja kitalálni, hogyan fog kinézni a kész irat; a különbséget
+ * viszont egyetlen pillantásra meglátja rajta, ha ugyanaz a név mindegyik
+ * kártyán ott áll, más-más kimenettel.
+ *
+ * A példák BAL OLDALA szándékosan azonos (`PELDA_NEV`): a szem így a jobb
+ * oldalt hasonlítja össze, nem két különböző mondatot olvas el.
+ */
+const PELDA_NEV = 'Kovács János';
+
+type CimkeMod = Exclude<ReplacementMode, 'theme'>;
+
+const CIMKE_MODOK: CimkeMod[] = ['role', 'type', 'numbered'];
+
+/**
+ * Mi kerül a példanév helyére — MINDKÉT NYELVEN.
+ *
+ * Az angol változat nem fordítás-kísérlet, hanem ugyanaz a zárt táblázat, ami
+ * a motorban is áll (`ROLE_EN`, `TYPE_LABEL_EN`, `NUMBERED_LABEL_EN`,
+ * src/pseudonym.ts). A kártyán tehát pontosan az látszik, ami az iratba kerül.
+ */
+const MODE_PELDA: Record<CimkeMod, Record<'hu' | 'en', string>> = {
+  role: { hu: 'a felperes', en: 'the plaintiff' },
+  type: { hu: '[név]', en: '[name]' },
+  numbered: { hu: '[NÉV-1]', en: '[NAME-1]' },
+};
+
+/**
+ * Egy mondat arról, mit jelent a mód — a kártyán a példa alatt.
+ *
+ * RÖVID, mert a kártyán négy sor jut rá: a hosszabb szöveg nem tolná lejjebb a
+ * következő rovatot, hanem elfogyna a végén. A teljes szöveg így is elolvasható
+ * — a kártya lebegő súgójában áll —, de a képernyőn nem szabad félbevágott
+ * mondatnak látszania.
+ */
+const MODE_LEIRAS: Record<CimkeMod, string> = {
+  role: 'Az eljárásbeli szerep kerül a helyére. Akinek nincs szerepe, az az adatfajta nevét kapja.',
+  type: 'Az adatfajta megjelölése kerül a helyére, az OBH 4/2021. §10(2) szóhasználatával.',
+  numbered: 'Semleges címke. Minden fél saját számot kap, tehát végig megkülönböztethetők.',
+};
+
+/*
+  A CSOPORTOK SORRENDJE nem ábécé és nem is a találatok száma szerinti: a
+  személynév a legsúlyosabb, azt nézi át a felhasználó a legfigyelmesebben,
+  ezért az áll elöl. Az azonosító után jön az összeg és a dátum: azokat a
+  program magától is felveszi vagy kihagyja, ott ellenőrizni kell, nem dönteni.
+*/
+/*
+  A „hivatalos” SZÁNDÉKOSAN NINCS ITT. Külön szakaszt kap a lista végén, saját
+  kapcsolóval és saját magyarázattal — a felek közé keverve a felhasználó
+  hibának nézné őket, és „kijavítana” egy olyan iratot, ami így volt helyes.
+*/
+const CSOPORT_SORREND: Fajta[] = ['person', 'org', 'place', 'identifier', 'amount', 'date'];
+
+const FAJTA_CIM: Record<Fajta, string> = {
+  person: 'Személyek',
+  org: 'Szervezetek',
+  place: 'Helyek',
+  identifier: 'Azonosítók',
+  amount: 'Összegek',
+  date: 'Dátumok',
+  hivatalos: 'Hivatalos szereplők',
+};
+
+/*
+  EGY SOR CSOPORTONKÉNT — amit a csoport címe nem mond el.
+
+  A hosszabb magyarázat a lebegő súgóba került (`FAJTA_SUGO`): a képernyőn a
+  lista a lényeg, nem a köré írt szöveg. Ami itt maradt, az mind TÉNY, amit a
+  csoport nevéből nem lehet kitalálni — hogy az azonosító nem álnevet kap,
+  hogy az összegek közös szorzóval változnak, hogy az eltolt dátumból nem
+  szabad határidőt számolni.
+*/
+const FAJTA_MIERT: Record<Fajta, string> = {
+  person: 'A felek, a tanúk, a hozzátartozók.',
+  org: 'Cégek, hivatalok, intézmények.',
+  place: 'Települések, utcák, ingatlanok.',
+  identifier: 'Ezek adatfajta-megjelölést kapnak, nem álnevet.',
+  amount: 'Fedőnév-módban közös szorzóval változnak, a többi módban „[összeg]” lesz belőlük.',
+  date: 'Közös eltolás. Az eltolt iratból határidőt számolni nem szabad.',
+  hivatalos: 'Az eljáró bíró, az ügyvéd és a bíróság neve. A Bszi. 166. § (2) szerint bent kell maradniuk.',
+};
+
+/** A teljes magyarázat — a csoport fejlécének lebegő súgójában. */
+const FAJTA_SUGO: Record<Fajta, string> = {
+  person: 'Akiknek a neve az iratban szerepel: a felek, a tanúk, a hozzátartozók.',
+  org: 'Cégek, hivatalok, intézmények neve.',
+  place: 'Települések, utcák, ingatlanok megnevezése.',
+  identifier:
+    'Lakcím, e-mail, adószám, TAJ, bankszámlaszám, helyrajzi szám. Ezek helyére sosem álnév kerül, hanem az adatfajta megjelölése — egy kitalált tízjegyű szám ugyanúgy valódinak látszana.',
+  amount:
+    'Fedőnév-módban minden összeg ugyanazzal, az ügyre állandó szorzóval változik, így az összefüggések megmaradnak. A másik három módban [összeg] kerül a helyükre. Pénznem nélküli számhoz — paragrafus, ügyszám, határidő — a program nem nyúl.',
+  date:
+    'Egyetlen, az ügyre állandó eltolás: az időközök megmaradnak, a 90 napos felmondási idő utána is 90 nap. Az eltolt iratból viszont határidőt számolni nem szabad. A jogszabályok évszámához a program nem nyúl.',
+  hivatalos:
+    'A Bszi. 166. § (2) szerint az eljáró bíró, az ügyvéd, az ügyvédi iroda és a bíróság neve a bírósági határozat közzétett változatában nem anonimizálható.',
+};
+
+/**
+ * EGY CSOPORT FEJLÉCE — a kapcsoló IDE került, nem egy külön sorba alá.
+ *
+ * Az összeg, a dátum és a hivatalos szereplők kapcsolója korábban a csoporton
+ * BELÜL állt, saját sorban, a fejléc alatt. Így viszont ugyanaz a kapcsoló két
+ * dolognak látszott: a fejléc a csoportról szólt, a sor pedig mintha a csoport
+ * egyik tétele volna. A fejlécsor jobb szélén nincs kérdés — a kapcsoló arra
+ * vonatkozik, aminek a nevét mellette olvassa a felhasználó.
+ */
+function CsoportFejlec({
+  fajta,
+  darab,
+  kapcsolo,
+}: {
+  fajta: Fajta;
+  darab: number;
+  /** A csoport egészére szóló kapcsoló; ahol nincs, ott a fejléc egyszerű. */
+  kapcsolo?: React.ReactNode;
+}) {
+  return (
+    <div className="fghead" title={FAJTA_SUGO[fajta]}>
+      <div className="fgszoveg">
+        <div className="t">
+          {FAJTA_CIM[fajta]} <span className="count">{darab}</span>
+        </div>
+        <div className="s">{FAJTA_MIERT[fajta]}</div>
+      </div>
+      {kapcsolo !== undefined && <div className="fgctl">{kapcsolo}</div>}
+    </div>
+  );
+}
+
+/* ─────────────────────────── építőelemek ─────────────────────────── */
+
+/**
+ * EGY BEÁLLÍTÁS EGY SOR: fent a megnevezés és a vezérlő, alattuk teljes
+ * szélességben a magyarázat.
+ *
+ * A MAGYARÁZAT AZÉRT KERÜLT A SOR ALÁ, mert a lap panellé keskenyedett. A
+ * megnevezés mellett, a 200 képpontos vezérlőoszlop mellett 177 képpont maradt
+ * a szövegnek: a leghosszabb magyarázat tizenegy sorba tört, és a beállítás
+ * egy hosszú, keskeny szövegoszloppá vált. Teljes szélességben ugyanaz a
+ * magyarázat négy-öt sor, és a sorhossz is olvasható tartományba kerül.
+ *
+ * A VEZÉRLŐK JOBB SZÉLE viszont EGY VONALBAN MARADT: a rács jobb oszlopában
+ * ülnek, a megnevezés első sorával egy magasságban. A szem így továbbra is
+ * egyetlen függőleges vonal mentén olvassa le, mi van bekapcsolva — ez volt az
+ * eredeti elrendezés lényege, és ez nem esett áldozatul a keskenyedésnek.
+ *
+ * A megnevezés `<label>`, tehát rá lehet kattintani, és a képernyőolvasó ezt
+ * mondja ki a vezérlő neveként. A magyarázat NEM a névbe került bele, hanem
+ * `aria-describedby`-jal kapcsolódik: a nevekbe fűzve minden kapcsoló egy
+ * három mondatos felolvasással kezdődne, és a lényeg — hogy be vagy ki van
+ * kapcsolva — a mondat végére csúszna.
+ */
+function Sor({
+  cim,
+  leiras,
+  vezerloId,
+  children,
+}: {
+  cim: string;
+  leiras: React.ReactNode;
+  vezerloId: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="setrow">
+      <label className="t" htmlFor={vezerloId}>
+        {cim}
+      </label>
+      <div className="setctl">{children}</div>
+      <div className="s" id={`${vezerloId}-s`}>
+        {leiras}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A kapcsoló.
+ *
+ * VALÓDI `input[type=checkbox]`, csak a megjelenése más — nem `div` és nem
+ * kattintáskezelő. Ez nem stílusdöntés: a saját rajzolású kapcsolóból elvész a
+ * Szóköz és az Enter, a képernyőolvasó pedig nem mondja meg, hogy be vagy ki
+ * van kapcsolva. Egy jogi iratot álnevesítő programban ez azt jelentené, hogy
+ * a felhasználó nem tudja ellenőrizni, mit kapcsolt be.
+ *
+ * A „Be” / „Ki” felirat AZ ÁLLAPOT MÁSODIK JELE. A gomb helyzete és a felirat
+ * együtt mondja meg, mi van bekapcsolva; ha csak a szín különböztetné meg őket,
+ * a színtévesztő felhasználó és a szürkeárnyalatos nyomat is vakon maradna.
+ * A felirat `aria-hidden`, mert az állapotot a jelölőnégyzet maga már közli —
+ * kétszer felolvasva csak zaj lenne.
+ */
+function Kapcsolo({
+  id,
+  be,
+  tiltva,
+  onValt,
+}: {
+  id: string;
+  be: boolean;
+  tiltva?: boolean;
+  onValt: (be: boolean) => void;
+}) {
+  return (
+    <>
+      <span className="tstate" aria-hidden="true">
+        {be ? 'Be' : 'Ki'}
+      </span>
+      <input
+        id={id}
+        type="checkbox"
+        className="toggle"
+        role="switch"
+        checked={be}
+        disabled={tiltva === true}
+        aria-describedby={`${id}-s`}
+        onChange={(e) => onValt(e.target.checked)}
+      />
+    </>
+  );
+}
+
+/* ─────────────────────────── a lap ─────────────────────────── */
+
+/*
+  A FÜLEK SORRENDJE A MUNKA MENETE.
+
+  Előbb az dől el, MIRE cseréljük a neveket — ez határozza meg az egész irat
+  kimenetét, és ettől függ minden csereszöveg. Utána jön, MIT cserélünk: azt
+  már a fenti döntés ismeretében érdemes átnézni, mert a listán álló
+  csereszövegek onnan származnak.
+
+  Fordított sorrendben a felhasználó előbb nézné át a listát, aztán a mód
+  átállításával az egészet újraírná maga alatt.
+*/
+type Ful = 'mire' | 'csere';
+
+const FULEK: { id: Ful; cim: string }[] = [
+  { id: 'mire', cim: 'Mire cseréljük?' },
+  { id: 'csere', cim: 'Mit cserélünk?' },
+];
+
+export function DocumentSetup({
+  beallitasok,
+  temak,
+  tetelek,
+  bentMaradok,
+  hivatalosCserelheto,
+  vizsgalat,
+  vizsgalatFut,
+  vizsgalatUzenet,
+  onBeallitas,
+  onCsereSzoveg,
+  onMind,
+  onKovetkezo,
+  onNincs,
+  onUjraVizsgalat,
+  onKeziFelvitel,
+  onUjKeszlet,
+  onKeszletTorles,
+  onTovabb,
+}: DocumentSetupProps) {
+  const [ful, setFul] = useState<Ful>('mire');
+
+  /* Egy lapon több azonosító is van, és a lap elvben kétszer is a képernyőre
+     kerülhet (pl. átmenet közben). A rögzített azonosítók ilyenkor összeérnének,
+     és a `<label for>` a MÁSIK példány vezérlőjére mutatna. */
+  const uid = useId();
+  const az = (nev: string): string => `${uid}-${nev}`;
+
+  /* A fülek gombjai a nyílbillentyűs lépkedéshez kellenek: a fókusznak követnie
+     kell a váltást, különben a billentyűzetes felhasználó egy olyan gombon áll,
+     ami már nem az aktív fül. */
+  const fulGombok = useRef<Partial<Record<Ful, HTMLButtonElement | null>>>({});
+
+  const cserelendo = tetelek.filter((t) => t.cserelodik > 0);
+  /*
+    A „MARAD" CSAK AZT SZÁMOLJA, AMI TÉNYLEG BENT MARAD.
+
+    Aki nem szerepel az iratban (kézzel felvitt név, akit a szöveg nem említ),
+    az nem „bent maradt" — nincs mit bent hagyni belőle. A két esetet
+    összeszámolva a lábléc olyan iratról állítana bent maradt adatot, amiben
+    egyetlen ilyen sincs, és a felhasználó azt keresné, mit rontott el.
+  */
+  const kihagyott = tetelek.filter((t) => t.elofordulas > 0 && t.cserelodik === 0).length;
+
+  function fulValt(uj: Ful): void {
+    setFul(uj);
+    fulGombok.current[uj]?.focus();
+  }
+
+  function fulBillentyu(e: React.KeyboardEvent<HTMLDivElement>): void {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Home' && e.key !== 'End') {
+      return;
+    }
+    e.preventDefault();
+    const most = FULEK.findIndex((f) => f.id === ful);
+    let cel = most;
+    if (e.key === 'ArrowLeft') cel = (most - 1 + FULEK.length) % FULEK.length;
+    if (e.key === 'ArrowRight') cel = (most + 1) % FULEK.length;
+    if (e.key === 'Home') cel = 0;
+    if (e.key === 'End') cel = FULEK.length - 1;
+    const kovetkezo = FULEK[cel];
+    if (kovetkezo !== undefined) fulValt(kovetkezo.id);
+  }
+
+  return (
+    <div className="docsetup">
+      <div className="ds-card">
+        {/*
+          A LAP FEJLÉCE ELTŰNT.
+
+          Egy cím („Mi történjen ezzel az irattal?”) és egy mondat állt itt,
+          és mindkettő ugyanazt mondta el, amit a két fül felirata: hogy most a
+          csere beállításai jönnek. Egy panelen, ahol a hely a
+          magyarázatoké, ez két sor volt a semmiért.
+        */}
+        <div className="tabs ds-tabs" role="tablist" onKeyDown={fulBillentyu}>
+          {FULEK.map((f) => (
+            <button
+              key={f.id}
+              ref={(el) => {
+                fulGombok.current[f.id] = el;
+              }}
+              className={`tab${ful === f.id ? ' active' : ''}`}
+              role="tab"
+              id={az(`ful-${f.id}`)}
+              aria-selected={ful === f.id}
+              aria-controls={az(`lap-${f.id}`)}
+              tabIndex={ful === f.id ? 0 : -1}
+              onClick={() => setFul(f.id)}
+            >
+              {f.cim}
+              {f.id === 'csere' && tetelek.length > 0 && (
+                <span className="count">{tetelek.length}</span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        <div
+          className="ds-body"
+          role="tabpanel"
+          id={az(`lap-${ful}`)}
+          aria-labelledby={az(`ful-${ful}`)}
+          tabIndex={0}
+        >
+          {ful === 'mire' && (
+            <MireLap
+              beallitasok={beallitasok}
+              temak={temak}
+              onBeallitas={onBeallitas}
+              onUjKeszlet={onUjKeszlet}
+              onKeszletTorles={onKeszletTorles}
+            />
+          )}
+
+          {ful === 'csere' && (
+            <CsereLap
+              az={az}
+              beallitasok={beallitasok}
+              tetelek={tetelek}
+              bentMaradok={bentMaradok}
+              hivatalosCserelheto={hivatalosCserelheto}
+              vizsgalat={vizsgalat}
+              fut={vizsgalatFut}
+              {...(vizsgalatUzenet === undefined ? {} : { vizsgalatUzenet })}
+              onBeallitas={onBeallitas}
+              onCsereSzoveg={onCsereSzoveg}
+              onMind={onMind}
+              onKovetkezo={onKovetkezo}
+              onNincs={onNincs}
+              onUjraVizsgalat={onUjraVizsgalat}
+              onKeziFelvitel={onKeziFelvitel}
+            />
+          )}
+        </div>
+
+        <div className="ds-foot">
+          {/* Az összegzés a gomb MELLETT áll, nem egy fül belsejében: a
+              felhasználó a továbblépés pillanatában lássa, hány nevet visz
+              magával, és hány marad bent szándékosan. */}
+          <div className="ds-sum">
+            <b>{cserelendo.length}</b> cserélődik
+            {kihagyott > 0 && (
+              <>
+                {' · '}
+                <b>{kihagyott}</b> marad
+              </>
+            )}
+            {!beallitasok.replaceOfficials && bentMaradok.length > 0 && (
+              <>
+                {' · '}
+                <b>{bentMaradok.length}</b> a törvény szerint bent marad
+              </>
+            )}
+          </div>
+          {/*
+            A „MÁSIK IRATOT NYITOK" GOMB INNEN KIKERÜLT.
+
+            Ugyanazt tette, amit a fejléc megnyitás ikonja — és a fejléc végig
+            látszik, ezen a lapon is. Két gomb ugyanarra a műveletre azt
+            kérdezteti meg, mi a különbség köztük; itt ráadásul a lap
+            legfontosabb gombja mellől vett el figyelmet.
+          */}
+          <div className="ds-acts">
+            <button className="btn primary" onClick={onTovabb}>
+              Mehet a csere
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────── „Mire cseréljük?” ─────────────────────────── */
+
+/**
+ * EGY RÁCS, EGY DÖNTÉS.
+ *
+ * Eddig két rács állt itt egymás alatt: fent négy csere-mód kártyája, lent a
+ * névkészleteké — és a felső rács egyik kártyája („Fedőnevek”) semmi mást nem
+ * csinált, mint hogy az alsó rácsot élővé tette. A felhasználónak tehát
+ * kétszer kellett ugyanazt választania, és amíg nem tette meg mindkettőt, az
+ * alsó rács letiltva, halványan állt ott.
+ *
+ * Márpedig a négy mód KIZÁRJA EGYMÁST, és a névkészlet pontosan ugyanennek a
+ * kérdésnek a válasza: mi kerüljön a nevek helyére. Ezért innentől EGY rács
+ * van. Elöl a három címkés mód, utánuk a névkészletek — egy készletre
+ * kattintva a program egyszerre kapcsol fedőnév-módra és választ készletet.
+ *
+ * A JELVÉNY MONDJA MEG, MELYIK FAJTA. A címkés módoké „címke”, a
+ * készleteké „névkészlet”: a kártyák egyformák, a döntés következménye viszont
+ * nem az, és ezt látni kell.
+ */
+function MireLap({
+  beallitasok,
+  temak,
+  onBeallitas,
+  onUjKeszlet,
+  onKeszletTorles,
+}: {
+  beallitasok: DokumentumBeallitasok;
+  temak: ThemeSummaryUi[];
+  onBeallitas: (valtozas: Partial<DokumentumBeallitasok>) => void;
+  onUjKeszlet: () => void;
+  onKeszletTorles: (id: string) => void;
+}) {
+  const fedonevMod = beallitasok.mode === 'theme';
+
+  return (
+    <>
+      <div className="ds-szakasz">
+        <h3>Mi kerüljön a nevek helyére?</h3>
+        <p>
+          Az első három kártya címkét ír a nevek helyére, a többi fedőnevet. A kártyán a kimenet
+          nyelve is váltható.
+        </p>
+      </div>
+
+      {/*
+        A HÁROM CÍMKÉS KÁRTYA A KÉSZLETEK RÁCSÁN BELÜL áll, nem fölötte: a
+        `NevkeszletRacs` az `elotte` gyerekeit ugyanabba a rácsba teszi,
+        ugyanabba a `radiogroup`-ba. Így a billentyűzetes felhasználó is egyetlen
+        csoportként lépked végig rajtuk, és a rács hat egyforma magas kártyája
+        egy vonalban marad.
+      */}
+      <NevkeszletRacs
+        themes={temak}
+        // Fedőnév-módon kívül EGYETLEN készletkártya sem kiválasztott: a
+        // választás a fenti három kártya valamelyikén áll. Egy pipa mindkét
+        // helyen azt jelentené, hogy két dolog van egyszerre kiválasztva.
+        selected={fedonevMod ? beallitasok.themeId : ''}
+        onPick={(id) => onBeallitas({ mode: 'theme', themeId: id })}
+        onNewCustom={onUjKeszlet}
+        onRemoveCustom={onKeszletTorles}
+        elotte={CIMKE_MODOK.map((m) => (
+          <ModKartya
+            key={m}
+            mod={m}
+            nyelv={beallitasok.labelLang}
+            kivalasztott={beallitasok.mode === m}
+            onValaszt={() => onBeallitas({ mode: m })}
+            onNyelv={(ny) => onBeallitas({ mode: m, labelLang: ny })}
+          />
+        ))}
+      />
+
+      {/* A RAGOZÁS EGYSZER, A KÁRTYÁK ALATT.
+
+          Mindegyik módra ugyanaz áll, és a kártyákon négyszer leírva a példát
+          nyomná el — pedig épp a példa a kártya lényege. */}
+      <p className="hint" style={{ marginTop: 10 }}>
+        A toldalék a mondathoz igazodik: „{PELDA_NEV}nak” → „a felperesnek”, angolul „the
+        plaintiff-nek”.
+      </p>
+    </>
+  );
+}
+
+/**
+ * Egy címkés csere-mód kártyája.
+ *
+ * Szándékosan ugyanaz a `themecard` alap, mint a névkészleté: a felhasználónak
+ * egyetlen kártyás felületet kell megtanulnia, nem kettőt. A nyelvkapcsoló is
+ * ugyanaz a `langchip` sor, ugyanazon a helyen — ami a készletnél a nevek
+ * nyelve, az itt a címkéké.
+ */
+function ModKartya({
+  mod,
+  nyelv,
+  kivalasztott,
+  onValaszt,
+  onNyelv,
+}: {
+  mod: CimkeMod;
+  nyelv: 'hu' | 'en';
+  kivalasztott: boolean;
+  onValaszt: () => void;
+  onNyelv: (nyelv: 'hu' | 'en') => void;
+}) {
+  return (
+    <div
+      className={`themecard modcard${kivalasztott ? ' selected' : ''}`}
+      role="radio"
+      aria-checked={kivalasztott}
+      /*
+        A KÁRTYA NEVE A MÓD NEVE — nem a leírása.
+
+        Enélkül a kártya felolvasott neve a `title`, vagyis a négysoros
+        magyarázat: a képernyőolvasós felhasználó végighallgat egy mondatot
+        arról, MIT csinál a mód, de azt a szót sosem hallja meg, amivel a
+        program máshol hivatkozik rá — pedig a lépéssáv is ezen a néven nevezi.
+        A `title` ettől nem vész el: `aria-label` mellett leírásként hangzik el,
+        tehát a sorrend áll helyre, nem az egyik szöveg szorítja ki a másikat.
+      */
+      aria-label={MODE_LABEL[mod]}
+      tabIndex={0}
+      title={MODE_LEIRAS[mod]}
+      onClick={onValaszt}
+      onKeyDown={(e) => {
+        // Csak a kártya SAJÁT billentyűje választ: a nyelvkapcsoló valódi gomb,
+        // azé az Enter és a szóköz.
+        if (e.target !== e.currentTarget) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onValaszt();
+        }
+      }}
+    >
+      {/* UGYANAZ A FEJLÉCSOR, mint a névkészlet-kártyákon: balra a jelvény
+          (mi ez), jobbra a nyelvváltó (vezérlő). A hat kártya így azonos
+          szerkezettel kezdődik, és a szem egy vonalban futja végig őket. */}
+      <div className="kartyafej">
+        <div className="jelek">
+          <span className="kartyajel mod">címke</span>
+        </div>
+        <div className="langsor">
+          {(['hu', 'en'] as const).map((ny) => (
+            <button
+              key={ny}
+              className={`langchip${ny === nyelv ? ' on' : ''}`}
+              aria-pressed={ny === nyelv}
+              onClick={(e) => {
+                e.stopPropagation();
+                onNyelv(ny);
+              }}
+            >
+              {ny === 'hu' ? 'magyar' : 'angol'}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="t">
+        <span className="nev">{MODE_LABEL[mod]}</span>
+        {kivalasztott && <span className="pipa">✓</span>}
+      </div>
+      <div className="pelda">
+        <span className="bal">{PELDA_NEV}</span>
+        <span className="nyil" aria-hidden="true">
+          →
+        </span>
+        <span className="jobb">{MODE_PELDA[mod][nyelv]}</span>
+      </div>
+      <div className="s">{MODE_LEIRAS[mod]}</div>
+    </div>
+  );
+}
+
+/* ─────────────────────────── „Mit cserélünk?” ─────────────────────────── */
+
+function CsereLap({
+  az,
+  beallitasok,
+  tetelek,
+  bentMaradok,
+  hivatalosCserelheto,
+  vizsgalat,
+  fut,
+  vizsgalatUzenet,
+  onBeallitas,
+  onCsereSzoveg,
+  onMind,
+  onKovetkezo,
+  onNincs,
+  onUjraVizsgalat,
+  onKeziFelvitel,
+}: {
+  az: (nev: string) => string;
+  beallitasok: DokumentumBeallitasok;
+  tetelek: TalaltTetel[];
+  bentMaradok: BentMarado[];
+  hivatalosCserelheto: boolean;
+  vizsgalat: VizsgalatAllapot;
+  fut: boolean;
+  vizsgalatUzenet?: string;
+  onBeallitas: (valtozas: Partial<DokumentumBeallitasok>) => void;
+  onCsereSzoveg: (id: string, szoveg: string) => void;
+  onMind: (id: string) => void;
+  onKovetkezo: (id: string) => void;
+  onNincs: (id: string) => void;
+  onUjraVizsgalat: () => void;
+  onKeziFelvitel: () => void;
+}) {
+  const szazalek = Math.round(beallitasok.autoThreshold * 100);
+  const bizonytalan = tetelek.filter((t) => t.bizonytalanDb > 0).length;
+
+  /*
+    A KIÚT MINDIG OTT VAN.
+
+    Nem csak az üres listánál: a félbeszakadt vizsgálat listája is hiányos
+    lehet, és a felhasználó akkor jön rá, amikor már végigolvasta. Ha ilyenkor
+    vissza kellene lépnie a megnyitásig, inkább kiadná az iratot úgy, ahogy van.
+  */
+  const kiutak = (
+    <div className="ds-ways">
+      <button className="btn sm ghost" onClick={onUjraVizsgalat}>
+        Vizsgálat újra
+      </button>
+      <button className="btn sm ghost" onClick={onKeziFelvitel}>
+        Nevet veszek fel kézzel
+      </button>
+    </div>
+  );
+
+  return (
+    <>
+      {/*
+        A KÉT MEGMARADT BEÁLLÍTÁS A LAP TETEJÉN.
+
+        Mindkettő ERRE a lapra tartozik, mert itt van hatásuk: a küszöb azt
+        szabja meg, mi számít bizonytalannak az alábbi listán, a kulcsfájl
+        pedig azt, hogy a most beállított cserék visszafejthetők maradnak-e.
+        Külön fülön állva a felhasználó a lista átnézése közben nem látta,
+        milyen küszöbbel néz szembe.
+      */}
+      {/*
+        A NYELVI MODELL A LAP TETEJÉN.
+
+        Innen derül ki, hogy a lenti lista miért rövid — és innen is orvosolható:
+        a dokumentum nyelve szerinti modell kiválasztható, letölthető, és a
+        vizsgálat is elindítható. Eddig ehhez a Beállításokba kellett átmenni,
+        onnan vissza, és a vizsgálatot még egyszer elindítani.
+      */}
+      <FelismeroSav fut={fut} onVizsgalat={onUjraVizsgalat} />
+
+      <div className="ds-teteje">
+        <Sor
+          cim={`Bizonytalansági küszöb: ${szazalek}%`}
+          vezerloId={az('thr')}
+          leiras="Ez alatt a találat „bizonytalan” jelvényt kap, és a cserét kérni kell rá."
+        >
+          <span className="rangeval" aria-hidden="true">
+            {szazalek}%
+          </span>
+          <input
+            id={az('thr')}
+            type="range"
+            min={50}
+            max={100}
+            step={5}
+            value={szazalek}
+            aria-describedby={az('thr-s')}
+            onChange={(e) => onBeallitas({ autoThreshold: Number(e.target.value) / 100 })}
+          />
+        </Sor>
+
+        <Sor
+          cim="Készüljön visszafejtő kulcsfájl"
+          vezerloId={az('key')}
+          leiras="Melyik álnév melyik nevet takarja. Amíg megvan, a kimenet a GDPR szerint személyes adat."
+        >
+          <Kapcsolo
+            id={az('key')}
+            be={beallitasok.keepKey}
+            onValt={(be) => onBeallitas({ keepKey: be })}
+          />
+        </Sor>
+      </div>
+
+      {vizsgalat === 'megszakitva' && (
+        <div className="note">
+          <b>A vizsgálat meg lett szakítva.</b> Ami itt látszik, hiányos: a program addig jutott,
+          ameddig megszakítottad. Amit nem talált meg, azt nem is cseréli le.
+        </div>
+      )}
+      {vizsgalat === 'hiba' && (
+        <div className="note bad">
+          <b>A vizsgálat hibába futott.</b>{' '}
+          {vizsgalatUzenet === undefined || vizsgalatUzenet === ''
+            ? 'A program nem tudta végigolvasni az iratot, ezért ez a lista nem teljes.'
+            : vizsgalatUzenet}
+        </div>
+      )}
+      {vizsgalat === 'kihagyva' && (
+        <div className="note">
+          <b>A vizsgálat nem futott le.</b> A program nem keresett neveket ebben az iratban, tehát
+          magától nem is cserél le egyet sem.
+        </div>
+      )}
+      {vizsgalat === 'kesz' && vizsgalatUzenet !== undefined && vizsgalatUzenet !== '' && (
+        <p className="hint">{vizsgalatUzenet}</p>
+      )}
+
+      {tetelek.length === 0 ? (
+        <div className="empty">
+          <div className="big">◌</div>
+          {vizsgalat === 'kesz' ? (
+            <p>
+              A vizsgálat lefutott, de <b>egyetlen nevet sem talált</b>. Ez kétféle okból lehet: az
+              irat tényleg nem tartalmaz nevet, vagy a szöveg nem olvasható ki belőle — szkennelt
+              iratban a betűk kép formájában állnak, azokat a program nem látja.
+            </p>
+          ) : (
+            <p>Nincs mit átnézni. Az alábbi két úton juthatsz tovább.</p>
+          )}
+          {kiutak}
+        </div>
+      ) : (
+        <>
+          <div className="ds-listtop">
+            {/*
+              EGY GOMB MINDENRE — a régi „kérdezés nélkül menjen végig” kapcsoló
+              helyén.
+
+              A kapcsoló ÁLLAPOTOT ígért, holott MŰVELETRŐL volt szó: nem
+              maradt utána semmi, amit a felhasználó a képernyőn ellenőrizhetett
+              volna. Egy gomb ugyanazt teszi, csak a hatása azonnal látszik is:
+              a lenti sorok mind „mind” állásba billennek, és a bal oldali
+              iratnézeten minden kiemelés kiszínesedik.
+            */}
+            {/*
+              A „MINDENT CSERÉLÜNK" GOMB INNEN KIKERÜLT.
+
+              A felhasználó jelezte, hogy nem tudja megkülönböztetni a lap alján
+              álló „Mehet a csere" gombtól — és igaza volt abban, ami ebből
+              következik: két nagy, egymás fölött álló gomb, mindkettő a
+              cseréről, egyértelmű különbség nélkül. Az alsó a folyamat
+              továbbvitele, ez pedig egy tömeges bekapcsolás volt, amire
+              alapállásban nincs is szükség: minden találat eleve cserére van
+              kapcsolva. Ami visszakapcsolható, azt a sorok „Mind" gombja és a
+              csoportok fejléckapcsolója teszi — ott, ahol a hatása is látszik.
+            */}
+            {bizonytalan > 0 && (
+              <p className="hint">
+                <b>{bizonytalan}</b> találat vár döntésre.
+              </p>
+            )}
+            {kiutak}
+          </div>
+
+          {CSOPORT_SORREND.map((fajta) => {
+            const sorok = tetelek.filter((t) => t.fajta === fajta);
+            if (sorok.length === 0) return null;
+            return (
+              <div className="fgroup" key={fajta}>
+                <CsoportFejlec
+                  fajta={fajta}
+                  darab={sorok.length}
+                  {...(fajta === 'amount' || fajta === 'date'
+                    ? {
+                        kapcsolo: (
+                          <Kapcsolo
+                            id={az(fajta)}
+                            be={fajta === 'amount' ? beallitasok.replaceAmounts : beallitasok.shiftDates}
+                            onValt={(be) =>
+                              onBeallitas(fajta === 'amount' ? { replaceAmounts: be } : { shiftDates: be })
+                            }
+                          />
+                        ),
+                      }
+                    : {})}
+                />
+                {sorok.map((t) => (
+                  <TalaltSor
+                    key={t.id}
+                    tetel={t}
+                    onCsereSzoveg={onCsereSzoveg}
+                    onMind={onMind}
+                    onKovetkezo={onKovetkezo}
+                    onNincs={onNincs}
+                  />
+                ))}
+              </div>
+            );
+          })}
+        </>
+      )}
+
+      <HivatalosSzakasz
+        az={az}
+        be={beallitasok.replaceOfficials}
+        cserelheto={hivatalosCserelheto}
+        bentMaradok={bentMaradok}
+        sorok={tetelek.filter((t) => t.fajta === 'hivatalos')}
+        onValt={(be) => onBeallitas({ replaceOfficials: be })}
+        onCsereSzoveg={onCsereSzoveg}
+        onMind={onMind}
+        onKovetkezo={onKovetkezo}
+        onNincs={onNincs}
+      />
+    </>
+  );
+}
+
+/**
+ * A TÖRVÉNY SZERINT BENT MARADÓ NEVEK — külön szakaszon, saját kapcsolóval.
+ *
+ * Nem kimaradt találatok, hanem a jogszabály előírása (Bszi. 166. § (2)): az
+ * eljáró bíró, az ügyvéd, az ügyvédi iroda és a bíróság neve nyilvános. A többi
+ * közé keverve a felhasználó hibának nézné őket, és „kijavítana” egy olyan
+ * iratot, ami így volt helyes.
+ *
+ * A KAPCSOLÓ MÉGIS OTT VAN, mert nem minden irat megy bíróságra. Egy belső
+ * feljegyzésben, egy ügyfélnek küldött másolatban vagy egy nyelvi modellnek
+ * átadott szövegben a bíró neve ugyanolyan személyes adat, mint bárkié — és a
+ * felhasználó kérése kifejezetten az volt, hogy erre legyen mód. Ezért:
+ * elszeparálva, alapból kikapcsolva, és kimondva, mit jelent bekapcsolni.
+ */
+function HivatalosSzakasz({
+  az,
+  be,
+  cserelheto,
+  bentMaradok,
+  sorok,
+  onValt,
+  onCsereSzoveg,
+  onMind,
+  onKovetkezo,
+  onNincs,
+}: {
+  az: (nev: string) => string;
+  be: boolean;
+  cserelheto: boolean;
+  bentMaradok: BentMarado[];
+  /** A hivatalos szereplők találatai — csak bekapcsolt cserénél van bennük sor. */
+  sorok: TalaltTetel[];
+  onValt: (be: boolean) => void;
+  onCsereSzoveg: (id: string, szoveg: string) => void;
+  onMind: (id: string) => void;
+  onKovetkezo: (id: string) => void;
+  onNincs: (id: string) => void;
+}) {
+  // Nincs kit cserélni ÉS nincs mit kiírni: a szakasz elmarad. Egy üres rovat
+  // azt a kérdést vetné fel, hogy hova tűntek a nevek.
+  if (bentMaradok.length === 0) return null;
+
+  return (
+    <div className={`fgroup keep${be ? ' nyitva' : ''}`}>
+      <CsoportFejlec
+        fajta="hivatalos"
+        darab={be ? sorok.length : bentMaradok.length}
+        {...(cserelheto ? { kapcsolo: <Kapcsolo id={az('officials')} be={be} onValt={onValt} /> } : {})}
+      />
+
+      {/*
+        BEKAPCSOLVA UGYANOLYAN SOROK, MINT MÁSHOL.
+
+        Korábban a bekapcsolás a felek közé olvasztotta őket, és itt csak egy
+        kapcsoló maradt — a felhasználó tehát nem látta egy helyen, KIKET
+        érintett a döntése, és azt sem, mire cserélődnek. Innentől a szakasz
+        megtartja a saját bontását: minden névnél ott a csereszöveg és
+        ugyanaz a három gomb, mint a többi csoportban.
+      */}
+      {be && (
+        <>
+          <div className="keepfigy">
+            <b className="warntext">
+              Bírósági határozat közzétett változatában ez jogszabályba ütközik.
+            </b>{' '}
+            Csak akkor hagyd bekapcsolva, ha az irat nem közzétételre megy.
+          </div>
+          {sorok.map((t) => (
+            <TalaltSor
+              key={t.id}
+              tetel={t}
+              onCsereSzoveg={onCsereSzoveg}
+              onMind={onMind}
+              onKovetkezo={onKovetkezo}
+              onNincs={onNincs}
+            />
+          ))}
+        </>
+      )}
+
+      {!be &&
+        bentMaradok.map((b) => (
+          <div className="keeprow" key={`${b.name}|${b.why}`}>
+            <div className="val">{b.name}</div>
+            <div className="why">{b.why}</div>
+          </div>
+        ))}
+    </div>
+  );
+}
+
+/**
+ * EGY TALÁLAT SORA — kapcsoló helyett HÁROM GOMB.
+ *
+ * A kapcsoló csak két állást ismert: cserél vagy marad. Egy név viszont sokszor
+ * szerepel az iratban, és nem mindenhol ugyanaz a helyzet — a „Szabó” egy
+ * mondatban vezetéknév, a következőben köznév. A három gomb ezt a valóságot
+ * adja vissza:
+ *
+ *   Mind        — minden előfordulás cserélődik
+ *   Következő   — a következő előfordulás cserélődik, a többi marad
+ *   Nincs csere — egyik sem cserélődik
+ *
+ * A „Következő” a Word Csere párbeszédének mozdulata, és pontosan azért van
+ * rá szükség, amiért ott: aki egyesével akar dönteni, ne egy külön képernyőn
+ * kelljen végigkattintania. A gomb az iratot is odagörgeti, tehát a döntés és
+ * a mondat, amiről szól, egyszerre látszik.
+ */
+function TalaltSor({
+  tetel,
+  onCsereSzoveg,
+  onMind,
+  onKovetkezo,
+  onNincs,
+}: {
+  tetel: TalaltTetel;
+  onCsereSzoveg: (id: string, szoveg: string) => void;
+  onMind: (id: string) => void;
+  onKovetkezo: (id: string) => void;
+  onNincs: (id: string) => void;
+}) {
+  /**
+   * NEM SZEREPEL AZ IRATBAN — külön eset, nem „nincs csere".
+   *
+   * Ide a kézzel felvitt név kerül, amit a szöveg nem említ. A gombjai
+   * értelmetlenek (nincs mit bekapcsolni), és a „az eredeti szöveg bent marad"
+   * figyelmeztetés is hazugság volna: nincs mi bent maradjon. A sor mégis
+   * látszik, mert a felhasználó felvitte — a hallgatás azt üzenné, hogy a
+   * program elnyelte.
+   */
+  const nincsBenne = tetel.elofordulas === 0;
+  /*
+    „NINCS CSERE" CSAK KIMONDOTT DÖNTÉSRE.
+
+    Amíg akár egyetlen előfordulása emberi döntésre vár, a sor egyik gombja
+    sem aktív: a program nem állíthatja azt, hogy a felhasználó úgy döntött,
+    maradjon bent — miközben csak még nem döntött róla. A „bizonytalan”
+    jelvény ilyenkor megmondja, mi hiányzik.
+  */
+  const nincs = !nincsBenne && tetel.cserelodik === 0 && tetel.bizonytalanDb === 0;
+  const mind = !nincsBenne && !tetel.vanKovetkezo && tetel.cserelodik > 0;
+  const reszben = !nincs && !mind && !nincsBenne;
+  /* A „kézzel átírva” csak akkor igaz, ha a szöveg TÉNYLEG más, mint amit a
+     program adna: aki visszagépeli az alapértelmezettet, ne kapjon róla
+     figyelmeztetést, mert nincs mit visszaállítania. */
+  const sajat = tetel.sajatCsere ?? '';
+  const atirt = sajat !== '' && sajat !== tetel.csere;
+  const ertek = sajat === '' ? tetel.csere : sajat;
+
+  return (
+    <div className={`findrow${nincs || nincsBenne ? ' off' : ''}`}>
+      <div className="fmain">
+        <span className="orig" title={tetel.eredeti}>
+          {tetel.eredeti}
+        </span>
+        <span className="farrow" aria-hidden="true">
+          →
+        </span>
+        {/* A csereszöveg NEM címke, hanem szerkeszthető mező: a ragozó motor
+            néha mellényúl egy ritka névnél, és ilyenkor az ügyvéd egyetlen
+            helyen javítja, nem a kész iratban keresi végig.
+
+            Az összeg és a dátum kivétel: ott a csereszöveget MÉRÉS adja (közös
+            szorzó, közös eltolás), és egyetlen érték kézi átírása pont azt az
+            összefüggést törné el, amiért a közös szorzó van. */}
+        {tetel.fajta === 'amount' || tetel.fajta === 'date' ? (
+          <span className="frepl static">{nincs ? tetel.eredeti : ertek}</span>
+        ) : (
+          <input
+            type="text"
+            className="frepl"
+            value={nincs ? tetel.eredeti : ertek}
+            disabled={nincs || nincsBenne}
+            aria-label={`${tetel.eredeti} helyére kerülő szöveg`}
+            onChange={(e) => onCsereSzoveg(tetel.id, e.target.value)}
+          />
+        )}
+      </div>
+
+      <div className="fctl">
+        {nincsBenne ? (
+          <span className="pill kind">nem szerepel az iratban</span>
+        ) : (
+        <div className="seg sm" role="group" aria-label={`${tetel.eredeti} cseréje`}>
+          <button
+            className={`segbtn${mind ? ' active' : ''}`}
+            aria-pressed={mind}
+            title={`Mind a(z) ${tetel.elofordulas} előfordulás lecserélődik`}
+            onClick={() => onMind(tetel.id)}
+          >
+            Mind
+          </button>
+          {/* A gomb CSAK akkor látszik, ha van mit bekapcsolnia. Egyetlen
+              előfordulásnál a „Mind” és a „Következő” ugyanaz a művelet —
+              két gomb ugyanarra azt kérdeztetné meg, mi a különbség. */}
+          {tetel.elofordulas > 1 && (
+            <button
+              className="segbtn"
+              disabled={!tetel.vanKovetkezo}
+              title={
+                tetel.vanKovetkezo
+                  ? 'A következő előfordulás lecserélődik, a többi marad — az irat odagörög'
+                  : 'Nincs több bekapcsolható előfordulás'
+              }
+              onClick={() => onKovetkezo(tetel.id)}
+            >
+              Következő
+            </button>
+          )}
+          <button
+            className={`segbtn${nincs ? ' active' : ''}`}
+            aria-pressed={nincs}
+            title="Az eredeti szöveg marad az iratban"
+            onClick={() => onNincs(tetel.id)}
+          >
+            Nincs csere
+          </button>
+        </div>
+        )}
+      </div>
+
+      <div className="fmeta">
+        <span className="pill kind">{tetel.szerep}</span>
+        <span className="occ">
+          {nincsBenne ? (
+            'a szöveg nem említi'
+          ) : reszben ? (
+            <b>
+              {tetel.cserelodik}/{tetel.elofordulas} helyen
+            </b>
+          ) : (
+            `${tetel.elofordulas} helyen`
+          )}
+        </span>
+        {tetel.bizonytalanDb > 0 && (
+          <span className="pill review">
+            {tetel.bizonytalanDb === tetel.elofordulas
+              ? 'bizonytalan'
+              : `${tetel.bizonytalanDb} bizonytalan`}
+          </span>
+        )}
+        {/* A program döntött helyette („Mindent cserélünk”): ez nem a
+            felhasználó döntése volt, tehát ki kell mondani. */}
+        {tetel.bizonytalan === true && tetel.bizonytalanDb === 0 && tetel.kezi !== true && (
+          <span className="pill review">bizonytalan volt — a program döntött</span>
+        )}
+        {tetel.kezi === true && <span className="pill kind">kézzel felvéve</span>}
+        {/* A sor EGY példát mutat a sok közül: ki kell mondani, különben a
+            felhasználó azt hinné, hogy csak ehhez az egy értékhez nyúlunk. */}
+        {(tetel.fajta === 'amount' || tetel.fajta === 'date') && tetel.elofordulas > 1 && (
+          <span className="occ">példa az elsőre; a többivel ugyanez történik</span>
+        )}
+        {nincs && <span className="warn">az eredeti szöveg bent marad az iratban</span>}
+        {atirt && !nincs && (
+          <span className="occ">
+            kézzel átírva — alapból: <b>{tetel.csere}</b>{' '}
+            <button className="ds-link" onClick={() => onCsereSzoveg(tetel.id, '')}>
+              vissza
+            </button>
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}

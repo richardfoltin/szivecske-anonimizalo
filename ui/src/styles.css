@@ -1,0 +1,3461 @@
+/*
+  Szivecske Anonimizáló — formanyelv.
+
+  Egy ügyvédi irodában használt program, amit egy ember napi több órán át néz.
+  Ezért nyugodt, meleg papírszín, komoly tipográfia, és egyetlen hangsúlyszín
+  (rózsa), amit csak ott használunk, ahol tényleg döntés van.
+*/
+
+:root {
+  --paper: #fdfafb;
+  --surface: #ffffff;
+  --surface-2: #f7f1f4;
+  --ink: #2e2130;
+  --ink-soft: #675a6b;
+  --muted: #9a8d9e;
+  --line: #ebe0e6;
+  --line-soft: #f3ebef;
+
+  --rose: #c4577d;
+  --rose-deep: #a5416a;
+  --rose-soft: #fbedf2;
+  --rose-tint: #f6dbe5;
+
+  --mint: #3d8a72;
+  --mint-soft: #e6f3ee;
+  --amber: #a97318;
+  --amber-soft: #fbf0da;
+
+  --shadow-sm: 0 1px 2px rgba(46, 33, 48, 0.06);
+  --shadow: 0 2px 4px rgba(46, 33, 48, 0.05), 0 12px 28px -16px rgba(46, 33, 48, 0.22);
+  --shadow-lg: 0 4px 8px rgba(46, 33, 48, 0.06), 0 28px 60px -24px rgba(46, 33, 48, 0.32);
+
+  --radius: 10px;
+  --radius-sm: 7px;
+
+  --ui: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --ui-display: "Segoe UI Variable Display", "Segoe UI Semibold", "Segoe UI", system-ui, sans-serif;
+  --doc: Georgia, "Times New Roman", serif;
+  --mono: "Cascadia Mono", "Consolas", ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--ui);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+::-webkit-scrollbar-thumb {
+  background: #ddd0d8;
+  border-radius: 99px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c9b7c3;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ─────────────────────────── váz ─────────────────────────── */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 16px;
+  /* Jobbra hely a natív ablakgomboknak (kicsinyítés / teljes méret / bezárás). */
+  padding-right: 148px;
+  height: 46px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--line);
+  flex: 0 0 auto;
+  /* Az egész sáv az ablak fogantyúja; a benne lévő gombok kivételek. */
+  -webkit-app-region: drag;
+  user-select: none;
+}
+.titlebar button {
+  -webkit-app-region: no-drag;
+}
+
+/*
+  A FEJLÉC MŰVELETI GOMBJAI (megnyitás, mentés).
+
+  `flex: 0 0 auto`: ez a csoport SOHA nem zsugorodik és nem törik. A fejléc
+  szűkülésekor az irat neve rövidül és a „Beállítások” felirata tűnik el —
+  ezek nélkül a program használható marad, a megnyitás és a mentés nélkül
+  viszont nem.
+
+  A `gap` szándékosan kisebb a sáv 14 képpontos térközénél: a két ikon EGY
+  eszközcsoport, nem két különálló jelzés. A csoport körüli nagyobb hézag
+  választja el őket a mellettük álló beállítás gombtól.
+*/
+.titleacts {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+}
+/* Két csoport egy sorban: balra az IRAT műveletei (megnyitás, mentés), jobbra
+   a FOLYAMATÉ (találatok lapja, új ügy). A vékony elválasztó mondja meg, hogy
+   nem ugyanarról szólnak — enélkül négy egyforma ikon állna egymás mellett. */
+.titlesep {
+  width: 1px;
+  height: 18px;
+  margin: 0 5px;
+  background: var(--line);
+  flex: 0 0 auto;
+}
+
+/*
+  A FEJLÉC ÁLLAPOTJELZÉSEI — a megszűnt lépéssávból.
+
+  Nem művelet, hanem TÉNY az iratról: hány találatról döntött a program ember
+  helyett, és van-e feloldatlan változáskövetés. Gomb mégis, mert mindkettő
+  megnyit egy ablakot, ahol a részletek állnak — és mert a felhasználónak
+  látnia kell, hogy van hova kattintania.
+*/
+.btn.jelzes {
+  gap: 6px;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.btn.jelzes .btnszo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.btn.jelzes.gond {
+  color: var(--amber);
+}
+
+/*
+  NÉGYZETES IKONGOMB.
+
+  A `.btn` vízszintes belső margója szöveghez van szabva; egy 16 képpontos
+  rajz mellett ez ferde, fekvő téglalapot adna. Fix méret helyett azonos
+  függőleges és vízszintes margó: így a kattintható terület 30×30 képpont —
+  bőven a 24 képpontos alsó határ fölött, amit egy egérrel dolgozó ember
+  pontosan eltalál.
+*/
+.btn.icon {
+  padding: 6px;
+  gap: 0;
+}
+.btn.icon .btnikon {
+  display: block;
+}
+/*
+  AZ IKON MÉRETE A CSS-BŐL JÖN, nem a `viewBox`-ból.
+
+  A Tabler-rajzok 24×24-es vászonra készültek, és az arányaik ehhez vannak
+  szabva — a `viewBox` átírásával a vonalvastagság és a lekerekítések
+  torzulnának. A megjelenítési méret ezért itt áll: 17 képpont, ami a 13,5
+  képpontos feliratok mellé illik.
+*/
+.btnikon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--ui-display);
+  font-weight: 600;
+  font-size: 14.5px;
+  letter-spacing: 0.005em;
+  flex: 0 0 auto;
+}
+/*
+  Az embléma mozaikos szivecske: 11×11 kockás rács.
+
+  Ezért a mérete NEM szabadon választható. Csak a 11 többszörösei adják ki, hogy
+  egy kocka pontosan egész képpontra essen (22px → 2, 33px → 3, 44px → 4 …).
+  Közte a rajzoló kénytelen tört képpontra tenni a cellahatárt, és elsimítja:
+  20 képponton (1,82 képpont/kocka) a szabályos rács szabálytalan, pöttyös
+  zajjá esik szét, és pont az vész el, amitől kitakarásnak látszik. Kimértük.
+
+  Ugyanezért nincs `border-radius` sem: a lekerekítés a szélső kockákba vágna
+  bele, a mozaik pedig éles, derékszögű kockákból áll — ez a lényege.
+*/
+.brand img {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+.brand .sub {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 12.5px;
+  border-left: 1px solid var(--line);
+  padding-left: 9px;
+  margin-left: 1px;
+}
+
+/*
+  AZ IRAT NEVE — a dokumentumpanel fejlécén, nem a programfejlécben.
+
+  Korábban `.docchip` néven a felső sávban ült. Onnan kikerült: az irat neve
+  oda tartozik, ahol maga az irat van, és a felső sávban harmadszor is
+  szerepelt volna (a panel fejléce és a vizsgálat képernyője mellett) —
+  ráadásul pont abból a sávból vett el helyet, ahol a műveleti gombok állnak.
+*/
+.docname {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  flex: 0 1 auto;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.docname b {
+  color: var(--ink);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.docname span {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.spacer {
+  flex: 1;
+}
+
+/*
+  KESKENY ABLAK — a fejléc nem törhet, mert az ablak fogantyúja.
+
+  A sáv jobb oldalán 148 képpont a natív ablakgomboké, tehát egy 440 képpont
+  széles ablakban alig 290 marad. Enélkül a szabály nélkül a fejléc tartalma
+  egyszerűen kicsúszott a jobb szélen, és az EGÉSZ lap vízszintesen
+  görgethetővé vált — nem csak a fejléc.
+
+  Ezért nem törünk, hanem RANGSOROLUNK. Ami elsőként megy: az „Anonimizáló”
+  alcím — a jel maga is azonosítja a programot. A gombok maradnak, mert azok
+  nélkül a program keskeny ablakban használhatatlan lenne.
+
+  A RANGSOR, a legelőbb feladott elemtől a legtovább tartóig:
+    1. az „Anonimizáló" alcím eltűnik,
+    2. a „Beállítások" gomb FELIRATA eltűnik — a fogaskerék marad,
+    3. a megnyitás és a mentés ikonja marad utoljára.
+
+  A 2. és a 3. sorrendje nem ízlés kérdése: a beállítások ugyanaz a lap,
+  amire a lépéssáv „Beállítások és találatok" gombja is elvisz, tehát van
+  másik útja. A mentésnek a menüsoron kívül nincs.
+
+  Az IRAT NEVE már nem szerepel ebben a rangsorban: kikerült a fejlécből.
+*/
+.titlebar {
+  overflow: hidden;
+}
+
+@media (max-width: 860px) {
+  .brand .sub {
+    display: none;
+  }
+}
+
+/* A „Beállítások" felirat a fogaskerék mellől. A gomb `title`-je és
+   `aria-label`-je változatlan, tehát sem a buboréksúgó, sem a képernyőolvasó
+   nem veszít semmit — csak a képpontok szabadulnak fel. */
+@media (max-width: 780px) {
+  .titlebar .btnszo {
+    display: none;
+  }
+}
+
+/* ─────────────────────────── lépéssáv ─────────────────────────── */
+
+.steps {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  padding: 9px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  flex: 0 0 auto;
+  overflow-x: auto;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 13px 7px 9px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
+  transition: background 0.14s, border-color 0.14s;
+  white-space: nowrap;
+}
+.step:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+.step:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+.step.active {
+  background: var(--rose-soft);
+  border-color: var(--rose-tint);
+}
+.step .num {
+  display: grid;
+  place-items: center;
+  width: 21px;
+  height: 21px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  font-size: 11.5px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+.step.active .num {
+  background: var(--rose);
+  color: #fff;
+}
+.step.done .num {
+  background: var(--mint-soft);
+  color: var(--mint);
+}
+.step .label {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.step .label .t {
+  font-weight: 600;
+  font-size: 13px;
+}
+.step .label .s {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.stepsep {
+  width: 1px;
+  background: var(--line-soft);
+  margin: 6px 4px;
+  flex: 0 0 auto;
+}
+
+/* ─────────────────────────── gombok ─────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.14s, border-color 0.14s, transform 0.08s;
+}
+.btn:hover:not(:disabled) {
+  background: var(--surface-2);
+  border-color: #ddcfd8;
+}
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  box-shadow: none;
+}
+.btn.primary {
+  background: var(--rose);
+  border-color: var(--rose);
+  color: #fff;
+  font-weight: 600;
+}
+.btn.primary:hover:not(:disabled) {
+  background: var(--rose-deep);
+  border-color: var(--rose-deep);
+}
+.btn.ghost {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+.btn.ghost:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+.btn.sm {
+  padding: 4px 9px;
+  font-size: 12px;
+  gap: 5px;
+}
+
+/* ─────────────────────────── munkaterület ─────────────────────────── */
+
+.workspace {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.viewport {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  background: #f2ecef;
+  padding: 22px 24px 40px;
+}
+
+.pagewrap {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.page {
+  position: relative;
+  background: #fff;
+  box-shadow: var(--shadow);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.page img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.page .pageno {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  font-size: 10.5px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.85);
+  padding: 1px 6px;
+  border-radius: 99px;
+}
+
+.hl {
+  position: absolute;
+  border-radius: 2px;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: background 0.12s, box-shadow 0.12s;
+}
+/*
+  A KIEMELÉS KÉT DOLGOT MOND EGYSZERRE — ezért két osztálya van.
+
+  FEDETTSÉG = a kimenet. Kitöltve: lecseréljük. Csak aláhúzva: marad. A
+  felhasználó kérése szó szerint ez volt az összegekre és a dátumokra — legyenek
+  megjelölve, de csak akkor színesek, ha be van kapcsolva rajtuk a csere.
+
+  SZÍN = a fajta. Négy van: név, összeg, dátum, hivatalos szereplő. Az utolsó
+  azért külön, mert a Bszi. 166. § (2) szerint alapból BENT MARAD — a
+  felhasználónak látnia kell, melyik nevet nézi.
+
+  A SZÍN SOSEM AZ EGYETLEN JEL. A fedettség (kitöltött / kitöltés nélküli) és a
+  jelmagyarázat szövege szürkeárnyalatban és színtévesztéssel is elmondja
+  ugyanezt; a `title` pedig kiírja mindegyik találatnál.
+*/
+.hl.csere.k-nev {
+  background: rgba(196, 87, 125, 0.19);
+  box-shadow: inset 0 -2px 0 rgba(196, 87, 125, 0.55);
+}
+/* Összeg: zöldes — a pénz és a szám ne a nevek színén osztozzon. */
+.hl.csere.k-osszeg {
+  background: rgba(23, 128, 106, 0.17);
+  box-shadow: inset 0 -2px 0 rgba(23, 128, 106, 0.6);
+}
+/* Dátum: kék. */
+.hl.csere.k-datum {
+  background: rgba(46, 106, 168, 0.17);
+  box-shadow: inset 0 -2px 0 rgba(46, 106, 168, 0.6);
+}
+/* Hivatalos szereplő: ibolya — a törvény szerint bent maradó nevek köre. */
+.hl.csere.k-hivatalos {
+  background: rgba(122, 79, 168, 0.18);
+  box-shadow: inset 0 -2px 0 rgba(122, 79, 168, 0.62);
+}
+/* A bizonytalanság a FELISMERÉSRŐL szól, nem a fajtáról: ott a fajta színe
+   nem mondana semmit, a borostyán viszont igen. */
+.hl.bizonytalan {
+  background: rgba(169, 115, 24, 0.2);
+  box-shadow: inset 0 -2px 0 rgba(169, 115, 24, 0.6);
+}
+.hl.nincs {
+  background: transparent;
+  box-shadow: inset 0 -1px 0 rgba(122, 110, 128, 0.55);
+}
+.hl.nincs:hover {
+  background: rgba(154, 141, 158, 0.14);
+}
+.hl.selected {
+  background: rgba(196, 87, 125, 0.34);
+  box-shadow:
+    inset 0 -2px 0 var(--rose),
+    0 0 0 2px rgba(196, 87, 125, 0.35);
+}
+
+.textview {
+  max-width: 820px;
+  margin: 0 auto;
+  background: #fff;
+  box-shadow: var(--shadow);
+  border-radius: 4px;
+  padding: 44px 52px;
+  font-family: var(--doc);
+  font-size: 14.5px;
+  line-height: 1.72;
+  white-space: pre-wrap;
+  user-select: text;
+  color: #1f1722;
+}
+/*
+  A SZÖVEGES NÉZET JELÖLÉSEI — ugyanaz a három állapot, mint a lapképen.
+
+  Ez a nézet a DOCX és a TXT iratoké, vagyis a jogi iratok többségéé: itt nincs
+  lapkép, amire kiemelést lehetne fektetni, tehát maga a szöveg hordozza a
+  jelölést. A színek szándékosan azonosak a `.hl` szabályokéval — ugyanaz a
+  három dolog, ugyanaz a három kép.
+*/
+.textview mark {
+  background: rgba(196, 87, 125, 0.2);
+  border-bottom: 2px solid rgba(196, 87, 125, 0.6);
+  color: inherit;
+  padding: 0 1px;
+  border-radius: 2px;
+}
+.textview mark.csere.k-osszeg {
+  background: rgba(23, 128, 106, 0.18);
+  border-bottom-color: rgba(23, 128, 106, 0.65);
+}
+.textview mark.csere.k-datum {
+  background: rgba(46, 106, 168, 0.18);
+  border-bottom-color: rgba(46, 106, 168, 0.65);
+}
+.textview mark.csere.k-hivatalos {
+  background: rgba(122, 79, 168, 0.19);
+  border-bottom-color: rgba(122, 79, 168, 0.68);
+}
+.textview mark.bizonytalan {
+  background: rgba(169, 115, 24, 0.2);
+  border-bottom-color: rgba(169, 115, 24, 0.65);
+}
+.textview mark.nincs {
+  background: transparent;
+  border-bottom: 1px dashed rgba(122, 110, 128, 0.7);
+}
+.textview mark.selected {
+  outline: 2px solid rgba(196, 87, 125, 0.45);
+  outline-offset: 1px;
+}
+/* Kattintható nézetben a jelölés gomb: a mutató és a fókuszkeret is ezt mondja. */
+.viewport.kapcsolhato .textview mark {
+  cursor: pointer;
+}
+.viewport.kapcsolhato .textview mark:hover {
+  background: rgba(196, 87, 125, 0.32);
+}
+.viewport.kapcsolhato .textview mark.nincs:hover {
+  background: rgba(154, 141, 158, 0.2);
+}
+.viewport.kapcsolhato .textview mark:focus-visible {
+  outline: 2px solid var(--rose);
+  outline-offset: 2px;
+}
+
+/* ─────────────────────────── szereplap ─────────────────────────── */
+
+.panel {
+  width: 396px;
+  flex: 0 0 396px;
+  border-left: 1px solid var(--line);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.panel-head {
+  padding: 13px 15px 11px;
+  border-bottom: 1px solid var(--line-soft);
+  flex: 0 0 auto;
+}
+.panel-head h2 {
+  margin: 0 0 2px;
+  font-family: var(--ui-display);
+  font-size: 14.5px;
+  font-weight: 600;
+}
+.panel-head p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.tabs {
+  display: flex;
+  gap: 3px;
+  padding: 9px 12px 0;
+  border-bottom: 1px solid var(--line-soft);
+  flex: 0 0 auto;
+}
+.tab {
+  padding: 6px 11px;
+  border: 0;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tab.active {
+  color: var(--rose-deep);
+  border-bottom-color: var(--rose);
+  font-weight: 600;
+}
+.tab .count {
+  background: var(--surface-2);
+  border-radius: 99px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.tab.active .count {
+  background: var(--rose-soft);
+  color: var(--rose-deep);
+}
+
+.panel-body {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.castrow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3px 10px;
+  padding: 11px 15px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.castrow:hover {
+  background: #fdf9fb;
+}
+.castrow .orig {
+  font-weight: 600;
+  font-size: 13.5px;
+}
+.castrow .arrow {
+  color: var(--muted);
+  margin: 0 5px;
+}
+.castrow .repl {
+  color: var(--rose-deep);
+  font-weight: 600;
+  font-size: 13.5px;
+}
+.castrow .meta {
+  grid-column: 1 / -1;
+  font-size: 11.5px;
+  color: var(--muted);
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.castrow .actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.castrow input.rename {
+  grid-column: 1 / -1;
+  margin-top: 6px;
+  width: 100%;
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  user-select: text;
+}
+.castrow input.rename:focus {
+  outline: 2px solid var(--rose-tint);
+  outline-offset: 1px;
+  background: #fff;
+}
+
+.matchrow {
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--line-soft);
+  cursor: pointer;
+}
+.matchrow:hover {
+  background: #fdf9fb;
+}
+.matchrow.selected {
+  background: var(--rose-soft);
+}
+.matchrow .top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+.matchrow .surface {
+  font-weight: 600;
+  font-size: 13px;
+}
+.matchrow .to {
+  color: var(--rose-deep);
+  font-size: 13px;
+}
+.matchrow .ctx {
+  font-family: var(--doc);
+  font-size: 12px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+.matchrow .ctx b {
+  background: var(--rose-soft);
+  border-radius: 2px;
+  padding: 0 2px;
+}
+.matchrow .why {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.matchrow .acts {
+  display: flex;
+  gap: 6px;
+  margin-top: 7px;
+}
+
+.pill {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 2px 7px;
+  border-radius: 99px;
+  text-transform: uppercase;
+  flex: 0 0 auto;
+}
+.pill.auto {
+  background: var(--mint-soft);
+  color: var(--mint);
+}
+.pill.review {
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+.pill.reject {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.pill.kind {
+  background: var(--surface-2);
+  color: var(--ink-soft);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+
+.empty {
+  padding: 34px 22px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+.empty .big {
+  font-size: 26px;
+  margin-bottom: 8px;
+  opacity: 0.5;
+}
+
+/* ─────────────────────────── állapotsáv ─────────────────────────── */
+
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+  height: 30px;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--ink-soft);
+  flex: 0 0 auto;
+}
+.statusbar .sep {
+  width: 1px;
+  height: 13px;
+  background: var(--line);
+}
+.statusbar b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─────────────────────────── nyitóképernyő ─────────────────────────── */
+
+.welcome {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 30px;
+  overflow: auto;
+}
+.welcome-card {
+  width: min(660px, 100%);
+  text-align: center;
+}
+.welcome h1 {
+  font-family: var(--ui-display);
+  font-size: 30px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+  /* Sormintaként az embléma és a név egy sorban, közösen középre — a szöveg
+     `text-align` önmagában nem igazítaná függőlegesen a jelet a betűkhöz. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.welcome h1 .heart {
+  color: var(--rose);
+}
+/* A nyitóképernyő címsorában álló embléma. 33px = 3 képpont kockánként. */
+.welcome h1 .mark {
+  width: 33px;
+  height: 33px;
+  display: block;
+  flex: 0 0 auto;
+}
+.welcome .lead {
+  color: var(--ink-soft);
+  font-size: 14.5px;
+  margin: 0 auto 26px;
+  max-width: 48ch;
+  line-height: 1.6;
+}
+
+.dropzone {
+  border: 2px dashed var(--rose-tint);
+  background: linear-gradient(180deg, #fffdfe, var(--rose-soft));
+  border-radius: 16px;
+  padding: 44px 30px;
+  transition: border-color 0.15s, background 0.15s, transform 0.12s;
+}
+.dropzone.over {
+  border-color: var(--rose);
+  transform: scale(1.008);
+}
+/* A behúzás jele: nagyobbra méretezett, de UGYANAZ a rajz, mint a lenti
+   három lépés elsőjén — a szem így összeköti a kettőt. */
+.dropzone .lepesikon {
+  width: 38px;
+  height: 38px;
+  color: var(--rose-deep);
+  margin-bottom: 12px;
+  stroke-width: 1.2;
+}
+.dropzone p {
+  margin: 0 0 18px;
+  color: var(--ink-soft);
+}
+.dropzone .formats {
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/*
+  A MODELLHIÁNY SÁVJA — egy sor, nem egy doboznyi szöveg.
+
+  Nem riasztás: a program modell nélkül is dolgozik, csak kevesebbet talál
+  meg. Ezért halk borostyán, nem piros — és ezért fér el a mondat és a gomb
+  egyetlen sorban. A részletes magyarázat a lebegő súgóban áll.
+*/
+.modellhiany {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 9px 14px;
+  border: 1px solid #e8d5ae;
+  border-radius: var(--radius);
+  background: var(--amber-soft);
+  font-size: 12.5px;
+  color: var(--ink);
+}
+
+/*
+  A HÁROM LÉPÉS a nyitóképernyő alján.
+
+  Ikon fent, alatta a lépés neve, alatta egy sor. A doboz KÖZÉPRE igazít —
+  a szem így a három ikont futja végig, nem három bekezdés kezdetét keresi.
+*/
+.assurances {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 26px;
+  text-align: center;
+}
+.assurance {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 15px 13px 13px;
+  box-shadow: var(--shadow-sm);
+}
+.assurance .lepesikon {
+  color: var(--rose-deep);
+  margin-bottom: 7px;
+}
+.assurance .t {
+  font-weight: 600;
+  font-size: 12.5px;
+  margin-bottom: 3px;
+}
+.assurance .s {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+/*
+  A BETÖLTŐKÉPERNYŐ — a megnyitás és a vizsgálat közös lapja.
+
+  Semmi kártya, semmi lábléc, semmi magyarázó doboz: ezen a képernyőn nincs
+  mit eldönteni. Ami itt áll, mind válasz egy kérdésre, amit a várakozó
+  felhasználó tesz fel: mivel dolgozik (fájlnév), hol tart (szakasz és csík),
+  és félbehagyhatom-e (Leállítás).
+*/
+.loading {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  padding: 30px;
+  overflow: auto;
+}
+.loading-in {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(420px, 100%);
+  text-align: center;
+}
+/* A JEL LÉLEGZIK: mozgás nélkül a képernyő megállt programnak látszik, és a
+   felhasználó a leghosszabb szakasz közepén lövi ki a programot. Lassú és
+   halk, nem pörgő — az percekig nézve idegesítő. */
+.loading-in .pulzus {
+  width: 44px;
+  height: 44px;
+  animation: pulzus 1.9s ease-in-out infinite;
+}
+@keyframes pulzus {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+/* A mozgást kikapcsoló rendszerbeállítást tiszteletben tartjuk: a jel akkor
+   áll, a haladást a csík és a szakasz neve mondja el helyette. */
+@media (prefers-reduced-motion: reduce) {
+  .loading-in .pulzus,
+  .csik.hatarozatlan .bar {
+    animation: none;
+  }
+}
+.loading-in .fnev {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.loading-in .mit {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.loading-in .progress,
+.loading-in .csik {
+  width: 100%;
+}
+.loading-in .ds-link {
+  color: var(--amber);
+}
+
+/*
+  HATÁROZATLAN CSÍK: ott, ahol nincs mit arányosítani.
+
+  Nem 0%-os folyamatjelző — abból a felhasználó azt olvassa ki, hogy a program
+  megállt. Egy oda-vissza futó darab annyit állít, amennyit tudunk: dolgozunk,
+  de nem tudjuk, meddig tart.
+*/
+.csik {
+  position: relative;
+  height: 6px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.csik.hatarozatlan .bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 38%;
+  border-radius: 99px;
+  background: var(--rose);
+  animation: csikoz 1.3s ease-in-out infinite;
+}
+@keyframes csikoz {
+  0% {
+    left: -40%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* ─────────────────────────── párbeszédek ─────────────────────────── */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(46, 33, 48, 0.32);
+  backdrop-filter: blur(2px);
+  display: grid;
+  place-items: center;
+  padding: 26px;
+  z-index: 40;
+}
+.dialog {
+  background: var(--surface);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  width: min(860px, 100%);
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.dialog.narrow {
+  width: min(560px, 100%);
+}
+.dialog-head {
+  padding: 17px 21px 13px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.dialog-head h2 {
+  margin: 0 0 3px;
+  font-family: var(--ui-display);
+  font-size: 17px;
+  font-weight: 600;
+}
+.dialog-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  max-width: 62ch;
+  line-height: 1.5;
+}
+.dialog-body {
+  padding: 17px 21px;
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+.dialog-foot {
+  padding: 13px 21px;
+  border-top: 1px solid var(--line-soft);
+  display: flex;
+  gap: 9px;
+  justify-content: flex-end;
+  background: #fdfbfc;
+}
+
+/*
+  A LÁBLÉC BAL OLDALA a döntés adata — a névkészlet-ablakban a kiválasztott
+  készlet neve és névszáma. Rugalmasan nyúlik és nullára zsugorodhat, hogy a
+  gombok a helyükön maradjanak akkor is, ha a mondat hosszabb, mint a hely.
+
+  Legfeljebb KÉT SOR. A lábléc gombsor, nem szövegdoboz: ha a mondat szabadon
+  törhetne, keskeny ablakban a lábléc a párbeszéd felét elfoglalná, és a
+  gombok kicsúsznának a képből.
+*/
+.dialog-foot .footinfo {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.dialog-foot .footinfo b {
+  color: var(--ink);
+  font-weight: 600;
+}
+/* A gombok nem nyúlnak a szöveg magasságára, és nem is nyomódnak össze:
+   a lábléc addig is gombsor marad, amíg mellettük mondat áll. */
+.dialog-foot .btn {
+  flex: 0 0 auto;
+  align-self: center;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 13px;
+}
+.field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.field .hint {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+input[type='text'],
+input[type='password'],
+select,
+textarea {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  user-select: text;
+  width: 100%;
+}
+input[type='text']:focus,
+input[type='password']:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--rose-tint);
+  outline-offset: 1px;
+  border-color: var(--rose-tint);
+}
+
+.partytable {
+  width: 100%;
+  border-collapse: collapse;
+}
+.partytable th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 0 8px 7px;
+}
+.partytable td {
+  padding: 4px 8px 4px 0;
+  vertical-align: middle;
+}
+.partytable td:last-child {
+  padding-right: 0;
+}
+.partytable input,
+.partytable select {
+  padding: 6px 8px;
+}
+
+/*
+  A NÉVKÉSZLET-RÁCS — EGYFORMA KÁRTYÁK.
+
+  A `grid-auto-rows: 1fr` minden sort ugyanakkorára szab, a kártya pedig
+  kitölti a sorát. Ez önmagában még nem elég: ha a leírás kártyánként más
+  magas, a mintanevek kártyánként máshol kezdődnek, és a szem nem tud
+  végigfutni a rácson. Ezért a kártya belseje FELÜLRŐL épül, és minden
+  rovatának rögzített sorszáma van — a hosszabb szöveg nem tolja lejjebb a
+  következő rovatot, hanem elfogy.
+*/
+.themegrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(238px, 1fr));
+  grid-auto-rows: 1fr;
+  align-items: stretch;
+  gap: 11px;
+}
+/*
+  A SZŰK VÁLTOZAT a beállító lap jobb paneljére.
+
+  Ott a rács nem egy 760 képpontos párbeszédben áll, hanem egy 440–580 közötti
+  panelben. A 238-as alsó határral abban EGY oszlop férne el, és a négy
+  csere-mód meg a névkészletek egyetlen hosszú szalaggá nyúlnának — pont az
+  összehasonlítás veszne el, amiért a kártyás forma egyáltalán jobb a
+  legördülőnél. 176-tal két oszlop áll, tehát a kártyák egymás MELLETT
+  hasonlíthatók össze.
+*/
+.themegrid.compact {
+  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+  gap: 9px;
+}
+.themegrid.compact .themecard {
+  padding: 10px 12px;
+}
+.themegrid.compact .themecard .s {
+  min-height: 6em;
+  -webkit-line-clamp: 4;
+}
+.themegrid.compact .themecard .samples {
+  font-size: 12px;
+}
+
+.themecard {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  height: 100%;
+  min-width: 0;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 13px 15px;
+  cursor: pointer;
+  transition: border-color 0.14s, background 0.14s, box-shadow 0.14s;
+}
+.themecard:hover {
+  border-color: var(--rose-tint);
+  box-shadow: var(--shadow-sm);
+}
+/* A kártya `div` lett, nem `button` — gombot gombba ágyazni nem szabad. A
+   fókuszgyűrűt ezért magunknak kell kirajzolnunk, különben billentyűvel járva
+   nem látszik, hol áll a kijelölés. */
+.themecard:focus-visible {
+  outline: 2px solid var(--rose);
+  outline-offset: 2px;
+}
+.themecard.selected {
+  border-color: var(--rose);
+  background: var(--rose-soft);
+  box-shadow: 0 0 0 1px var(--rose);
+}
+
+/*
+  A LETILTOTT KÁRTYA HALVÁNY, DE OLVASHATÓ.
+
+  Nem fedőnév-módban a névkészletnek nincs hatása a kimenetre, tehát nem
+  döntés — a kártyák viszont ott maradnak, mert LÁTNI KELL, melyik készlet van
+  beállítva arra az esetre, ha a felhasználó visszavált. Egy áttetszőségre
+  állított rács szövege 3:1 kontraszt alá esne: jelen volna a képernyőn, de
+  elolvasni nem lehetne. A tompítást ezért a saját színeink adják.
+
+  A KIVÁLASZTOTT kártya letiltva is megkülönböztethető marad (halvány rózsa
+  keret és pipa): különben pont az veszne el, amiért a rács ilyenkor is ott van.
+*/
+.themecard.tiltva {
+  cursor: default;
+  background: var(--surface-2);
+  border-color: var(--line-soft);
+}
+.themecard.tiltva:hover {
+  border-color: var(--line-soft);
+  box-shadow: none;
+}
+.themecard.tiltva .t .nev {
+  color: var(--ink-soft);
+}
+.themecard.tiltva .s,
+.themecard.tiltva .samples {
+  color: var(--muted);
+}
+.themecard.tiltva.selected {
+  border-color: var(--rose-tint);
+  background: var(--rose-soft);
+  box-shadow: none;
+}
+.themecard.tiltva .t .pipa {
+  color: var(--rose-tint);
+}
+.themecard.tiltva .kartyajel.keszlet {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.langchip:disabled {
+  color: var(--muted);
+  border-color: var(--line-soft);
+  cursor: default;
+}
+.langchip:disabled:hover {
+  border-color: var(--line-soft);
+}
+.langchip.on:disabled {
+  background: var(--rose-tint);
+  border-color: var(--rose-tint);
+  color: var(--ink-soft);
+}
+
+.themecard .t {
+  font-weight: 600;
+  font-size: 13.5px;
+  min-height: 20px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+/* A hosszú készletnév nem törhet két sorba: azzal a kártya minden további
+   rovata lejjebb csúszna, és pont az egy vonalba rendezés veszne el. */
+.themecard .t .nev {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.themecard .t .pipa {
+  flex: 0 0 auto;
+  color: var(--rose);
+}
+.themecard .t .torol {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1;
+  padding: 3px 5px;
+  border-radius: var(--radius-sm);
+}
+.themecard .t .torol:hover {
+  background: var(--rose-soft);
+  color: var(--rose-deep);
+}
+
+/* A nyelvsor akkor is helyet foglal, ha üres — enélkül a kétnyelvű kártyák
+   egy sorral lejjebb kezdenék a mintaneveket. */
+/*
+  A KÁRTYA FEJLÉCSORA: balra a jelvények, jobbra a nyelvváltó.
+
+  A két oldal két különböző dolog — CÍMKE és VEZÉRLŐ —, és a szétválasztásuk
+  nem díszítés: a felhasználó korábban a jelvényre próbált kattintani, mert
+  ugyanúgy nézett ki, mint a nyelvváltó gomb mellette. A sorvégre húzott
+  vezérlő ezt a kérdést nem veti fel.
+
+  A sor AKKOR IS OTT VAN, ha egy nyelv van vagy nincs nyelvváltó: üresen, de
+  helyet foglalva. Enélkül a kártyák nem egy vonalban kezdenék a tartalmat, és
+  a rács pont azt veszítené el, amiért egyforma magasságúra van szabva.
+*/
+.kartyafej {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 21px;
+  margin-bottom: 7px;
+}
+.kartyafej .jelek {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.langsor {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 5px;
+  flex: 0 0 auto;
+}
+/*
+  A NYELVVÁLTÓ SZEGMENSES VEZÉRLŐ, nem jelvény.
+
+  Korábban ugyanolyan lekerekített pirula volt, mint a jelvény mellette — a
+  felhasználó jelezte is, hogy nem tudja megkülönböztetni őket. Márpedig az
+  egyik CÍMKE (nem megnyomható), a másik VEZÉRLŐ. A megkülönböztetés így három
+  jelen áll egyszerre: a szegmenses forma (a két gomb összeér, közös keretben),
+  a szögletesebb sarok, és a helye a sor jobb szélén.
+*/
+.langsor {
+  padding: 1px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface-2);
+}
+.langsor:empty {
+  border-color: transparent;
+  background: transparent;
+}
+.langchip {
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  border-radius: 5px;
+  padding: 1px 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.langchip:hover:not(.on) {
+  color: var(--ink);
+}
+.langchip.on {
+  background: var(--rose);
+  color: #fff;
+}
+
+/*
+  HÁROM SOR LEÍRÁS ÉS KÉT SOR MINTANÉV — pontosan ennyi, akármilyen hosszú a
+  szöveg. A `min-height` a rövid szöveget tartja a helyén, a sorvágás a
+  hosszút; e kettő nélkül a mintanevek kártyánként máshol kezdődnének. A
+  teljes leírás a kártya lebegő súgójában áll, tehát nem vész el.
+*/
+.themecard .s {
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin-bottom: 9px;
+  min-height: 4.5em;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.themecard .samples {
+  font-family: var(--doc);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--rose-deep);
+  min-height: 3em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/*
+  A KÉSZLET MÉRETE — a kártya alján, halkan.
+
+  Adat, nem választási ok magában: a szem a mintaneveket olvassa, ezt csak
+  akkor keresi meg, ha két készlet között kell dönteni. Ezért ül alul,
+  kisebb betűvel, a kártya alsó széléhez tolva (`margin-top: auto`) — így a
+  rács minden kártyáján EGY VONALBAN áll, akármilyen hosszú fölötte a leírás.
+*/
+.themecard .meret {
+  margin-top: auto;
+  padding-top: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/*
+  A JELVÉNY: MELYIK DÖNTÉS KÁRTYÁJA EZ.
+
+  Egy rácsban két különböző rangú döntés áll — a csere-mód és a névkészlet —,
+  és mindkettő ugyanabban a kártyaformában. Jelvény nélkül a kettő egyenrangú
+  választásnak látszana, pedig a MÓD dönti el, kell-e egyáltalán névkészlet.
+
+  A rangkülönbséget maga a jelvény rajza mondja el: a mód TÖLTÖTT (ez a döntés
+  vezet), a névkészlet KERETES (ez követi). Nem csak a szín különbözteti meg
+  őket, tehát szürkeárnyalatban és színtévesztéssel is látszik.
+*/
+.kartyajel {
+  padding: 1px 7px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+/* A hangsúlyszín SÖTÉT változata, nem az alap: fehér betű a `--rose`-on 4,2:1,
+   ami ekkora betűméretnél kevés — a `--rose-deep` 5,9:1-et ad. A jelvény
+   pontosan attól ér valamit, hogy ránézésre elolvasható. */
+.kartyajel.mod {
+  background: var(--rose-deep);
+  border: 1px solid var(--rose-deep);
+  color: #fff;
+}
+.kartyajel.keszlet {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+}
+/* SAJÁT KÉSZLET: nyelvi modell javasolta, nem ember nézte át. Nem hiba, de a
+   kártya legfontosabb ténye — ezért kiemelt, de nem riasztó szín. */
+.kartyajel.sajat {
+  background: var(--amber-soft);
+  border: 1px solid #e8d5ae;
+  color: var(--amber);
+}
+/* AMIHEZ ELŐBB TÖLTENI KELL. Ugyanaz a borostyán jelentés, mint a modellsávé:
+   „ez így még nem működik, de van rá teendő”. */
+.kartyajel.letoltes {
+  background: var(--amber-soft);
+  border: 1px solid #e8d5ae;
+  color: var(--amber);
+}
+
+/*
+  KÉTSOROS GOMB: felirat fent, a méret alatta.
+
+  A „Letöltés (421 MB)” egy szűk panelen a zárójel közepén tört el, és a „MB)”
+  önmagában maradt a második soron. A méret nem a felirat része, hanem adat
+  mellette — külön sorban, halkabban, és a felirat maga nem törhet.
+*/
+.btn.tordelt {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1.25;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+.btn.tordelt .meret {
+  font-size: 10.5px;
+  font-weight: 600;
+  opacity: 0.82;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+  A CSERE-MÓD KÁRTYÁJA.
+
+  Ugyanaz a `themecard` alap, mint a névkészleté: a felhasználónak egyetlen
+  kártyás felületet kell megtanulnia, nem kettőt. Két eltérés van, és mindkettő
+  a tartalomból következik.
+*/
+.modcard .t {
+  /* A mód neve TÖRHET két sorba („Hivatalos (OBH) — eljárási szerep”). A
+     készletnévnél a vágás azért volt jó, mert ott a név csak megnevezés; itt
+     viszont a név MAGA a magyarázat fele, levágva félreérthető lenne. A
+     rögzített magasság tartja egy vonalban a négy kártya példasorát. */
+  align-items: flex-start;
+  min-height: 2.7em;
+  line-height: 1.25;
+}
+.modcard .t .nev {
+  white-space: normal;
+  overflow: visible;
+}
+/*
+  A PÉLDA a kártya lényege: a mód NEVE önmagában nem mondja meg, mi lesz a
+  kimenet. Kiemelt dobozban áll, mert nem magyarázat, hanem maga a válasz — és
+  mind a négy kártyán ugyanabban a magasságban, hogy a szem a jobb oldalt
+  hasonlítsa össze.
+*/
+.modcard .pelda {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  min-height: 3.6em;
+  margin-bottom: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-family: var(--doc);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.modcard.selected .pelda {
+  background: var(--surface);
+}
+.modcard .pelda .bal,
+.modcard .pelda .nyil {
+  color: var(--muted);
+}
+.modcard .pelda .jobb {
+  color: var(--rose-deep);
+  font-weight: 600;
+}
+.modcard .s {
+  margin-bottom: 0;
+}
+
+/* A hozzáadó kártyát nem lehet kiválasztani, csak a gombjait megnyomni: egy
+   2,7 GB-os letöltést nem indíthat el egy félrekattintás a kártya üres
+   részén. A szaggatott keret ezt előre megmondja. */
+.addcard {
+  cursor: default;
+  border-style: dashed;
+}
+.addcard:hover {
+  border-color: var(--line);
+  box-shadow: none;
+}
+.cardact {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.cardact .progress.sm {
+  width: 100%;
+  height: 18px;
+  margin-bottom: 0;
+}
+.hint.amber {
+  color: var(--amber);
+}
+
+.note {
+  border-left: 3px solid var(--amber);
+  background: var(--amber-soft);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 10px 13px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #6b4a10;
+  margin-bottom: 13px;
+}
+.note.good {
+  border-left-color: var(--mint);
+  background: var(--mint-soft);
+  color: #23594a;
+}
+.note.bad {
+  border-left-color: var(--rose);
+  background: var(--rose-soft);
+  color: #7d2c4c;
+}
+.note b {
+  font-weight: 700;
+}
+
+.checkline {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  margin-bottom: 11px;
+}
+.checkline input {
+  margin-top: 2px;
+  accent-color: var(--rose);
+  width: 15px;
+  height: 15px;
+}
+.checkline .t {
+  font-weight: 600;
+  font-size: 13px;
+}
+.checkline .s {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.resultrow {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 13px;
+}
+.resultrow:last-child {
+  border-bottom: 0;
+}
+.resultrow .v {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* „A programról” fül fejléce: itt van hely az emblémának nagyban, és itt lesz
+   valóban olvasható, hogy a szivecske ki van takarva — a tálcán ehhez túl kicsi.
+   88px = 8 képpont kockánként, és ez a méret 125%-os és 150%-os Windows-nagyítás
+   mellett is egész marad (110, illetve 132 képpont). */
+.about-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0 18px;
+}
+.about-brand img {
+  width: 88px;
+  height: 88px;
+  display: block;
+}
+.about-brand .name {
+  font-family: var(--ui-display);
+  font-size: 19px;
+  font-weight: 600;
+}
+.about-brand .tag {
+  color: var(--ink-soft);
+  font-size: 13px;
+  text-align: center;
+  max-width: 42ch;
+}
+
+.spinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid var(--rose-tint);
+  border-top-color: var(--rose);
+  border-radius: 99px;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.busy {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(253, 250, 251, 0.72);
+  backdrop-filter: blur(1px);
+  z-index: 60;
+  gap: 10px;
+}
+.busy .box {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  padding: 11px 20px;
+  box-shadow: var(--shadow);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─────────────────────────── modellek ─────────────────────────── */
+
+.modelcard {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 14px 16px;
+  margin-bottom: 11px;
+}
+.modelcard.active {
+  border-color: var(--rose);
+  box-shadow: 0 0 0 1px var(--rose);
+  background: #fffbfc;
+}
+.modelcard .mhead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.modelcard .mname {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.modelcard .mrepo {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.modelcard .msize {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.modelcard .mfacts {
+  margin: 0 0 10px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  align-items: baseline;
+}
+.modelcard .mfacts dt {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.modelcard .mfacts dd {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.modelcard .mmeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 11px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.modelcard .mactions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress {
+  position: relative;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  overflow: hidden;
+  margin-bottom: 11px;
+}
+.progress .bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, var(--rose-tint), var(--rose));
+  transition: width 0.2s ease-out;
+}
+.progress .ptext {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  mix-blend-mode: multiply;
+}
+
+/* ─────────────────────────── felismert felek ─────────────────────────── */
+
+.detected {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 3px 0 0 2px;
+}
+.detected .ev {
+  font-style: italic;
+}
+.partytable tr.low input[type='text'] {
+  border-color: var(--amber);
+  background: #fffdf7;
+}
+
+/* A párbeszédek fix magasságúak: a tartalom görget, a fejléc és a lábléc marad.
+   Enélkül a hosszabb lista kitolja az ablakot, és a gombok kicsúsznak a képből. */
+.dialog {
+  height: min(86vh, 780px);
+}
+.dialog.narrow {
+  height: auto;
+  max-height: min(86vh, 780px);
+}
+.dialog-head,
+.dialog-foot {
+  flex: 0 0 auto;
+}
+.dialog-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.dialog .tabs {
+  flex: 0 0 auto;
+}
+
+/* ─────────────────────────── közös apróságok ─────────────────────────── */
+
+/* Eddig csak a `.field .hint` volt megformázva, a párbeszédek többi
+   magyarázó sora formázatlanul, törzsszöveg-méretben állt. Ugyanazok az
+   értékek, hogy a meglévő helyeken semmi ne mozduljon el. */
+.hint {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.mono {
+  font-family: var(--mono);
+}
+
+/* ─────────────────────────── nézetváltó ─────────────────────────── */
+
+.docarea {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.viewtabs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  flex: 0 0 auto;
+}
+.seg {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.segbtn {
+  border: 0;
+  background: transparent;
+  padding: 5px 12px;
+  border-radius: 5px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  transition: background 0.14s, color 0.14s;
+}
+.segbtn:hover:not(.active) {
+  color: var(--ink);
+}
+.segbtn.active {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+.viewbanner {
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-2);
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  flex: 0 0 auto;
+}
+
+/* A blokkoló változáskövetés a lépéssávban. Nem díszítés: a letiltott mentés
+   gomb magában csak annyit üzen, hogy „valamiért nem lehet". */
+.step.warn {
+  background: var(--rose-soft);
+  border-color: var(--rose-tint);
+}
+.step.warn .num {
+  background: var(--rose);
+  color: #fff;
+}
+.step.warn .label .t {
+  color: var(--rose-deep);
+}
+.step.warn .label .s {
+  color: var(--rose-deep);
+  opacity: 0.75;
+}
+
+/* ─────────────────────────── útvonalak ─────────────────────────── */
+
+.fieldlabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.pathline {
+  display: block;
+  margin-top: 6px;
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 11.5px;
+  /* A Windows-útvonalak hosszúak: tördelni kell, különben kilógnak a
+     párbeszédből, és épp a fájlnév vége vész el. */
+  word-break: break-all;
+  user-select: text;
+}
+.pathline.empty {
+  color: var(--muted);
+  font-style: italic;
+}
+.pathpick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pathpick .pathline {
+  flex: 1;
+  min-width: 0;
+  margin-top: 0;
+}
+.pathacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+/* ─────────────────────────── ellenőrzés listái ─────────────────────────── */
+
+.findings {
+  margin-top: 14px;
+}
+.findhead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.findhead .cut {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ─────────────────────────── kulcsfájl-tábla ─────────────────────────── */
+
+.keytable {
+  width: 100%;
+  border-collapse: collapse;
+}
+.keytable th {
+  text-align: left;
+  padding: 0 8px 6px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.keytable td {
+  padding: 7px 8px 7px 0;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 13px;
+  vertical-align: top;
+  user-select: text;
+}
+.keytable td.pseudo {
+  color: var(--rose-deep);
+  font-weight: 600;
+}
+.keytable td.orig {
+  font-weight: 600;
+}
+
+/* ─────────────────────── a nyelvi modell állapota ─────────────────────── */
+
+/*
+  NÉGY ÁLLAPOT, NÉGY KÜLÖN KÉP.
+
+  A modell a felismerés motorja: ha nem futott, csak a szerkezeti minták
+  találtak feleket. Ez nem lábjegyzet, ezért nem is ugyanaz a doboz négyszer,
+  más szöveggel — a szem előbb dönt, mint az olvasás. A siker zöld és halk, a
+  kikapcsolt állapot szürke (tudatos beállítás, nem baj), a hiányzó modell
+  borostyán (teendő van), a hiba rózsa (meg kell állni).
+*/
+.modelnote {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--muted);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--surface-2);
+  padding: 11px 13px;
+  margin-bottom: 14px;
+}
+.modelnote p {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+.modelnote p.soft {
+  color: var(--muted);
+  font-size: 11.5px;
+}
+.modelnote .mhead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.modelnote .mhead .t {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+}
+.modelnote .mark {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 99px;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--muted);
+  color: #fff;
+}
+.modelnote .macts {
+  margin-top: 10px;
+}
+
+/* A `border-color` MEGELŐZI a `border-left-color`-t: rövidítés, mind a négy
+   oldalt átírja. Fordított sorrendben némán elnyelné a bal oldali sávot — épp
+   azt a csíkot, amiről az állapot ránézésre felismerhető. */
+.modelnote.ok {
+  border-color: transparent;
+  border-left-color: var(--mint);
+  background: var(--mint-soft);
+}
+.modelnote.ok .mark {
+  background: var(--mint);
+}
+.modelnote.ok .mhead .t {
+  color: #23594a;
+}
+
+.modelnote.missing {
+  border-color: transparent;
+  border-left-color: var(--amber);
+  background: var(--amber-soft);
+}
+.modelnote.missing .mark {
+  background: var(--amber);
+}
+.modelnote.missing .mhead .t {
+  color: #6b4a10;
+}
+
+/* A hiba az egyetlen állapot, ami keretet is kap: ezen a ponton nem elég
+   tájékoztatni, meg kell állítani. */
+.modelnote.failed {
+  border: 1px solid var(--rose-tint);
+  border-left: 3px solid var(--rose);
+  background: var(--rose-soft);
+}
+.modelnote.failed .mark {
+  background: var(--rose);
+}
+.modelnote.failed .mhead .t {
+  color: var(--rose-deep);
+}
+.modelnote.failed p.loud {
+  color: #7d2c4c;
+  font-weight: 600;
+}
+
+/* A lépéssáv halkabb jelzése: van teendő, de nem blokkol. */
+.step.soft {
+  background: var(--surface-2);
+  border-color: var(--line);
+}
+.step.soft .num {
+  background: var(--muted);
+  color: #fff;
+}
+
+/*
+  A JELZÉSEK RÖVIDÜLNEK, A FŐMŰVELET NEM CSÚSZIK KI.
+
+  A lépéssáv jelzései szaporodnak (modell, program döntései, változáskövetés), és
+  1100 px-es ablakban együtt már nem férnek ki. A sáv magától gördülne, azaz a
+  „Mentés másként…" gomb a látható sávon KÍVÜLRE kerülne — a felhasználó pedig
+  nem tudná elmenteni az iratot, mert egy figyelmeztetés elfoglalta a helyét.
+  Ezért a jelzés a szűk helyen levágódik (a teljes mondat a buboréksúgóban áll),
+  a főművelet viszont soha nem zsugorodik. A `min-width: 0` nem díszítés: e
+  nélkül a rugalmas elem a saját tartalma alá nem megy, tehát nem is rövidül.
+*/
+.steps .step.soft,
+.steps .step.warn {
+  min-width: 0;
+}
+.steps .step.soft .label,
+.steps .step.warn .label {
+  min-width: 0;
+  overflow: hidden;
+}
+.steps .step.soft .label .t,
+.steps .step.soft .label .s,
+.steps .step.warn .label .t,
+.steps .step.warn .label .s {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.steps .btn.primary {
+  flex: 0 0 auto;
+}
+
+/* ─────────────────────────── azonosítók ─────────────────────────── */
+
+/*
+  Az azonosítók KÜLÖN ROVATA a Felek-párbeszédben.
+
+  Nem a felek táblájának ötödik-hatodik sora: nincs nemük és nincs eljárási
+  szerepük, a felek közé keverve pedig az ügyvéd tíz számsor közül keresné ki
+  a felperest. Ezért kap saját keretet, saját fejlécet és soronkénti kapcsolót.
+*/
+.idsection {
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.idhead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+}
+.idhead .t {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 13px;
+}
+.idhead .t .on {
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: var(--mint-soft);
+  color: var(--mint);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.idhead .s {
+  margin-top: 3px;
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  line-height: 1.45;
+  max-width: 62ch;
+}
+.idacts {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.idrow {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 9px;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line-soft);
+  cursor: pointer;
+}
+.idrow:last-child {
+  border-bottom: 0;
+}
+.idrow:hover {
+  background: var(--surface-2);
+}
+.idrow input {
+  accent-color: var(--rose);
+  width: 15px;
+  height: 15px;
+  grid-row: 1 / span 2;
+}
+.idmain {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.idrow .val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  word-break: break-all;
+}
+.idrow .occ {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.idrow .ev {
+  grid-column: 2;
+  font-size: 11.5px;
+  font-style: italic;
+  color: var(--muted);
+  line-height: 1.4;
+}
+/* A kikapcsolt sor NEM tűnik el, csak halkul: azt is látni kell, mi az, ami
+   szándékosan bent marad az iratban. */
+.idrow.off .val,
+.idrow.off .pill {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+.idrow.off .ev,
+.idrow.off .occ {
+  opacity: 0.55;
+}
+
+/* ────────────────── figyelmeztetések tételes listája ────────────────── */
+
+/*
+  Egy figyelmeztetés egy doboz. Bekezdésbe fűzve a lista hosszú szövegfallá
+  olvad, és pontosan az vész el belőle, amit el kell olvasni: hogy HÁNY külön
+  dolog maradt kint az átvizsgálásból.
+*/
+.warnitem {
+  border-left: 3px solid var(--amber);
+  background: var(--amber-soft);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 9px 12px;
+  margin-bottom: 8px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #6b4a10;
+}
+.warnitem:last-child {
+  margin-bottom: 0;
+}
+
+/* ──────────── amiről a program döntött ember helyett ──────────── */
+
+/*
+  A KÉRDEZÉS NÉLKÜLI ÚT ÁRA, kirajzolva.
+
+  Nem figyelmeztetés és nem hiba: a program azt tette, amit kértek tőle. Ezért
+  nem borostyán és nem rózsa — halk keret, ami annyit mond, hogy itt van
+  átnézni való. A rovaton belül viszont a KÖZNÉVI tételek kiemelkednek: ott áll
+  az elrontott mondat, ha van, a többi tétel java valódi név volt.
+*/
+.autoreport .koznev {
+  margin-top: 4px;
+  border: 1px solid var(--amber);
+  border-radius: var(--radius-sm);
+  background: var(--amber-soft);
+  padding: 10px 12px;
+}
+.autoreport .kfej {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: #6b4a10;
+  margin-bottom: 4px;
+}
+.autoreport .kfej .cut {
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--amber);
+  white-space: nowrap;
+}
+/* Egy fél, egy kérdés: a ragozott alakok EGY sor alá kerülnek, különben
+   ugyanaz a gyanú tízszer állna a listán. */
+.autoreport .kgroup {
+  margin-top: 9px;
+}
+.autoreport .kgroup:first-of-type {
+  margin-top: 0;
+}
+.autoreport .kline {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #6b4a10;
+  margin-bottom: 6px;
+}
+.autoreport .kline b {
+  color: var(--ink);
+}
+.autoreport .kforms {
+  display: block;
+  font-size: 11.5px;
+  color: var(--amber);
+  margin-top: 2px;
+}
+.autoreport .kgroup .matchrow {
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+}
+
+/* A visszaút a jelentés ALJÁN áll, elválasztva: előbb lássa, mi történt, és
+   csak utána azt, hogy meg lehet fordítani. Fordított sorrendben a gomb
+   elvinné a figyelmet a listáról. */
+.autoreport .backline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.autoreport .backline .s {
+  flex: 1;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.autoreport .backline .btn {
+  flex: 0 0 auto;
+}
+
+/* ──────────────── megnyitás utáni beállító oldal ──────────────── */
+
+/*
+  Ez NEM párbeszédablak, hanem a folyamat egyik állomása: megnyitás → vizsgálat
+  → EZ A LAP → mentés. Ezért nem sötétít el mögötte semmit és nincs rajta
+  bezáró kereszt — nincs mögötte munka, amihez vissza lehetne térni.
+
+  A LAP KÉT PANELE: BALRA AZ IRAT, JOBBRA A DÖNTÉSEK.
+
+  Eddig egyetlen, középre igazított kártya állt itt, és az irat sehol nem
+  látszott: a felhasználó úgy döntött a csere módjáról és a névkészletről, hogy
+  közben nem látta, MIHEZ. A bal panel ugyanaz a dokumentumnézet, ami a
+  munkalapon is áll, kiemelt találatokkal — a beállítás következménye így
+  azonnal látszik a szövegen.
+
+  MINDKÉT PANEL KÜLÖN GÖRGŐDIK, és ez nem kényelmi kérdés. Ha az egész lap
+  görögne, a beállítások lába — vele a továbblépés gombja — az irat aljára
+  csúszna, és a felhasználó a saját kiútját keresné egy több száz oldalas
+  irat végén.
+*/
+.setuppage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  overflow: auto;
+  background: var(--paper);
+}
+
+.setupdoc {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--line);
+}
+.setupdoc .viewport {
+  flex: 1;
+  min-height: 0;
+  /* Szűkebb, mint a munkalapon: itt a panel fele akkora, és minden elvett
+     képpont az irat olvashatóságából megy el. */
+  padding: 16px 18px 30px;
+}
+.setupdoc .pagewrap {
+  gap: 14px;
+}
+/* A szöveges nézet (DOCX, TXT) a munkalapon egy 820 képpontos „lapot” rajzol
+   bő margóval. Ebben a panelben abból a margóból lenne a legtöbb, ezért itt
+   szűkebb — a betűméret viszont marad, mert azt olvasni kell. */
+.setupdoc .textview {
+  padding: 28px 32px;
+  max-width: none;
+}
+
+.setupdoc-head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 7px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  font-size: 11.5px;
+  /* Nem a halvány `--muted`, mint a súgószövegeknél: ez a sáv rövid, és minden
+     szava teherhordó — a jelmagyarázat nélkül a kiemelés színei nem
+     jelentenek semmit. A `--ink-soft` 6,5:1-et ad, a `--muted` 3,2-t. */
+  color: var(--ink-soft);
+}
+.setupdoc-head > b {
+  color: var(--ink);
+  font-size: 12.5px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.setupdoc-head .db {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+/*
+  A JELMAGYARÁZAT UGYANAZOKKAL A SZÍNEKKEL, mint amiket magyaráz.
+
+  A kiemelés háromféle: amit lecserélünk, ami bizonytalan, és amihez nem
+  nyúlunk. Magyarázat nélkül a három szín csak dísz volna; a felhasználó
+  pedig épp attól látja a beállítás következményét, hogy tudja, mit néz.
+  A színminta nem az EGYETLEN jel: mellette ott a szöveges címke is.
+*/
+.setupdoc-head .jelek {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+.setupdoc-head .jel {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.setupdoc-head .jel::before {
+  content: '';
+  width: 12px;
+  height: 11px;
+  border-radius: 2px;
+  flex: 0 0 auto;
+}
+.setupdoc-head .jel.csere.k-nev::before {
+  background: rgba(196, 87, 125, 0.19);
+  box-shadow: inset 0 -2px 0 rgba(196, 87, 125, 0.55);
+}
+.setupdoc-head .jel.csere.k-osszeg::before {
+  background: rgba(23, 128, 106, 0.17);
+  box-shadow: inset 0 -2px 0 rgba(23, 128, 106, 0.6);
+}
+.setupdoc-head .jel.csere.k-datum::before {
+  background: rgba(46, 106, 168, 0.17);
+  box-shadow: inset 0 -2px 0 rgba(46, 106, 168, 0.6);
+}
+.setupdoc-head .jel.csere.k-hivatalos::before {
+  background: rgba(122, 79, 168, 0.18);
+  box-shadow: inset 0 -2px 0 rgba(122, 79, 168, 0.62);
+}
+.setupdoc-head .jel.bizonytalan::before {
+  background: rgba(169, 115, 24, 0.2);
+  box-shadow: inset 0 -2px 0 rgba(169, 115, 24, 0.6);
+}
+.setupdoc-head .jel.nincs::before {
+  background: transparent;
+  box-shadow: inset 0 -1px 0 rgba(122, 110, 128, 0.55);
+}
+
+/*
+  A BAL PANEL VEZÉRLŐ, NEM NÉZET.
+
+  Eddig itt a kattintáskezelő le volt véve a kiemelésekről, mert nem volt mire
+  mutatnia. Ma van: a kattintás egyetlen előfordulás cseréjét kapcsolja ki-be,
+  ugyanabba a tárolóba, amit a jobb oldali lista gombjai is írnak. A jelölés
+  tehát gomb — ezt a mutató és a lebegtetéskor erősödő szín is elmondja.
+*/
+.viewport.kapcsolhato .hl {
+  cursor: pointer;
+}
+.viewport.kapcsolhato .hl.csere:hover {
+  background: rgba(196, 87, 125, 0.32);
+}
+.viewport.kapcsolhato .hl.bizonytalan:hover {
+  background: rgba(169, 115, 24, 0.34);
+}
+/*
+  A bal panel a szélességét ATTÓL kapja, ami megmarad — a jobb panel viszont
+  rögzített. Fordítva a beállítások szélessége a talált nevek hosszától
+  függene: egy hosszú cégnév eltolná a kapcsolókat, és a lap minden iratnál
+  máshogy nézne ki.
+
+  A felső határ azért van, hogy nagy képernyőn az irat kapja a helyet: a
+  beállítások fölött 580 képpont után már csak levegő nőne.
+*/
+.docsetup {
+  flex: 0 0 clamp(440px, 38%, 580px);
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+  background: var(--paper);
+}
+.ds-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--surface);
+  /* Panelként nincs kerete és árnyéka: a bal panel elválasztó vonala már
+     megmondta, hol kezdődik. Egy lebegő kártya azt sugallná, hogy fölötte áll
+     valaminek — pedig mellette áll. */
+  overflow: hidden;
+  /*
+    A sortörés az ABLAK helyett a PANEL szélességét figyeli.
+
+    Képernyőméret-figyeléssel a lap nagy ablakban is tördelt volna, ha a panel
+    keskeny marad, és fordítva. A panel szélessége nem függ a tartalmától
+    (`clamp(...)` a `.docsetup`-on), ezért a méretzárolás itt biztonságos.
+  */
+  container-type: inline-size;
+}
+
+.ds-head {
+  padding: 13px 18px 11px;
+  border-bottom: 1px solid var(--line-soft);
+  flex: 0 0 auto;
+}
+.ds-head h2 {
+  margin: 0 0 3px;
+  font-family: var(--ui-display);
+  font-size: 15.5px;
+  font-weight: 600;
+}
+.ds-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  max-width: 62ch;
+  line-height: 1.45;
+}
+
+.ds-tabs {
+  padding: 8px 14px 0;
+}
+
+.ds-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 14px 18px 18px;
+}
+/* A lap görgethető, tehát billentyűzettel fókuszálható — a fókuszkeret viszont
+   ne fusson körbe az egész panelen, mert az hibának látszik. */
+.ds-body:focus-visible {
+  outline: 2px solid var(--rose-tint);
+  outline-offset: -2px;
+}
+
+/*
+  SZAKASZCÍM A „MIRE CSERÉLJÜK?” FÜLÖN.
+
+  Egy lapon két döntés áll — a csere-mód és a névkészlet —, mindkettő kártyás
+  rácsban. Cím és bevezető nélkül a két rács egyetlen, húsz kártyás
+  szőnyegnek látszana, amiből nem derül ki, hogy két külön kérdésről van szó.
+  A második szakasz elválasztó vonalat is kap: ott vált a kérdés.
+*/
+.ds-szakasz {
+  margin: 2px 0 10px;
+}
+.ds-szakasz ~ .ds-szakasz {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid var(--line-soft);
+}
+.ds-szakasz h3 {
+  margin: 0 0 3px;
+  font-family: var(--ui-display);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.ds-szakasz p {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.ds-szakasz p b {
+  color: var(--ink-soft);
+}
+
+/* ──── egy beállítás egy sor: fent a név és az állító, alattuk a magyarázat ──── */
+
+/*
+  A VEZÉRLŐK JOBB SZÉLE EGY VONALBAN ÁLL.
+
+  Nem díszítés: a szem a jobb szélen futó egyenes mentén olvassa le, mi van
+  bekapcsolva és mi nincs. Ha a kapcsolók a szöveg hosszát követve ugrálnának,
+  a lapot végig kellene olvasni ahhoz, hogy ugyanezt megtudjuk.
+
+  A MAGYARÁZAT VISZONT A SOR ALÁ KERÜLT, teljes szélességben.
+
+  Amíg a lap egy 760 képpontos kártya volt, a megnevezés és a magyarázat
+  elfért a vezérlőoszlop mellett. A lap most jobb oldali PANEL (440–580
+  képpont): ott a szövegnek 177 képpont maradt, és a leghosszabb magyarázat
+  tizenegy sorba tört — egy hosszú, keskeny szövegoszlop, amit senki nem olvas
+  el. Teljes szélességben ugyanaz négy-öt sor.
+
+  A rács tehát két oszlop és két sor: fent a megnevezés és — jobbra zárva — a
+  vezérlő, alattuk a magyarázat mindkét oszlopon átnyúlva.
+*/
+.setrow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 3px 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.setrow:last-child {
+  border-bottom: 0;
+}
+.setrow > .t {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+.setrow > .s {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.45;
+  max-width: 68ch;
+}
+.setctl {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+}
+.setctl input[type='range'] {
+  /*
+    RÖGZÍTETT SZÉLESSÉG, nem nyúló: a vezérlőoszlop a tartalmához igazodik
+    (`auto`), egy nyúló csúszka tehát nullára esne össze. 140 képpont az
+    50–100% tartományhoz elég ahhoz, hogy az ötös lépések elkülönüljenek.
+  */
+  flex: 0 0 140px;
+  /* A böngésző alapból 2 képpont margót ad a csúszkának, és ettől EGYEDÜL ez
+     a vezérlő csúszna be a többi jobb széle mögé. */
+  margin: 0;
+  accent-color: var(--rose);
+}
+.rangeval {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rose-deep);
+  font-variant-numeric: tabular-nums;
+  flex: 0 0 auto;
+}
+
+/*
+  AMI INNEN ELTŰNT: a `.setrow.off` tompítása.
+
+  Egyetlen sor használta, a névkészletet választó legördülő — az pedig
+  átköltözött a „Mire cseréljük?” fül kártyás rácsába. A letiltott állapot
+  ugyanaz maradt, csak most a kártyáé (`.themecard.tiltva`), és ugyanazzal az
+  indokkal: halvány, de olvasható, mert látni kell, mi van beállítva.
+*/
+
+/* ─────────────────────────── kapcsoló ─────────────────────────── */
+
+/*
+  VALÓDI `input[type=checkbox]`, csak a megjelenése más.
+
+  Az `appearance: none` leveszi róla a rendszer rajzolatát, de a billentyűzetet
+  (Szóköz, Enter), a fókuszsorrendet és a képernyőolvasó bemondását MEGTARTJA —
+  ezek vesznének el egy `div`-ből és kattintáskezelőből épített kapcsolóval.
+
+  A be- és kikapcsolt állapotot nem csak a szín különbözteti meg: a gomb a
+  sínen ÁTMEGY a másik oldalra, mellette pedig ott a „Be” / „Ki” felirat. Szín
+  nélkül — szürkeárnyalatban, színtévesztéssel — is leolvasható.
+
+  Az átmenetet a lap elején álló `prefers-reduced-motion` szabály kapcsolja ki
+  (`transition-duration: 0.01ms !important`), ezért itt nincs külön kivétel: a
+  gomb ilyenkor ugrik, de ugyanoda kerül.
+*/
+.toggle {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex: 0 0 auto;
+  width: 42px;
+  height: 24px;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  background: var(--surface-2);
+  cursor: pointer;
+  transition: background 0.16s, border-color 0.16s;
+}
+.toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.16s;
+}
+.toggle:checked {
+  background: var(--rose);
+  border-color: var(--rose-deep);
+}
+.toggle:checked::after {
+  transform: translateX(18px);
+}
+.toggle:hover:not(:disabled) {
+  border-color: var(--rose-tint);
+}
+/* Látható fókuszjelzés — enélkül a billentyűzetes felhasználó nem tudja, hol
+   jár, és vaktában nyom Szóközt. */
+.toggle:focus-visible {
+  outline: 2px solid var(--rose);
+  outline-offset: 2px;
+}
+.toggle:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.tstate {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  min-width: 3.4em;
+  text-align: right;
+  flex: 0 0 auto;
+}
+
+/* ─────────────────────── „Mit cserélünk?” fül ─────────────────────── */
+
+/*
+  A NYELVI MODELL SÁVJA a lap tetején.
+
+  Két állapota van, és a KÜLÖNBSÉGET SZÍNNEL IS jelezzük: letöltött modell
+  mellett halk, semleges keret (nincs teendő), hiányzó modell mellett
+  borostyán (a lenti lista emiatt rövid). A szín nem az egyetlen jel — a
+  szöveg mindkét esetben kimondja, mi a helyzet.
+
+  Egyetlen sorba szánva, de TÖRHET: keskeny panelen a nyelvválasztó és az
+  állapot egymás alá kerül, nem csúszik ki a képből.
+*/
+.modellsav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 9px 13px;
+  margin-bottom: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  font-size: 12px;
+}
+.modellsav.hianyzik {
+  border-color: #e8d5ae;
+  background: var(--amber-soft);
+}
+.modellsav .t {
+  font-weight: 600;
+  color: var(--ink);
+  flex: 0 0 auto;
+}
+.modellsav .allapot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-end;
+}
+.modellsav .allapot .jo {
+  color: var(--mint);
+  font-weight: 600;
+}
+.modellsav .allapot .amber {
+  color: var(--amber);
+  min-width: 0;
+}
+.modellsav .progress.sm {
+  flex: 1 1 90px;
+  min-width: 90px;
+}
+.modellsav .hiba {
+  flex: 1 1 100%;
+  color: var(--amber);
+}
+
+/*
+  A LAP TETEJÉN ÁLLÓ KÉT BEÁLLÍTÁS.
+
+  A küszöb és a kulcsfájl azért került ide a megszűnt „Hogyan cseréljük?”
+  fülről, mert ITT van hatásuk: a küszöb azt szabja meg, mi kap „bizonytalan”
+  jelvényt az alábbi listán, a kulcsfájl pedig azt, hogy a most beállított
+  cserék visszafejthetők maradnak-e. Külön fülön állva a felhasználó a lista
+  átnézése közben nem látta, milyen küszöbbel néz szembe.
+
+  Halványan elválasztva a listától: beállítás, nem találat.
+*/
+.ds-teteje {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fdfbfc;
+  padding: 4px 13px;
+  margin-bottom: 14px;
+}
+.ds-teteje .setrow:last-child {
+  border-bottom: 0;
+}
+
+/*
+  A „MINDENT CSERÉLÜNK" GOMB — a megszűnt „kérdezés nélkül menjen végig"
+  kapcsoló helyén.
+
+  A kapcsoló ÁLLAPOTOT ígért, holott MŰVELETRŐL volt szó: a bekapcsolása után
+  a képernyőn semmi nem változott, tehát nem volt mit ellenőrizni rajta. Ez a
+  gomb ugyanazt teszi, csak látható következménnyel: a lenti sorok mind „Mind"
+  állásba billennek, és a bal oldali iratnézeten minden jelölés kiszínesedik.
+*/
+.ds-mind {
+  flex: 1 1 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 11px 13px;
+  border: 1px solid var(--rose-tint);
+  border-radius: var(--radius);
+  background: var(--rose-soft);
+  margin-bottom: 12px;
+}
+.ds-mind .btn {
+  flex: 0 0 auto;
+}
+.ds-mind .hint {
+  margin: 0;
+  max-width: 58ch;
+}
+
+.ds-listtop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.ds-listtop .hint {
+  flex: 1 1 320px;
+  max-width: 62ch;
+}
+.ds-ways {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+.empty .ds-ways {
+  justify-content: center;
+  margin-top: 14px;
+}
+.empty p {
+  max-width: 54ch;
+  margin: 0 auto;
+  line-height: 1.55;
+}
+
+/*
+  Fajtánként külön keret. Egy hosszú listában a személynév és a bankszámlaszám
+  egymás alá kerülve összefolyik, pedig a kettőt másképp kell átnézni: a nevet
+  el kell olvasni, a számsort meg csak azonosítani.
+*/
+.fgroup {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+/*
+  A CSOPORT FEJLÉCE: balra a név és a magyarázat, jobbra a kapcsoló.
+
+  Az összeg, a dátum és a hivatalos szereplők kapcsolója korábban a csoporton
+  BELÜL állt, saját sorban a fejléc alatt — így viszont a csoport EGYIK
+  TÉTELÉNEK látszott, nem a csoport egészére szóló döntésnek. A fejlécsor jobb
+  szélén nincs kérdés: a kapcsoló arra vonatkozik, aminek a nevét mellette
+  olvassa a felhasználó.
+*/
+.fghead {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 9px 13px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+}
+.fgszoveg {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.fgctl {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* A kapcsoló a csoport NEVÉVEL egy magasságban áll, nem a doboz közepén: a
+     szem így egyetlen vízszintes vonal mentén olvassa le, mi van bekapcsolva. */
+  padding-top: 1px;
+}
+
+/*
+  A HIVATALOS SZEREPLŐK FIGYELMEZTETÉSE — bekapcsolt csere mellett.
+
+  Nem a kapcsoló magyarázata (az a fejlécben áll), hanem a KÖVETKEZMÉNY
+  kimondása: ez az egyetlen kapcsoló a programban, aminek jogszabályi
+  következménye van. Ezért marad a sorok fölött, nem tűnik el a súgóba.
+*/
+.keepfigy {
+  padding: 8px 13px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.fghead .t {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+  font-size: 13px;
+}
+.fghead .count {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  padding: 0 7px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.fghead .s {
+  margin-top: 3px;
+  font-size: 11.5px;
+  color: var(--ink-soft);
+  line-height: 1.45;
+  max-width: 62ch;
+}
+
+.findrow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 5px 12px;
+  align-items: center;
+  padding: 9px 13px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.findrow:last-child {
+  border-bottom: 0;
+}
+.findrow:hover {
+  background: #fdf9fb;
+}
+.fmain {
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  min-width: 0;
+}
+.findrow .orig {
+  font-weight: 600;
+  font-size: 13.5px;
+  overflow-wrap: anywhere;
+}
+.findrow .farrow {
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+/* A csereszöveg mező, nem címke: a ragozó néha mellényúl egy ritka névnél, és
+   akkor itt egy helyen kell javítani, nem a kész iratban végigkeresve. */
+.findrow .frepl {
+  flex: 1 1 150px;
+  width: auto;
+  min-width: 110px;
+  padding: 5px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rose-deep);
+  background: var(--surface-2);
+}
+.findrow .frepl:focus {
+  background: var(--surface);
+}
+/*
+  A VEZÉRLŐOSZLOP a rács széléhez zárva: a sorok gombjai így egy vonalban
+  állnak akkor is, ha a mellettük álló név más hosszú.
+
+  KAPCSOLÓ HELYETT HÁROM GOMB áll itt. A kapcsoló csak két állást ismert
+  (cserél / marad), egy név viszont sokszor szerepel az iratban, és nem
+  mindenhol ugyanaz a helyzet: a „Szabó" az egyik mondatban vezetéknév, a
+  másikban köznév. A „Következő" a Word Csere párbeszédének mozdulata, és
+  ugyanazért kell, amiért ott.
+*/
+.fctl {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.seg.sm {
+  padding: 2px;
+}
+.seg.sm .segbtn {
+  padding: 4px 9px;
+  font-size: 11.5px;
+}
+/* A LETILTOTT „Következő" nem tűnik el, csak halkul: a helye megmarad, tehát
+   a sorok gombjai nem ugrálnak, amikor egy sor teljesen bekapcsolódik. */
+.seg.sm .segbtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+/* A „Nincs csere" aktív állása NEM rózsaszín: az a csere színe. Halkabb
+   háttér, hogy a szem ne cserének olvassa. */
+.seg.sm .segbtn.active {
+  background: var(--surface);
+  color: var(--ink);
+}
+/* Az összeg és a dátum csereszövege nem szerkeszthető: a közös szorzót és a
+   közös eltolást egyetlen érték kézi átírása pont ott törné el, ahol a
+   lényege van. Mező helyett tehát olvasható szöveg. */
+.findrow .frepl.static {
+  flex: 1 1 150px;
+  min-width: 110px;
+  padding: 5px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rose-deep);
+  overflow-wrap: anywhere;
+}
+.fmeta {
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.fmeta .occ {
+  color: var(--muted);
+}
+.fmeta .warn {
+  color: var(--amber);
+  font-weight: 600;
+}
+/* A kikapcsolt sor NEM tűnik el, csak halkul: azt is látni kell, mi az, ami
+   szándékosan bent marad az iratban. */
+.findrow.off .orig,
+.findrow.off .frepl {
+  color: var(--ink-soft);
+}
+.findrow.off .frepl {
+  background: transparent;
+  border-color: var(--line-soft);
+}
+
+/* A törvény szerint bent maradó nevek. Nem hibák, ezért nem borostyán és nem
+   rózsa — halk, zöldes keret, amiről látszik, hogy így van rendben. */
+.fgroup.keep .fghead {
+  background: var(--mint-soft);
+  border-bottom-color: #cfe6dd;
+}
+.fgroup.keep .fghead .count {
+  background: var(--surface);
+  border-color: #cfe6dd;
+  color: var(--mint);
+}
+.keeprow {
+  padding: 8px 13px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.keeprow:last-child {
+  border-bottom: 0;
+}
+.keeprow .val {
+  font-size: 13px;
+  font-weight: 600;
+}
+.keeprow .why {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/*
+  A HIVATALOS SZEREPLŐK KAPCSOLÓJA — a zöld kereten belül.
+
+  Bekapcsolva a keret is átvált: a zöld azt jelentette, hogy „így van rendben"
+  (a törvény szerinti bent maradás), márpedig bekapcsolva épp az ellenkezője
+  történik. A figyelmeztetés szövege ilyenkor kiemelt, mert ez az egyetlen
+  kapcsoló a programban, aminek jogszabályi következménye van.
+*/
+.keepctl {
+  padding: 2px 13px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.keepctl .setrow:last-child {
+  border-bottom: 0;
+}
+.fgroup.keep.nyitva .fghead {
+  background: var(--amber-soft);
+  border-bottom-color: #e8d5ae;
+}
+.fgroup.keep.nyitva .fghead .count {
+  border-color: #e8d5ae;
+  color: var(--amber);
+}
+.warntext {
+  color: var(--amber);
+  font-weight: 600;
+}
+
+/* Szövegbe simuló gomb („vissza az alapértelmezetthez”). Gomb, nem `span`:
+   billentyűzettel is el kell érni. */
+.ds-link {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: inherit;
+  font-weight: 600;
+  color: var(--rose-deep);
+  text-decoration: underline;
+}
+.ds-link:focus-visible {
+  outline: 2px solid var(--rose-tint);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* ─────────────────────────── lábléc ─────────────────────────── */
+
+.ds-foot {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+  border-top: 1px solid var(--line-soft);
+  background: #fdfbfc;
+}
+.ds-sum {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+.ds-sum b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.ds-acts {
+  display: flex;
+  gap: 9px;
+  margin-left: auto;
+}
+
+/*
+  NAGYON KESKENY PANELEN A TALÁLAT SORA IS TÖRIK.
+
+  A `.setrow` már nem szerepel itt: a magyarázat azóta MINDIG a sor alatt áll
+  (lásd fent), tehát nincs mit külön tördelni. A találatok sorában viszont a
+  csereszöveg SZERKESZTHETŐ MEZŐ: 400 képpont alatt a név, a nyíl és a mező
+  egymás mellett annyira összeszorulna, hogy a mezőbe írt álnév vége nem
+  látszana — pedig épp azt kell ellenőrizni.
+
+  A HATÁR AZ ELECTRON-ABLAKON BELÜL NEM ÉRHETŐ EL (a panel ott legalább 440),
+  csak böngészőben, egymás alá rendezett panelekkel, nagyon szűk ablakban. A
+  szabály tehát a kiúté, nem a főútvonalé.
+*/
+@container (max-width: 380px) {
+  .fctl {
+    grid-column: 1;
+    grid-row: auto;
+    justify-content: flex-start;
+  }
+  .findrow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/*
+  KESKENY ABLAKBAN A KÉT PANEL EGYMÁS ALÁ KERÜL.
+
+  Az Electron-ablak legkisebb szélessége 1100 képpont (electron/main.ts
+  `minWidth`), tehát ez a program futásában nem fordul elő — böngészőben
+  viszont igen, és ott sem szabad, hogy a két panel összeszoruljon: 900 alatt
+  a beállítások 440 képpontja mellett az iratra 460 maradna, amin egy A4-es lap
+  szövege már nem olvasható.
+
+  Egymás alatt is MINDKETTŐ KÜLÖN GÖRGŐDIK, és a beállítások lába — a
+  továbblépés gombja — a képen marad. Egy hosszú lappá összeolvasztva pont az
+  veszne el, ami miatt a két panel külön görög.
+*/
+@media (max-width: 900px) {
+  .setuppage {
+    flex-direction: column;
+  }
+  .setupdoc {
+    flex: 1 1 40%;
+    min-height: 170px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .docsetup {
+    flex: 1 1 60%;
+    min-height: 280px;
+  }
+}
+
+/* ─────────────────────────── nyomtatás ─────────────────────────── */
+
+/*
+  Papírra CSAK az álnevesített előnézet mehet.
+
+  A főfolyamat a képernyő tartalmát nyomtatja, az eredeti nézetben viszont a
+  VALÓDI nevek állnak — azokat nyomtatóra küldeni ugyanaz a hiba volna, mint
+  fekete csíkot rajzolni föléjük. A felület a nyomtatás előtt átvált az
+  előnézetre; ez a szabály azt zárja ki, hogy egy versenyhelyzet vagy egy
+  későbbi átalakítás ezt visszafordítsa. Ezért a `.viewport.source` itt
+  feltétel nélkül rejtett.
+*/
+@media print {
+  .titlebar,
+  .steps,
+  .panel,
+  .statusbar,
+  .viewtabs,
+  .viewbanner,
+  .busy,
+  .overlay,
+  .welcome,
+  /* A beállító lap VALÓDI NEVEKET sorol fel az álnevük mellett: papírra
+     kinyomtatva pontosan az a visszafejtő kulcs volna, amit a kulcsfájlnál
+     olyan gondosan külön kezelünk. A `.setuppage` a lap egésze — a bal
+     panelben ott az EREDETI irat is, tehát nem elég a kártyát elrejteni. */
+  .setuppage,
+  .docsetup,
+  .viewport.source {
+    display: none !important;
+  }
+  html,
+  body,
+  #root,
+  .app {
+    height: auto;
+    overflow: visible;
+    background: #fff;
+  }
+  .workspace,
+  .docarea {
+    display: block;
+  }
+  .viewport {
+    overflow: visible;
+    padding: 0;
+    background: #fff;
+  }
+  .textview {
+    max-width: none;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+    font-size: 11pt;
+    color: #000;
+  }
+  /* A kiemelés a képernyőnek szól: a kész iratnak dokumentumként kell
+     kinéznie, nem javított fogalmazványként. */
+  .textview mark {
+    background: transparent;
+    border-bottom: 0;
+    color: inherit;
+  }
+  @page {
+    margin: 20mm 18mm;
+  }
+}

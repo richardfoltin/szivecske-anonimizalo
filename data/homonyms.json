@@ -1,0 +1,1175 @@
+{
+ "surnames": [
+  {
+   "form": "Nagy",
+   "common_meaning": "nagy – jelentős méretű, mértékű, fokú ('big, great'). Magyarország leggyakoribb családneve (~221 000 viselő).",
+   "part_of_speech": "melléknév",
+   "risk": "high"
+  },
+  {
+   "form": "Kis",
+   "common_meaning": "kis – kicsi, csekély ('small, minor'). A 'kis' jelzői alakja rendkívül gyakori jogi szövegben (kis értékű, kisebb kár, kiskorú).",
+   "part_of_speech": "melléknév",
+   "risk": "high"
+  },
+  {
+   "form": "Kiss",
+   "common_meaning": "A Kis családnév régies írásváltozata (~122 000 viselő); önmagában NEM köznév, de OCR-ben és elgépeléskor a 'kis' szóval egybemosódik.",
+   "part_of_speech": "tulajdonnév-változat (nem köznév)",
+   "risk": "low"
+  },
+  {
+   "form": "Magyar",
+   "common_meaning": "magyar – a magyar néphez, nyelvhez, joghoz tartozó ('Hungarian'). Jogi prózában kiemelten gyakori: magyar állampolgár, magyar jog szerint, a magyar bíróság.",
+   "part_of_speech": "melléknév/főnév (népnév)",
+   "risk": "high"
+  },
+  {
+   "form": "Fél",
+   "common_meaning": "fél – 1. a szerződés vagy per résztvevője ('party'; a felek, szerződő fél, harmadik fél), 2. valaminek a fele ('half'), 3. fél(ni) E/3 ('fears'). Családnévként ritka, de adatolt.",
+   "part_of_speech": "főnév / számnév / ige (E/3)",
+   "risk": "high"
+  },
+  {
+   "form": "Bíró",
+   "common_meaning": "bíró – ítélkező személy ('judge'); régen falusi elöljáró. A jogi szövegek egyik legsűrűbben előforduló szava.",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "high"
+  },
+  {
+   "form": "Biró",
+   "common_meaning": "A Bíró régies/rövid í-s írásváltozata; ugyanaz a köznévi ütközés.",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "high"
+  },
+  {
+   "form": "Erős",
+   "common_meaning": "erős – nagy erejű, intenzív ('strong'). Btk.-szakszó része: erős felindulásban elkövetett emberölés.",
+   "part_of_speech": "melléknév",
+   "risk": "high"
+  },
+  {
+   "form": "Hosszú",
+   "common_meaning": "hosszú – nagy kiterjedésű/időtartamú ('long'). Gyakori: hosszú időn át, hosszabb tartamú.",
+   "part_of_speech": "melléknév",
+   "risk": "high"
+  },
+  {
+   "form": "Rövid",
+   "common_meaning": "rövid – kis kiterjedésű/időtartamú ('short'). Gyakori: rövid úton, rövid határidő. Családnévként ritka, de adatolt.",
+   "part_of_speech": "melléknév",
+   "risk": "high"
+  },
+  {
+   "form": "Fehér",
+   "common_meaning": "fehér – szín ('white'). Gépjármű-, ingatlan- és személyleírásokban gyakori.",
+   "part_of_speech": "melléknév",
+   "risk": "medium"
+  },
+  {
+   "form": "Fekete",
+   "common_meaning": "fekete – szín ('black'); átvitt értelemben illegális (feketemunka, feketegazdaság).",
+   "part_of_speech": "melléknév",
+   "risk": "medium"
+  },
+  {
+   "form": "Vörös",
+   "common_meaning": "vörös – szín ('red', mély vörös árnyalat).",
+   "part_of_speech": "melléknév",
+   "risk": "medium"
+  },
+  {
+   "form": "Barna",
+   "common_meaning": "barna – szín ('brown'). Egyben férfi utónév (a Barnabás rövidülése).",
+   "part_of_speech": "melléknév",
+   "risk": "medium"
+  },
+  {
+   "form": "Szőke",
+   "common_meaning": "szőke – világos hajszínű ('blond').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Zöld",
+   "common_meaning": "zöld – szín ('green').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Szép",
+   "common_meaning": "szép – esztétikailag tetszetős ('beautiful'); 'szép számmal', 'szép összeg' fordulatokban is.",
+   "part_of_speech": "melléknév",
+   "risk": "medium"
+  },
+  {
+   "form": "Kemény",
+   "common_meaning": "kemény – szilárd, szigorú ('hard, severe').",
+   "part_of_speech": "melléknév",
+   "risk": "medium"
+  },
+  {
+   "form": "Csonka",
+   "common_meaning": "csonka – hiányos, megcsonkított ('truncated, maimed'). Számviteli/munkajogi szakszó: csonka hónap.",
+   "part_of_speech": "melléknév",
+   "risk": "medium"
+  },
+  {
+   "form": "Terhes",
+   "common_meaning": "terhes – 1. várandós ('pregnant'), 2. megterhelő ('burdensome'). Utóbbi jelentésben jogi szövegben is előfordul.",
+   "part_of_speech": "melléknév",
+   "risk": "medium"
+  },
+  {
+   "form": "Nemes",
+   "common_meaning": "nemes – 1. nemesi rangú, 2. előkelő, értékes ('noble'; nemesfém). Névelőző címként is állhat: 'nemes Nagy Béla'.",
+   "part_of_speech": "melléknév/főnév",
+   "risk": "medium"
+  },
+  {
+   "form": "Gazdag",
+   "common_meaning": "gazdag – vagyonos, bőséges ('rich').",
+   "part_of_speech": "melléknév",
+   "risk": "medium"
+  },
+  {
+   "form": "Bátor",
+   "common_meaning": "bátor – merész ('brave'). Egyben anyakönyvezhető férfi utónév.",
+   "part_of_speech": "melléknév",
+   "risk": "medium"
+  },
+  {
+   "form": "Vékony",
+   "common_meaning": "vékony – kis vastagságú ('thin').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Vastag",
+   "common_meaning": "vastag – nagy vastagságú ('thick').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Gyenge",
+   "common_meaning": "gyenge – kis erejű, csekély értékű ('weak').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Sánta",
+   "common_meaning": "sánta – bicegő ('lame').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Kopasz",
+   "common_meaning": "kopasz – hajatlan ('bald').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Tar",
+   "common_meaning": "tar – kopasz, csupasz ('bald, bare', régies).",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Görbe",
+   "common_meaning": "görbe – hajlott ('crooked'); főnévként matematikai görbe.",
+   "part_of_speech": "melléknév/főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Sima",
+   "common_meaning": "sima – egyenletes felületű, egyszerű ('smooth, plain').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Sebes",
+   "common_meaning": "sebes – 1. gyors ('swift'), 2. sebekkel borított ('wounded').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Édes",
+   "common_meaning": "édes – cukros ízű ('sweet'). Vigyázat: az 'édesanyja' egybeírt szó, tokenszinten nem esik egybe.",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Keserű",
+   "common_meaning": "keserű – kesernyés ízű ('bitter').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Savanyú",
+   "common_meaning": "savanyú – savas ízű ('sour').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Sós",
+   "common_meaning": "sós – sót tartalmazó ('salty').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Boros",
+   "common_meaning": "boros – borral kapcsolatos, bort ivott ('wine-, tipsy').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Borsos",
+   "common_meaning": "borsos – borssal fűszerezett; átvitt értelemben drága ('peppery; steep, pricey').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Csendes",
+   "common_meaning": "csendes – halk, nyugodt ('quiet'). Társasági jogi kifejezésben is: csendestárs.",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Hangos",
+   "common_meaning": "hangos – nagy hangerejű ('loud').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Víg",
+   "common_meaning": "víg – vidám, jókedvű ('merry').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Bús",
+   "common_meaning": "bús – szomorú, bánatos ('sorrowful').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Boldog",
+   "common_meaning": "boldog – örömteli ('happy'); egyházi cím is (Boldog X. Y.).",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Erdős",
+   "common_meaning": "erdős – erdővel borított ('wooded'). Ingatlan- és földhivatali leírásokban előfordul: erdős terület.",
+   "part_of_speech": "melléknév",
+   "risk": "medium"
+  },
+  {
+   "form": "Hegyi",
+   "common_meaning": "hegyi – hegyhez tartozó ('mountain-'). Ingatlan- és útleírásokban gyakori.",
+   "part_of_speech": "melléknév",
+   "risk": "medium"
+  },
+  {
+   "form": "Mezei",
+   "common_meaning": "mezei – mezőhöz tartozó ('of the field').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Völgyi",
+   "common_meaning": "völgyi – völgyhöz tartozó ('of the valley').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Vízi",
+   "common_meaning": "vízi – vízhez tartozó ('aquatic'; vízi jármű, vízi közlekedés).",
+   "part_of_speech": "melléknév",
+   "risk": "medium"
+  },
+  {
+   "form": "Erdei",
+   "common_meaning": "erdei – erdőhöz tartozó ('of the forest').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Földes",
+   "common_meaning": "földes – földdel borított; földdel bíró ('earthy; landed').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Nyári",
+   "common_meaning": "nyári – nyárhoz tartozó ('summer-'). Jogi szakkifejezés része: nyári ítélkezési szünet.",
+   "part_of_speech": "melléknév",
+   "risk": "medium"
+  },
+  {
+   "form": "Somogyi",
+   "common_meaning": "somogyi – Somogy megyéhez tartozó. Nem lexikális köznév, hanem helynévi -i képzős melléknév; ugyanígy viselkedik minden -i képzős helynévi családnév (Szegedi, Egri, Budai, Bácskai, Pesti, Váradi, Vasvári).",
+   "part_of_speech": "melléknév (helynévi -i képzés)",
+   "risk": "medium"
+  },
+  {
+   "form": "Vas",
+   "common_meaning": "vas – fém ('iron'); Vas megye neve is.",
+   "part_of_speech": "főnév",
+   "risk": "medium"
+  },
+  {
+   "form": "Acél",
+   "common_meaning": "acél – ötvözött vas ('steel'). Aczél írásváltozatban is.",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Arany",
+   "common_meaning": "arany – nemesfém ('gold').",
+   "part_of_speech": "főnév/melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Pénzes",
+   "common_meaning": "pénzes – pénzzel rendelkező ('moneyed'; pénzes küldemény).",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Bársony",
+   "common_meaning": "bársony – textília ('velvet').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Fodor",
+   "common_meaning": "fodor – hullámos szegély, hajfürt ('frill, curl').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Bodor",
+   "common_meaning": "bodor – göndör ('curly', régies).",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Szél",
+   "common_meaning": "szél – 1. légmozgás ('wind'), 2. valaminek a pereme ('edge, margin').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Ujj",
+   "common_meaning": "ujj – kézujj; ruhaujj ('finger; sleeve'). Ujjlenyomat kontextusban is felbukkan.",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Fejes",
+   "common_meaning": "fejes – fejjel bíró, fejes káposzta; bizalmasan vezető ('having a head; big shot').",
+   "part_of_speech": "melléknév/főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Szemes",
+   "common_meaning": "szemes – éles szemű, szemcsés ('sharp-eyed; granular').",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Rózsa",
+   "common_meaning": "rózsa – virág ('rose'). Egyben női (ritkán férfi) utónév.",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Virág",
+   "common_meaning": "virág – növény virága ('flower'). Egyben női utónév.",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Fenyő",
+   "common_meaning": "fenyő – tűlevelű fa ('pine, fir').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Kökény",
+   "common_meaning": "kökény – vadon termő cserje és termése ('sloe, blackthorn').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Búza",
+   "common_meaning": "búza – gabonaféle ('wheat').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Torma",
+   "common_meaning": "torma – fűszernövény ('horseradish').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Kása",
+   "common_meaning": "kása – főtt gabonaétel ('porridge, gruel').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Bors",
+   "common_meaning": "bors – fűszer ('pepper'). Egyben anyakönyvezhető férfi utónév.",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Gombos",
+   "common_meaning": "gombos – gombokkal ellátott ('buttoned'; gombos telefon).",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Méhes",
+   "common_meaning": "méhes – méhek tartására szolgáló hely ('apiary').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Bogár",
+   "common_meaning": "bogár – rovar ('beetle, bug').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Bárány",
+   "common_meaning": "bárány – fiatal juh ('lamb').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Medve",
+   "common_meaning": "medve – nagytestű ragadozó ('bear').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Galamb",
+   "common_meaning": "galamb – madár ('dove, pigeon').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Veréb",
+   "common_meaning": "veréb – kismadár ('sparrow').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Sólyom",
+   "common_meaning": "sólyom – ragadozó madár ('falcon').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Szarvas",
+   "common_meaning": "szarvas – nagyvad ('deer, stag'); melléknévként 'szarvakkal bíró' (szarvasmarha, szarvashiba). Település neve is.",
+   "part_of_speech": "főnév/melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Farkas",
+   "common_meaning": "farkas – ragadozó ('wolf'). Egyben férfi utónév és igen gyakori családnév.",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Ökrös",
+   "common_meaning": "ökrös – ökrökkel bíró, ökör vontatta ('ox-, having oxen'; ökrös szekér).",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Angyal",
+   "common_meaning": "angyal – égi lény ('angel').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Ördög",
+   "common_meaning": "ördög – gonosz szellem ('devil').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Király",
+   "common_meaning": "király – uralkodó ('king').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Herceg",
+   "common_meaning": "herceg – főnemesi rang ('prince, duke').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Császár",
+   "common_meaning": "császár – uralkodói cím ('emperor').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Gróf",
+   "common_meaning": "gróf – főnemesi rang ('count'). Névelőző címként is állhat régi iratokban.",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Vitéz",
+   "common_meaning": "vitéz – hős katona ('valiant, knight'). Névelőző címként is: 'vitéz Nagy Béla'.",
+   "part_of_speech": "főnév/melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Bán",
+   "common_meaning": "bán – történelmi méltóságnév ('ban'); igeként 'bán(ik)/megbán' töve.",
+   "part_of_speech": "főnév (méltóságnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Barát",
+   "common_meaning": "barát – 1. jóbarát ('friend'), 2. szerzetes ('friar').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Jobbágy",
+   "common_meaning": "jobbágy – feudális függő paraszt ('serf').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Gazda",
+   "common_meaning": "gazda – tulajdonos, birtokos, gazdálkodó ('farmer, owner, master').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Polgár",
+   "common_meaning": "polgár – városi lakos, állampolgár ('citizen'). Jogi szövegben gyakori.",
+   "part_of_speech": "főnév",
+   "risk": "medium"
+  },
+  {
+   "form": "Katona",
+   "common_meaning": "katona – fegyveres szolgálatot teljesítő személy ('soldier').",
+   "part_of_speech": "főnév",
+   "risk": "medium"
+  },
+  {
+   "form": "Mester",
+   "common_meaning": "mester – szakma mestere, oktató ('master, craftsman').",
+   "part_of_speech": "főnév",
+   "risk": "medium"
+  },
+  {
+   "form": "Szabados",
+   "common_meaning": "szabados – felszabadított jobbágy; melléknévként 'féktelen, szabadszájú'.",
+   "part_of_speech": "főnév/melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Pap",
+   "common_meaning": "pap – egyházi személy ('priest').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Papp",
+   "common_meaning": "A Pap régies írásváltozata (igen gyakori családnév); önmagában nem köznév.",
+   "part_of_speech": "tulajdonnév-változat (nem köznév)",
+   "risk": "low"
+  },
+  {
+   "form": "Deák",
+   "common_meaning": "deák – régiesen írnok, diák, latinul tudó ('scribe, student', archaikus).",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Kovács",
+   "common_meaning": "kovács – fémet alakító mesterember ('smith'). A 2. leggyakoribb családnév; köznévként ritka, ezért itt a fő kockázat a FEL NEM ISMERÉS.",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Szabó",
+   "common_meaning": "szabó – ruhakészítő mesterember ('tailor').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Molnár",
+   "common_meaning": "molnár – malmot működtető mesterember ('miller').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Varga",
+   "common_meaning": "varga – lábbelikészítő, tímár ('cobbler, leatherworker', régies).",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Takács",
+   "common_meaning": "takács – szövő mesterember ('weaver').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Szűcs",
+   "common_meaning": "szűcs – szőrmét feldolgozó mesterember ('furrier').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Lakatos",
+   "common_meaning": "lakatos – fémszerkezeteket készítő szakmunkás ('locksmith'). Iratokban gyakori a 'foglalkozása: lakatos' mezőben.",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "medium"
+  },
+  {
+   "form": "Mészáros",
+   "common_meaning": "mészáros – húsipari mesterember ('butcher').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Juhász",
+   "common_meaning": "juhász – juhokat őrző pásztor ('shepherd').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Pásztor",
+   "common_meaning": "pásztor – jószágot legeltető ember ('shepherd, herdsman').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Csordás",
+   "common_meaning": "csordás – szarvasmarhacsordát őrző pásztor ('herdsman').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Csikós",
+   "common_meaning": "csikós – ménest őrző pásztor ('horse herdsman').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Gulyás",
+   "common_meaning": "gulyás – 1. gulyát őrző pásztor, 2. gulyásleves ('herdsman; goulash').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Csősz",
+   "common_meaning": "csősz – határt, termést őrző ember ('field guard').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Bognár",
+   "common_meaning": "bognár – kerékgyártó mesterember ('wheelwright').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Bodnár",
+   "common_meaning": "bodnár – kádár, hordókészítő ('cooper').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Kádár",
+   "common_meaning": "kádár – kádat, hordót készítő mesterember ('cooper').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Pintér",
+   "common_meaning": "pintér – hordókészítő, kádár ('cooper', dunántúli szó).",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Fazekas",
+   "common_meaning": "fazekas – agyagedény-készítő mesterember ('potter').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Kertész",
+   "common_meaning": "kertész – kertet művelő ember ('gardener').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Halász",
+   "common_meaning": "halász – halat fogó ember ('fisherman'); igeként 'halász(ik)' E/3 alakja is.",
+   "part_of_speech": "főnév (foglalkozásnév) / ige",
+   "risk": "low"
+  },
+  {
+   "form": "Vadász",
+   "common_meaning": "vadász – vadat ejtő ember ('hunter'); igeként 'vadász(ik)' E/3 alakja is.",
+   "part_of_speech": "főnév (foglalkozásnév) / ige",
+   "risk": "low"
+  },
+  {
+   "form": "Madarász",
+   "common_meaning": "madarász – madarat fogó/kutató ember ('birdcatcher, ornithologist').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Kocsis",
+   "common_meaning": "kocsis – lovas kocsi hajtója ('coachman, driver').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Révész",
+   "common_meaning": "révész – kompot, csónakot átkelésre használó ember ('ferryman').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Sipos",
+   "common_meaning": "sipos – sípoló, sípon játszó ('piper').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Dudás",
+   "common_meaning": "dudás – dudán játszó zenész ('bagpiper').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Hegedűs",
+   "common_meaning": "hegedűs – hegedűn játszó zenész ('violinist, fiddler').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Szakács",
+   "common_meaning": "szakács – ételt készítő mesterember ('cook').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Sütő",
+   "common_meaning": "sütő – 1. sütésre szolgáló berendezés ('oven'), 2. pék ('baker'), 3. a 'süt' ige folyamatos melléknévi igeneve.",
+   "part_of_speech": "főnév / melléknévi igenév",
+   "risk": "low"
+  },
+  {
+   "form": "Borbély",
+   "common_meaning": "borbély – hajat, szakállt nyíró mesterember ('barber').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Tímár",
+   "common_meaning": "tímár – bőrt kikészítő mesterember ('tanner').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Csizmadia",
+   "common_meaning": "csizmadia – csizmakészítő mesterember ('bootmaker').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Kalmár",
+   "common_meaning": "kalmár – kereskedő ('merchant', régies).",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Vámos",
+   "common_meaning": "vámos – vámot szedő tisztviselő ('customs officer').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Ács",
+   "common_meaning": "ács – faszerkezetet készítő mesterember ('carpenter').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Kőműves",
+   "common_meaning": "kőműves – falazó, vakoló szakmunkás ('mason, bricklayer').",
+   "part_of_speech": "főnév (foglalkozásnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Nyerges",
+   "common_meaning": "nyerges – nyerget készítő mesterember; melléknévként 'nyereggel ellátott' (nyerges vontató).",
+   "part_of_speech": "főnév/melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Csapó",
+   "common_meaning": "csapó – gyapjút tömörítő mesterember; a 'csap' ige folyamatos melléknévi igeneve.",
+   "part_of_speech": "főnév / melléknévi igenév",
+   "risk": "low"
+  },
+  {
+   "form": "Balta",
+   "common_meaning": "balta – fejsze ('axe, hatchet').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Bába",
+   "common_meaning": "bába – szülésznő ('midwife').",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  },
+  {
+   "form": "Balog",
+   "common_meaning": "balog – balkezes ('left-handed', régies/nyelvjárási).",
+   "part_of_speech": "melléknév",
+   "risk": "low"
+  },
+  {
+   "form": "Balogh",
+   "common_meaning": "A Balog régies írásváltozata (gyakori családnév); önmagában nem köznév. Toldalékolása külön szabály alá esik (néma h).",
+   "part_of_speech": "tulajdonnév-változat (nem köznév)",
+   "risk": "low"
+  },
+  {
+   "form": "Német",
+   "common_meaning": "német – a német néphez, nyelvhez tartozó ('German'). Jogi szövegben gyakori: német jog szerint, német állampolgár.",
+   "part_of_speech": "melléknév/főnév (népnév)",
+   "risk": "medium"
+  },
+  {
+   "form": "Németh",
+   "common_meaning": "A Német régies írásváltozata (igen gyakori családnév); önmagában nem köznév.",
+   "part_of_speech": "tulajdonnév-változat (nem köznév)",
+   "risk": "low"
+  },
+  {
+   "form": "Horvát",
+   "common_meaning": "horvát – a horvát néphez, nyelvhez tartozó ('Croatian').",
+   "part_of_speech": "melléknév/főnév (népnév)",
+   "risk": "medium"
+  },
+  {
+   "form": "Horváth",
+   "common_meaning": "A Horvát régies írásváltozata (top 5 családnév); önmagában nem köznév.",
+   "part_of_speech": "tulajdonnév-változat (nem köznév)",
+   "risk": "low"
+  },
+  {
+   "form": "Tót",
+   "common_meaning": "tót – régiesen szlovák, szláv ('Slovak, Slavic'; ma pejoratív ízű).",
+   "part_of_speech": "melléknév/főnév (népnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Tóth",
+   "common_meaning": "A Tót régies írásváltozata (top 3 családnév); önmagában nem köznév.",
+   "part_of_speech": "tulajdonnév-változat (nem köznév)",
+   "risk": "low"
+  },
+  {
+   "form": "Török",
+   "common_meaning": "török – 1. a török néphez tartozó ('Turkish'), 2. a 'tör' ige E/1 alakja ('I break').",
+   "part_of_speech": "melléknév/főnév (népnév) / ige (E/1)",
+   "risk": "medium"
+  },
+  {
+   "form": "Orosz",
+   "common_meaning": "orosz – az orosz néphez, nyelvhez tartozó ('Russian').",
+   "part_of_speech": "melléknév/főnév (népnév)",
+   "risk": "medium"
+  },
+  {
+   "form": "Lengyel",
+   "common_meaning": "lengyel – a lengyel néphez, nyelvhez tartozó ('Polish').",
+   "part_of_speech": "melléknév/főnév (népnév)",
+   "risk": "medium"
+  },
+  {
+   "form": "Olasz",
+   "common_meaning": "olasz – az olasz néphez, nyelvhez tartozó ('Italian').",
+   "part_of_speech": "melléknév/főnév (népnév)",
+   "risk": "medium"
+  },
+  {
+   "form": "Cseh",
+   "common_meaning": "cseh – a cseh néphez, nyelvhez tartozó ('Czech').",
+   "part_of_speech": "melléknév/főnév (népnév)",
+   "risk": "medium"
+  },
+  {
+   "form": "Görög",
+   "common_meaning": "görög – a görög néphez, nyelvhez tartozó ('Greek'); igeként 'görög' (gurul) is.",
+   "part_of_speech": "melléknév/főnév (népnév)",
+   "risk": "medium"
+  },
+  {
+   "form": "Oláh",
+   "common_meaning": "oláh – régiesen román, vlach ('Romanian, Vlach'; ma pejoratív ízű).",
+   "part_of_speech": "melléknév/főnév (népnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Rác",
+   "common_meaning": "rác – régiesen szerb ('Serb').",
+   "part_of_speech": "melléknév/főnév (népnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Rácz",
+   "common_meaning": "A Rác régies írásváltozata (gyakori családnév); önmagában nem köznév.",
+   "part_of_speech": "tulajdonnév-változat (nem köznév)",
+   "risk": "low"
+  },
+  {
+   "form": "Szász",
+   "common_meaning": "szász – erdélyi/németországi népcsoport tagja ('Saxon').",
+   "part_of_speech": "melléknév/főnév (népnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Székely",
+   "common_meaning": "székely – erdélyi magyar népcsoport tagja ('Székely').",
+   "part_of_speech": "melléknév/főnév (népnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Kun",
+   "common_meaning": "kun – középkori betelepült néphez tartozó ('Cuman').",
+   "part_of_speech": "melléknév/főnév (népnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Tatár",
+   "common_meaning": "tatár – a tatár néphez tartozó ('Tatar').",
+   "part_of_speech": "melléknév/főnév (népnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Bolgár",
+   "common_meaning": "bolgár – a bolgár néphez, nyelvhez tartozó ('Bulgarian').",
+   "part_of_speech": "melléknév/főnév (népnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Bosnyák",
+   "common_meaning": "bosnyák – a bosnyák néphez tartozó ('Bosniak').",
+   "part_of_speech": "melléknév/főnév (népnév)",
+   "risk": "low"
+  },
+  {
+   "form": "Hajdú",
+   "common_meaning": "hajdú – történelmi fegyveres réteg tagja, később városi szolga ('haiduk'); Hajdú-Bihar megye nevében is.",
+   "part_of_speech": "főnév",
+   "risk": "low"
+  }
+ ],
+ "given_names": [
+  {
+   "form": "Virág",
+   "common_meaning": "virág – növény virága ('flower'). Női utónév; egyben családnév is – hármas ütközés (köznév + családnév + utónév).",
+   "risk": "low"
+  },
+  {
+   "form": "Rózsa",
+   "common_meaning": "rózsa – kerti virág ('rose'). Elsősorban női utónév; egyben családnév is.",
+   "risk": "low"
+  },
+  {
+   "form": "Gyöngy",
+   "common_meaning": "gyöngy – kagylóban képződő ékkő ('pearl'). Női utónév (a Gyöngyi, Gyöngyvér mellett önállóan is anyakönyvezhető).",
+   "risk": "low"
+  },
+  {
+   "form": "Csillag",
+   "common_meaning": "csillag – égitest ('star'). Női utónév; egyben családnév is.",
+   "risk": "low"
+  },
+  {
+   "form": "Hajnal",
+   "common_meaning": "hajnal – napkelte előtti időszak ('dawn'). Női utónév; egyben családnév is.",
+   "risk": "low"
+  },
+  {
+   "form": "Hajnalka",
+   "common_meaning": "hajnalka – kúszó dísznövény ('morning glory'), egyben a Hajnal becézett formája. Gyakori női utónév.",
+   "risk": "low"
+  },
+  {
+   "form": "Ibolya",
+   "common_meaning": "ibolya – tavaszi virág ('violet'). Gyakori női utónév.",
+   "risk": "low"
+  },
+  {
+   "form": "Viola",
+   "common_meaning": "viola – kerti dísznövény ('stock, gillyflower'). Női utónév.",
+   "risk": "low"
+  },
+  {
+   "form": "Jázmin",
+   "common_meaning": "jázmin – illatos cserje ('jasmine'). Női utónév.",
+   "risk": "low"
+  },
+  {
+   "form": "Boglárka",
+   "common_meaning": "boglárka – sárga mezei virág ('buttercup'). Gyakori női utónév.",
+   "risk": "low"
+  },
+  {
+   "form": "Kamilla",
+   "common_meaning": "kamilla – gyógynövény ('chamomile'). Női utónév.",
+   "risk": "low"
+  },
+  {
+   "form": "Nárcisz",
+   "common_meaning": "nárcisz – tavaszi hagymás virág ('daffodil, narcissus'). Női utónév.",
+   "risk": "low"
+  },
+  {
+   "form": "Hanga",
+   "common_meaning": "hanga – savanyú talajon élő törpecserje ('heather'). Női utónév.",
+   "risk": "low"
+  },
+  {
+   "form": "Aranka",
+   "common_meaning": "aranka – élősködő növény ('dodder'); egyben az Arany- tőből képzett női utónév.",
+   "risk": "low"
+  },
+  {
+   "form": "Farkas",
+   "common_meaning": "farkas – ragadozó ('wolf'). Régi magyar férfi utónév (pl. Bolyai Farkas) ÉS igen gyakori családnév – ezért a 'Farkas Farkas' vagy 'Kis Farkas' típusú sorrend-kétértelműség valós.",
+   "risk": "low"
+  },
+  {
+   "form": "Bors",
+   "common_meaning": "bors – fűszer ('pepper'). Anyakönyvezhető férfi utónév; egyben családnév.",
+   "risk": "low"
+  },
+  {
+   "form": "Bátor",
+   "common_meaning": "bátor – merész ('brave'). Anyakönyvezhető férfi utónév; melléknévként jogi szövegben is előfordul.",
+   "risk": "medium"
+  },
+  {
+   "form": "Álmos",
+   "common_meaning": "álmos – aluszékony, álmosságot érző ('sleepy'). Anyakönyvezhető férfi utónév (Álmos fejedelem).",
+   "risk": "low"
+  },
+  {
+   "form": "Előd",
+   "common_meaning": "előd – megelőző személy, jogelőd, ős ('predecessor, ancestor'). Férfi utónév; köznévként jogi szövegben is előfordul (jogelőd).",
+   "risk": "medium"
+  },
+  {
+   "form": "Szilárd",
+   "common_meaning": "szilárd – kemény halmazállapotú; állhatatos ('solid, firm'). Gyakori férfi utónév; melléknévként jogi/műszaki leírásokban is előfordul (szilárd burkolat, szilárd meggyőződés).",
+   "risk": "medium"
+  },
+  {
+   "form": "Győző",
+   "common_meaning": "győző – győztes fél ('victor'); a 'győz' ige folyamatos melléknévi igeneve. Férfi utónév.",
+   "risk": "low"
+  },
+  {
+   "form": "Vidor",
+   "common_meaning": "vidor – vidám, jókedvű ('cheerful', irodalmi/választékos). Anyakönyvezhető férfi utónév.",
+   "risk": "low"
+  },
+  {
+   "form": "Barna",
+   "common_meaning": "barna – szín ('brown'). Férfi utónév (a Barnabás rövidülése) ÉS családnév ÉS melléknév – hármas ütközés.",
+   "risk": "medium"
+  },
+  {
+   "form": "Levente",
+   "common_meaning": "levente – történelmi jelentésben ifjú vitéz; 1921–1945 között a Levente-mozgalom tagja. Ma gyakori férfi utónév; köznévi használata archaikus, ezért a kockázat alacsony.",
+   "risk": "low"
+  },
+  {
+   "form": "Gyula",
+   "common_meaning": "gyula – honfoglalás kori méltóságnév ('gyula', tribal dignitary). Gyakori férfi utónév; egyben városnév (Gyula). Köznévi használata csak történeti szövegben.",
+   "risk": "low"
+  },
+  {
+   "form": "Kende",
+   "common_meaning": "kende – honfoglalás kori szakrális fejedelmi méltóságnév. Anyakönyvezhető férfi utónév; köznévi használata csak történeti szövegben (bizonytalan besorolás, l. notes).",
+   "risk": "low"
+  }
+ ],
+ "context_cues": [
+  "POZITÍV – Megelőző névelőző rövidítés vagy cím közvetlenül a jelölt előtt: `dr.`, `Dr.`, `DR.`, `dr` (pont nélkül), `Prof. Dr.`, `ifj.`, `id.`, `özv.`, `néhai`, `vitéz`, `nemes`, `néh.`, `özvegy`. Minta: /\\b(dr|ifj|id|özv|néh)\\.?\\s+(?<JELÖLT>\\p{Lu}\\p{Ll}+)/ – szinte 100%-os precizitású.",
+  "POZITÍV – A jelöltet közvetlenül KÖVETI egy ismert magyar utónév (magyar névsorrend: családnév + utónév). Ez a legfontosabb egyedi jel: „Nagy Béla”, „Fehér Anna”, „Kis Farkas”. Megvalósítás: utónévlexikon (anyakönyvezhető utónevek jegyzéke) + a jelölt bigramtesztje. Kettős utónévnél a minta CSALÁDNÉV + UTÓNÉV + UTÓNÉV („Szabó Anna Mária”).",
+  "POZITÍV – A jelöltet MEGELŐZI egy ismert utónév nyugati sorrendben (fordított iratok, külföldi felek, e-mail-aláírások): „Béla Nagy”, „Anna Fehér”. Gyengébb jel, mint a magyar sorrend; csak akkor fogadd el, ha a jelölt nem funkcionálhat jelzőként az előtte álló utónévhez.",
+  "POZITÍV – A jelöltet követő megszólító/udvariassági szó: `úr`, `úrnak`, `úrral`, `úrhoz`, `urat`, `asszony`, `asszonyt`, `asszonynak`, `asszonnyal`, `kisasszony`, `úrhölgy`, `elvtárs` (történeti iratok). Minta: JELÖLT + (úr|asszony|kisasszony) tetszőleges esetraggal.",
+  "POZITÍV – `-né` képzős asszonynévi alak: `Nagyné`, `Kovácsné`, `Szabóné`, `Nagy Béláné`, `dr. Szabó Jánosné`, valamint ezek ragozott formái (`-nénak`, `-néval`, `-nét`, `-nétől`). Bármely jelölt + `né` szegmens gyakorlatilag mindig személynév. A teljes szerkezet kezelendő: `dr. Szabó Jánosné szül. Kis Mária`.",
+  "POZITÍV – Családi többes `-ék`: `Nagyék`, `Kovácsékat`, `Szabóéknál`, `Kisékhoz`. A `-ék` toldalék kizárólag tulajdonnévhez (és néhány foglalkozásnévhez) járul, ezért igen nagy precizitású jel.",
+  "POZITÍV – A jelöltet (vagy a teljes nevet) követő eljárási szerep értelmezőként, vessző nélkül vagy vesszővel: `felperes`, `alperes`, `vádlott`, `terhelt`, `sértett`, `tanú`, `kérelmező`, `kérelmezett`, `beavatkozó`, `indítványozó`, `panaszos`, `adós`, `hitelező`, `örökhagyó`, `örökös`, `haszonélvező`, `eladó`, `vevő`, `bérlő`, `bérbeadó`, `zálogkötelezett`, `kezes`, `meghatalmazott`, `képviselő`, `jogi képviselő`, `gyám`, `gondnok`, `szakértő`, `tolmács`. Pl. „Nagy Béla felperes előadta…”, „Kis János I. r. vádlott”.",
+  "POZITÍV – Sorszámozott perbeli pozíció a név előtt vagy után: `I. r.`, `II. r.`, `III. r.`, `I. rendű`, `II. rendű alperes`, `1. számú tanú`, `A) alperes`. Minta: /\\b[IVX]+\\.\\s?r\\.?\\s+/ vagy /\\b[IVX]+\\.\\s?rendű\\b/ a név közvetlen szomszédságában.",
+  "POZITÍV – Űrlapmezős kontextus: a jelölt egy kettőspontos címke UTÁN áll ugyanabban a sorban. Címkék: `Név:`, `Születési név:`, `Leánykori név:`, `Viselt név:`, `Anyja neve:`, `Anyja születési neve:`, `Felperes:`, `Alperes:`, `Vádlott:`, `Terhelt:`, `Sértett:`, `Tanú:`, `Kérelmező:`, `Ügyfél:`, `Meghatalmazó:`, `Meghatalmazott:`, `Képviselő:`, `Jogi képviselő:`, `Örökhagyó:`, `Eladó:`, `Vevő:`, `Bérlő:`, `Ügyvezető:`, `Cégjegyzésre jogosult:`, `Eljáró bíró:`, `Jegyzőkönyvvezető:`, `Közjegyző:`. Nagybetűs változatban is (`FELPERES:`), és ez a jel ALL-CAPS blokkban is működik.",
+  "POZITÍV – A nevet követő születési/azonosító adatokat tartalmazó zárójel: NÉV + `(` + (`szül.`|`született`|`sz.`|`an.`|`anyja neve`|`szül. hely`|`lakcím`|`lakik`|`szig. sz.`|`szem. ig. sz.`|`adóazonosító jel`|`szem. azon.`). Pl. „Nagy Béla (szül.: Budapest, 1975. 03. 04., an.: Kis Mária)”. Kivételesen nagy precizitású.",
+  "POZITÍV – A nevet közvetlenül követő magyar cím: 4 jegyű irányítószám + településnév. Minta: NÉV + `(`? + /\\b\\d{4}\\b/ + Településnév. Pl. „Nagy Béla (1088 Budapest, Rákóczi út 5.)”.",
+  "POZITÍV – Aláírásblokk: a dokumentum utolsó ~10 sorában, a `Kelt`/keltezéssor (`Budapest, 2024. március 4.`) UTÁN álló, csak nagybetűvel kezdődő 1–3 tokenből álló önálló sor, gyakran aláírásvonal (`_____`, `-------`) alatt/fölött, és/vagy amelyet a következő sorban szerepmegjelölés követ: `ügyvéd`, `s. k.`, `sk.`, `felperes`, `felperesi jogi képviselő`, `ügyvezető`, `közjegyző`, `jegyzőkönyvvezető`, `a tanács elnöke`, `bíró`. Az `s. k.` / `sk.` önmagában is biztos névjel.",
+  "POZITÍV – Név-bevezető szavak a jelölt előtt: `néven`, `név szerint`, `nevű`, `nevezetű`, `született`, `leánykori neve`, `születési neve`, `korábbi neve`, `alias`, `becenevén`. Pl. „leánykori neve: Kis Mária”, „a Nagy Béla nevű ügyfél”.",
+  "POZITÍV – Ügyszám-fejléc/perbeli szembeállítás: `c/a` (contra), `kontra`, ` v. `, ` ./. `. Pl. „Nagy Béla c/a Kis János”. Mindkét oldal névjelölt.",
+  "POZITÍV – Birtokos szerkezet eljárási főnévvel a név után: NÉV + `képviseletében`, `meghatalmazása alapján`, `nevében`, `javára`, `terhére`, `részére`, `címére`, `ellen`, `kérelmére`, `előadása szerint`, `vallomása szerint`, `tulajdonában`, `birtokában`. Pl. „Nagy Béla képviseletében eljárva…”.",
+  "POZITÍV – Jegyzőkönyvi/közjegyzői formulák, amelyeket kötelezően név követ: `megjelent:`, `előttem megjelent`, `jelen vannak:`, `a tanács tagjai:`, `eljáró bíró:`, `bíróság elnöke:`, `kihallgatott tanú:`, `esküt tett`, `figyelmeztetve a hamis tanúzás következményeire`.",
+  "POZITÍV – Kötőjeles kettős családnév: `Kovács-Nagy Béla`, `Nagy-Kovács Anna`. Ha a kötőjel MINDKÉT oldalán nagybetűs elem áll, és a szerkezetet utónév követi, akkor ez egy név, nem összetett köznév.",
+  "POZITÍV – Dokumentumszintű propagáció (a gyakorlatban a legerősebb jel): ha ugyanaz a token a dokumentumban LEGALÁBB EGYSZER egyértelmű névkörnyezetben szerepel (`dr.` után, utónévvel, `felperes:` mezőben, `-né`/`-ék` alakban), akkor a többi előfordulását is névként kell kezelni ott, ahol a mondattani környezet nem cáfolja. Fordítva is: ha a token a dokumentumban rendszeresen kisbetűvel, jelzői pozícióban áll, az erősíti a köznévi olvasatot.",
+  "POZITÍV – Ismétlődő bigram: ha ugyanaz a NAGYBETŰS + NAGYBETŰS tokenpár a dokumentumban legalább kétszer előfordul, és a második tag utónévlexikonban szerepel, akkor névnek veendő az ALL-CAPS blokkokban is.",
+  "ANTI-CUE – Névelő + jelölt + köznév: `a`/`az`/`egy` + JELÖLT + kisbetűs főnév → köznévi (jelzői) olvasat. Pl. „a nagy értékű ingóság”, „az erős felindulás”, „a fekete gépjármű”. Ha a következő token kisbetűs főnév, amelyet a jelölt jelzőként módosíthat, a köznévi olvasat erősen valószínű.",
+  "ANTI-CUE – A jelöltet mértékjelölő fejszó követi: `mértékű`, `összegű`, `értékű`, `fokú`, `arányú`, `mennyiségű`, `terjedelmű`, `időtartamú`, `hatályú`, `jelentőségű`, `súlyú`. Ez gyakorlatilag mindig köznévi jelző („nagy összegű”, „kis értékű”, „hosszú időtartamú”) – kivétel nincs.",
+  "ANTI-CUE – Melléknévi/határozói morfológia a jelöltön: középfok `-bb` (`nagyobb`, `kisebb`, `hosszabb`, `erősebb`), felsőfok `leg-` (`legnagyobb`), határozórag `-an/-en`, `-ul/-ül` (`nagyban`, `nagyon`, `erősen`, `rövidesen`), képzők `-ság/-ség` (`nagyság`, `kisebbség`, `erősség`), `-ít/-ul/-ül` igeképzők (`nagyít`, `erősít`, `feketedik`). Ezek NEM lehetnek névalakok – a névnél csak esetragok, birtokos személyjelek és `-né`/`-ék` várhatók.",
+  "ANTI-CUE – Fokhatározó áll a jelölt előtt: `igen`, `nagyon`, `különösen`, `rendkívül`, `kifejezetten`, `viszonylag`, `túl`, `túlzottan`, `meglehetősen`, `kellően`, `arányosan`, `mint` (hasonlításban). → köznévi melléknév.",
+  "ANTI-CUE – Rögzített jogi szókapcsolat része. Kötelező stoplista (bővítendő): `nagy értékre elkövetett`, `különösen nagy érték`, `nagyobb kár`, `nagy nyilvánosság előtt`, `nagyfokú`, `nagy gondatlanság`, `nagykorú`, `kiskorú`, `nagyszülő`, `kis értékű`, `kisebb kár`, `kisebbségi`, `erős felindulásban elkövetett emberölés`, `a fél`, `a felek`, `szerződő fél`, `harmadik fél`, `ellenérdekű fél`, `perbeli fél`, `az eljáró bíró`, `a bíró tájékoztatta`, `bírói úton`, `bírói mérlegelés`, `magyar állampolgár`, `magyar jog szerint`, `a Magyar Állam`, `magyar nyelven`, `német jog szerint`, `rövid úton`, `hosszú időn át`, `nemesfém`, `csonka hónap`, `nyári ítélkezési szünet`, `fehérgalléros`, `feketemunka`, `vízi jármű`, `vízi közlekedés`, `erdős terület`. A stoplista illesztése MEGELŐZI az egytokenes névfelismerést.",
+  "ANTI-CUE – A jelölt nem önálló token, hanem összetett szó vagy kötőjeles szerkezet része kisbetűs folytatással: `nagykorúság`, `kisadózó`, `kismértékű`, `nagyvállalat`, `feketegazdaság`, `bírósági`, `bíróság`, `polgármester`, `királyi`. Csak önálló, szóhatárral elválasztott tokent szabad névjelöltnek venni.",
+  "ANTI-CUE – Népnévi jelölt jogi/nyelvi formulában: `német`, `horvát`, `orosz`, `török`, `lengyel`, `olasz`, `cseh`, `görög`, `szász`, `magyar` + `jog`, `nyelv`, `nyelvű`, `állampolgár`, `állampolgárság`, `hatóság`, `bíróság`, `fordítás`, `szabvány`, `piac`, `fél` → köznév.",
+  "ANTI-CUE – Helynévi kontextus: a jelöltet `megye`, `megyei`, `járás`, `járási`, `város`, `városi`, `község`, `utca`, `út`, `útja`, `tér`, `köz`, `körút`, `sétány`, `sor`, `dűlő`, `hrsz.` követi → földrajzi név vagy közterületnév, NEM személynév. Pl. `Vas megye`, `Szarvas város`, `Somogyi Béla utca`. FIGYELEM: a közterületnevek gyakran valódi személynevet tartalmaznak (`Kossuth Lajos utca`, `Deák Ferenc tér`) – ezeket sem szabad álnevesíteni.",
+  "ANTI-CUE – Szerződésben nagybetűvel írt fogalommeghatározás: a magyar szerződési gyakorlat a definiált feleket nagy kezdőbetűvel írja mondat közben is (`az Eladó`, `a Vevő`, `a Bérbeadó`, `a Szolgáltató`, `a Megrendelő`, `a Felek`, `a Szerződő Fél`, `a Munkáltató`, `a Munkavállaló`, `a Bank`, `az Adós`). Ezek NEM személynevek, noha nagybetűsek. Ha a dokumentumban van `a továbbiakban: Eladó` vagy `(a továbbiakban „Vevő”)` alakú definíciós fordulat, gyűjtsd ki a definiált szavakat, és tedd dokumentumszintű tiltólistára.",
+  "ANTI-CUE (gyenge, önmagában NEM elégséges) – Mondatkezdő pozíció. A magyar jogi próza sűrűn kezd mondatot köznévvel, de ugyanilyen sűrűn puszta családnévvel is („Nagy Béla előadta, hogy…”). A mondatkezdő nagybetű ezért NULLA információt hordoz: a döntést kizárólag a jobb oldali környezet (követő utónév, szerep, zárójeles adat) és a dokumentumszintű propagáció alapján hozd meg. Ugyanez vonatkozik a felsorolásjelek, számozott pontok (`1.`, `a)`), táblázatcellák és címsorok utáni pozícióra."
+ ],
+ "notes": [
+  "A gazetteer KÉT ellentétes hibát véd, és a két csoportot külön kell kezelni. (a) Gyakori köznév + ritka családnév (Nagy, Kis, Magyar, Fél, Erős, Hosszú, Rövid, Bíró): itt a fő veszély a HAMIS POZITÍV – a köznév álnevesítése tönkreteszi a jogi szöveget. Ezekre alapértelmezés legyen a 'köznév', és csak erős pozitív jel (követő utónév, dr., szerepmegjelölés, űrlapmező, -né/-ék) billentse át névre. (b) Ritka köznév + igen gyakori családnév (Kovács, Szabó, Molnár, Takács, Varga, Juhász, Mészáros, Fazekas, Bognár): itt a fő veszély a HAMIS NEGATÍV – a valódi név bennmarad a szövegben, ami adatvédelmi incidens. Ezekre alapértelmezés legyen a 'név', és csak explicit köznévi jel (foglalkozásmező, 'a/az' + jelző, stoplista) billentse vissza.",
+  "ALL-CAPS blokkok: fejlécek, felek megjelölése, bélyegzőlenyomatok, aláírásblokkok, űrlapok, valamint a beszkennelt/OCR-ezett iratok nagy része csupa nagybetűs. Ilyenkor a kisbetű/nagybetű különbség NULLA információt hordoz, és MINDEN kisbetű-alapú heurisztika (mondatkezdet, 'a/az' + kisbetűs jelző, követő kisbetűs főnév) érvénytelen. Megvalósítás: észlelj csupa nagybetűs zónát (≥3 egymást követő csupa nagybetűs token, vagy olyan sor, amelynek betűinek ≥80%-a nagybetű), és ott váltsd át a döntési politikát: kizárólag (i) pozíciós/mezőalapú jelek (`FELPERES:`, `TANÚ:`, aláírásblokk), (ii) családnév+utónév bigramteszt utónévlexikonnal, (iii) a dokumentum máshol előforduló vegyes kis-nagybetűs alakjából való propagáció alapján dönts. Külön csapda: a magyar ékezetek OCR-ben és régi rendszerekben eltűnhetnek a nagybetűs alakról (NAGY BELA, KOVACS JANOS, HORVATH ISTVAN) – a lexikonokat ékezetkiszedett (unaccented) kulccsal is indexeld.",
+  "Utónév kontra családnév sorrendi kétértelműség: a magyar keresztnevek jelentős része ÖNÁLLÓ CSALÁDNÉVKÉNT is használatos (Simon, Máté, Pál, Antal, Balázs, Gál, Márton, Fábián, Ambrus, Bálint, Benedek, Kelemen, Lukács, Illés, Jakab, Dávid, Dániel, Albert, Domonkos, Gergely, Sebestyén, Bertalan, Ferenc, Sándor, István, László, Gábor, Mihály, Miklós, Péter, Tamás, Vince, Zsigmond, Barna, Farkas). Emiatt a 'Simon Péter', 'Balázs Márton', 'Gál Sándor' típusú nevekben tokenszinten nem dönthető el, melyik a családnév – de ez az álnevesítő szempontjából gyakran mindegy: MINDKETTŐT cserélni kell. A tényleges kockázat az, hogy egy ilyen név egyik tagját a rendszer köznévnek vagy nem-névnek minősíti. Alapszabály: két egymást követő nagybetűs token, amelyek MINDKETTEJE szerepel a magyar név-lexikonokban → teljes névnek veendő.",
+  "Sorrend: a magyar jogi iratok a magyar (családnév + utónév) sorrendet használják, de a fordított iratokban, külföldi felek nevénél, e-mail-fejlécekben és nemzetközi szerződésekben nyugati sorrend (utónév + családnév) is előfordul. Az álnevesítőnek meg kell őriznie az eredeti sorrendet.",
+  "RAGOZÁS – a teljes néven csak az UTOLSÓ elem ragozódik: 'Nagy Bélának' (nem 'Nagynak Bélának'), 'Kis Jánost', 'dr. Szabó Anna Máriával'. Puszta családnév viszont önmagában ragozódik: 'Nagynak', 'Kováccsal'. Az álnévcserénél ezt a mintát meg kell tartani: 'Kovács Jánosnak' → 'Kőszikla Frédnek' (a rag a KERESZTNÉVRE kerül, a saját hangrendje szerint), 'Kováccsal' → 'Kősziklával'.",
+  "RAGOZÁS – a -val/-vel eszközhatározó rag v-je hasonul a névszó utolsó mássalhangzójához: Kovács → Kováccsal, Nagy → Naggyal, Kis → Kissel, Papp → Pappal, Szabó → Szabóval (magánhangzó után nincs hasonulás), Halász → Halásszal, Bíró → Bíróval, Farkas → Farkassal. Az álnév megválasztásánál előny, ha a szóvég szabályosan hasonuló; a hasonulást a cserélő motorban IMPLEMENTÁLNI kell, nem elég a rag hozzáfűzése.",
+  "BIZONYTALAN, ELLENŐRIZENDŐ SZABÁLY – a régies írású magyar családnevek (Kiss, Papp, Tóth, Horváth, Balogh, Móricz, Széll, Kossuth, Batthyány) toldalékolása az AkH. külön pontja alá esik (néma betű, illetve bonyolult betűegyüttes a szóvégen). Biztosnak tekinthető: Kiss → Kissel (nem 'Kisssel'), Papp → Pappal (nem 'Papppal'), azaz hármas betűzés nem íródik ki. NEM biztos, és a bevezetés előtt az érvényes akadémiai helyesírási szabályzatból ellenőrzendő: a néma h-ra végződő nevek (Balogh, Tóth, Horváth, Kossuth) kötőjeles vagy kötőjel nélküli toldalékolása. Ezt NE tippeléssel implementáld – vedd fel tesztesetnek és nézd meg a szabályzatban.",
+  "Az álnév megválasztása visszahat a nyelvtani helyességre: válassz olyan tematikus álneveket, amelyeknek a hangrendje egyértelmű (nem vegyes hangrendű), amelyek nem végződnek néma betűre vagy kettős mássalhangzóra, és amelyek nem esnek egybe magyar köznévvel – különben a saját álnévkészleted hozza vissza ugyanezt a homonímiaproblémát a kimeneten.",
+  "NEM álnevesítendő nagybetűs elemek, amelyek gyakran tartalmaznak valódi családnevet: közterületnevek (Kossuth Lajos utca, Deák Ferenc tér, Bem rakpart), intézménynevek (Semmelweis Egyetem, Fővárosi Törvényszék, Kúria), jogszabálynevek és rövidítéseik (Ptk., Btk., Kp., Pp., Alaptörvény), bírósági határozat-hivatkozások (BH2019. 145., EBH2015. P.12., Kúria Pfv. ...), történelmi személyek, valamint a bíróságok és hatóságok megnevezései. Ezekre külön kivétel-lista kell.",
+  "Cégnevek gyakran tartalmaznak családnevet: 'Nagy és Társa Kft.', 'Kovács Építőipari Zrt.', 'Szabó Bt.'. Az álnevesítési politikát külön kell megadni rájuk (általában a cégnév is személyes adatnak minősülhet, ha egyéni vállalkozó vagy betéti társaság beltagja azonosítható belőle). Felismerési fogódzó: a `Kft.`, `Bt.`, `Zrt.`, `Nyrt.`, `Kkt.`, `Kht.`, `Nonprofit Kft.`, `e.v.`, `ev.`, `Ügyvédi Iroda`, `Kamara` utótagok.",
+  "Az iratok gyakran MÁR részlegesen anonimizáltak: 'N. B. felperes', 'K. J. tanú', 'Nagy B.', 'X. Y.'. Ezeket békén kell hagyni (vagy külön kezelni), és nem szabad kibontani vagy újra cserélni.",
+  "A döntés ELŐFORDULÁSONKÉNTI, nem dokumentumonkénti: ugyanaz a szó lehet családnév a fejlécben és köznév két sorral lejjebb ('Nagy Béla felperes… a nagy összegű kártérítés'). Ugyanakkor a dokumentumszintű prior (hol fordult elő egyértelmű névkörnyezetben) bemenete legyen az előfordulásonkénti döntésnek – ne felülírja, hanem súlyozza.",
+  "Elhagyott, mert nem sikerült CSALÁDNÉVKÉNT megbízhatóan igazolni (a feladat listájából): Szürke, Gyors, Lassú, Csúnya, Fürge, Serény, Tiszta, Szegény, Vidám, Szomorú, Okos, Úr, Fő, Alsó, Felső. Helyettük ugyanazt a jelentésmezőt lefedő, adatolt családnevek kerültek be: Szőke/Zöld (szín), Sebes (gyors), Víg (vidám), Bús (szomorú), Gyenge (gyenge), Csendes/Hangos, Gazdag. Az 'Alsó', 'Felső', 'Fő' elemek nem önálló családnevek, hanem helynévi előtagok (Alsónémedi, Felsőzsolca, Fő utca) – ezeket helynévi kivételként kezeld, ne homonim családnévként.",
+  "Bizonytalan, adatolást igénylő családnevek (nem kerültek a fő listába, de érdemes lehet külön, alacsony prioritású listán tartani): Tavaszi, Őszi, Téli (a Nyári biztosan adatolt), Élő, Néma, Süket, Drága, Rendes, Ezüst, Szilva. A 'rendes' szó viszont KÖZNÉVKÉNT nagyon gyakori a jogi prózában (rendes felmondás, rendes bíróság, rendes jogorvoslat) – ezt akkor is vedd fel a köznévi stoplistára, ha családnévként nem igazolható.",
+  "A feladat listájából KIHAGYOTT utónevek, mert nem magyar köznevek: 'Réka' (hun/ótörök eredetű személynév, nincs köznévi jelentése) és 'Zalán' (szláv/Zala-tő, nincs köznévi jelentése). Bizonytalan, ellenőrizendő utónévjelöltek, amelyeket nem vettem fel: Szellő, Bíbor, Liliom, Rege, Boglár, Szikra, Tünde ('tünde' irodalmi melléknévként adatolt, de a köznévi használat marginális) – ezek egy része szerepel az anyakönyvezhető utónevek jegyzékén, de a köznévi ütközés kockázata elhanyagolható, ezért alacsony prioritásúak.",
+  "Gyakorlati sorrend a megvalósításban: (1) rögzített jogi szókapcsolat-stoplista illesztése többtokenes mintaként, (2) szerződéses definíciók kigyűjtése ('a továbbiakban: Eladó'), (3) egyértelmű névminták (dr./ifj./özv., -né, -ék, űrlapmező, zárójeles születési adat, aláírásblokk) felismerése és dokumentumszintű propagálása, (4) családnév+utónév bigram illesztése lexikonnal, (5) a maradék homonim jelöltek eldöntése morfológiai és mondattani anti-cue-k alapján, (6) csak ezután a ragozásmegőrző csere."
+ ]
+}

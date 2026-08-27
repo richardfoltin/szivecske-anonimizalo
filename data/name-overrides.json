@@ -1,0 +1,52 @@
+{
+ "_comment": "Nevek, amelyeknél a helyes toldalékolás a KIEJTÉSTŐL függ, és az írásképből nem vezethető le. A motor ezeket adatként kapja, nem szabályból. AkH. 12. 216. b) és 217.",
+ "names": {
+  "Balzac": {
+   "harmony": "back",
+   "ins": "Balzackal",
+   "note": "a c betű [k] hangot jelöl"
+  },
+  "Greenwich": {
+   "harmony": "front_unrounded",
+   "ins": "Greenwichcsel",
+   "note": "a ch [cs]-t jelöl"
+  },
+  "Madách": {
+   "harmony": "back",
+   "ins": "Madáchcsal",
+   "forms": {
+    "TRANS": "Madáchcsá"
+   },
+   "note": "magyar névben a ch [cs]"
+  },
+  "Bach": {
+   "harmony": "back",
+   "ins": "Bachhal",
+   "note": "németben a ch [h]-szerű"
+  },
+  "Bruce": {
+   "harmony": "back",
+   "hyphenate": true,
+   "ins": "Bruce-szal",
+   "note": "néma szó végi e, kiejtett véghang [sz]"
+  },
+  "Loire": {
+   "harmony": "back",
+   "hyphenate": true,
+   "ins": "Loire-ral",
+   "note": "néma szó végi e"
+  },
+  "Rousseau": {
+   "harmony": "back",
+   "hyphenate": true,
+   "ins": "Rousseau-val",
+   "note": "bonyolult betűkapcsolat a szó végén"
+  },
+  "Voltaire": {
+   "harmony": "front_unrounded",
+   "hyphenate": true,
+   "ins": "Voltaire-rel",
+   "note": "néma szó végi e"
+  }
+ }
+}

@@ -1,0 +1,122 @@
+# Szivecske Anonimizáló — mi marad ki a verziókövetésből.
+#
+# A rendezőelv három kérdés: újratermelhető-e, elbírja-e a GitHub, és
+# tartalmazhat-e valakinek a valódi személyes adatát. A harmadik a legfontosabb.
+# Ez a program pont az ilyen adat eltüntetésére készült; egyetlen véletlenül
+# feltöltött ügyirat vagy kulcsfájl az egész célt aláásná, és a git előzményéből
+# utólag kitörölni fájdalmas.
+
+
+# ── Újratermelhető és nagy ──────────────────────────────────────────────────
+
+# 1,4 GB, és az `npm install` a package-lock.json alapján pontosan visszaállítja.
+node_modules/
+
+# Épített kimenet. Nem pusztán „nagy”: a dist/telepito alatt álló telepítő
+# ~529 MiB, a GitHub viszont fájlonként 100 MB fölött elutasítja a feltöltést —
+# ez tehát nem fér fel, akárhogy is szeretnénk. A dist/ui-t a vite, a
+# dist/telepito-t az electron-builder gyártja, mindkettőt az `npm run dist`.
+dist/
+dist-electron/
+
+# A nyelvi modell: 809 MB, ebből a model.onnx maga 440 MB. Nem is a Hugging
+# Face-tárolóból jön készen — a scripts/export-nytk.py exportálja ONNX-be, tehát
+# újra előállítható. A származást és az ellenőrzőösszegeket a
+# .modellek/NYTK/.../PROVENANCE.md és a SHA256SUMS.json rögzíti; a licencfeltételek
+# a docs/licencek.md-ben állnak.
+.modellek/
+
+# Az e2e futtatások melléktermékei. Itt nem csak naplók vannak: a .tmp/e2e/userdata
+# egy teljes Electron-felhasználói profil (gyorsítótárak, Local Storage, mentett
+# beállítások), ami egy éles próba után valódi adatot is hordozhat.
+.tmp/
+
+
+# ── Teszt-kimenetek, pontosan két kivétellel ────────────────────────────────
+
+# FIGYELEM a minta alakjára: itt `spike/out/*` áll, NEM `spike/out/`. Ha magát a
+# könyvtárat zárnánk ki, a git bele sem nézne, és az alatta álló `!` kivételek
+# némán hatástalanok lennének — a két teszt-bemenet kimaradna, a hiba pedig csak
+# friss klónon derülne ki. Így viszont csak a tartalmat zárjuk ki, és a kivétel
+# érvényesül.
+#
+# Ami itt keletkezik: anonimizált iratok, jegyzőkönyvek és .szkulcs kulcsfájlok.
+# Mind újratermelődik minden teszt-futáskor.
+spike/out/*
+
+# Ez a kettő NEM kimenet, hanem teszt-BEMENET. Nélkülük friss klónon öt készlet
+# dől el: test/app-integration.ts (PDF és DOCX ágon is), test/formatum-tests.ts,
+# test/lanc-tesztek.ts, test/szivargas-kapu.ts, test/szivargas-azonositok.ts.
+# Együtt 106 kB, tehát a méret nem indok a kihagyásukra.
+#
+# Miért nem generáljuk őket inkább? A .docx-et semmilyen szkript nem állítja elő
+# — kézzel készült rögzített minta. A .pdf-et a spike/make-sample-pdf.ts gyártaná,
+# de fejnélküli Chrome-mal: az nem determinisztikus, és nincs is minden gépen
+# Chrome. Egy tesztkészlet bemenete nem függhet attól, mi van feltelepítve.
+#
+# Miért maradnak itt, és nem költöznek a test/ alá? Mert öt tesztkészlet ÍR is a
+# spike/out/ könyvtárba, és egyikük sem hív mkdirSync-et — a könyvtárnak léteznie
+# kell a klónozás pillanatában. Ez a két követett fájl tartja életben.
+!spike/out/keresetlevel.pdf
+!spike/out/keresetlevel.docx
+
+
+# ── Amit soha, semmilyen könyvtárban ────────────────────────────────────────
+
+# Kulcsfájl: az álnév → valódi név megfeleltetés. Ez a program legérzékenyebb
+# kimenete — ha kikerül, az anonimizálás visszafordítható. Nem elég a spike/out/
+# szabályára hagyatkozni, mert a felhasználó bárhová mentheti.
+*.szkulcs
+
+# Valódi ügyiratok. A program tényleges használója jogász, és a legkönnyebb
+# baleset az, hogy egy éles irat megnyitáskor vagy mentéskor a projektkönyvtárba
+# kerül. A gyökérben álló irat ezért alapból nem követett. Ez nem érinti a
+# tesztadatokat: azok a samples/ és a spike/out/ alatt vannak, nem itt.
+/*.pdf
+/*.docx
+/*.doc
+/*.rtf
+/*.odt
+/*.xlsx
+# Levélből kimentett irat: ugyanaz a baleset, csak más kiterjesztéssel.
+/*.eml
+/*.msg
+
+
+# ── Napló, szerkesztő, operációs rendszer ───────────────────────────────────
+
+*.log
+npm-debug.log*
+*.out.txt
+
+# Titkokat ma nem használ a program (nincs hálózati hívása), de ha valaha
+# aláíró tanúsítvány jelszava kerülne környezeti fájlba, az ne most derüljön ki.
+.env
+.env.*
+*.pfx
+*.p12
+
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+.DS_Store
+
+# A GÉPHEZ KÖTÖTT Claude Code-beállítás. A `.claude/settings.json` KÖVETETT — az
+# hordozza az automata mentés horgát, tehát klónozás után is működnie kell —, a
+# `.local` viszont a fejlesztő saját gépéé: abszolút útvonalakat és személyes
+# engedélyeket tartalmaz, amiknek másik gépen nincs értelmük.
+.claude/settings.local.json
+.claude/worktrees/
+
+
+# ── Ami szándékosan NINCS ezen a listán ─────────────────────────────────────
+#
+# build/    — Ez FORRÁS, nem kimenet: az alkalmazásikonok vannak benne, és a
+#             package.json build.win.icon a build/icon.ico-ra hivatkozik. A
+#             legtöbb általános .gitignore-sablon kizárja a `build/`-öt; ha
+#             valaki onnan másol be sort ide, azzal töri el a telepítőt.
+# data/     — Szótárak, homonimalista, névkészletek. A telepítő extraResources-ként
+#             szállítja, tehát a program nélküle nem működik.
+# samples/  — Szintetikus mintairatok. Ellenőrizve: a bennük álló azonosítók nem
+#             valós személyekéi (lásd docs/licencek.md „Mintairatok”).
