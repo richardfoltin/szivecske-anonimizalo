@@ -1961,6 +1961,20 @@ export default function App() {
     ].filter((j) => j.db > 0);
   }, [analysis, hivatalosIdk, kimenetMost]);
 
+  /**
+   * A HIVATALOS SZEREPLŐK NEVE, ahogy a felismerés adta.
+   *
+   * A kikapcsolt szakasz a `keepList` teljes megnevezését mutatja („dr. Bach
+   * Tivadar"), a bekapcsolt viszont a `cast` nevét — abból a motor a címet
+   * („dr.") már levette, mert ahhoz nem nyúl. A képernyőn ettől a kapcsoló
+   * átbillentésekor maga a NÉV is megváltozott, ami adatvesztésnek látszik.
+   * A két állapot innentől ugyanabból az egy listából veszi a nevet.
+   */
+  const hivatalosNevek = useMemo(
+    () => new Map((detected?.officials ?? []).map((o) => [o.id, o.fullName])),
+    [detected],
+  );
+
   const keziIdk = useMemo(() => {
     const felismert = new Set([
       ...(detected?.parties ?? []).map((d) => d.id),
@@ -2048,7 +2062,7 @@ export default function App() {
           bekapcsolás pont ezt jelenti, és a listán is látszania kell.
         */
         fajta: hivatalosIdk.has(c.entityId) ? 'hivatalos' : c.kind,
-        eredeti: c.original,
+        eredeti: hivatalosNevek.get(c.entityId) ?? c.original,
         szerep: c.role,
         elofordulas: a.elofordulas,
         cserelodik: a.cserelodik,
@@ -2114,7 +2128,7 @@ export default function App() {
     }
 
     return [...sorok.values()];
-  }, [analysis, parties, identifiers, keziIdk, hivatalosIdk, kimenetMost]);
+  }, [analysis, parties, identifiers, keziIdk, hivatalosIdk, hivatalosNevek, kimenetMost]);
 
   /**
    * VAN-E EGYÁLTALÁN MIT MENTENI — és ha nincs, MIÉRT nincs.

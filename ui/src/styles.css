@@ -1694,6 +1694,18 @@ textarea:focus {
   átlátszóság. A szín a gombé marad, teljes fedéssel.
 */
 .btn.tordelt .meret {
+  /*
+    A SZÍN A GOMBÉ. Ez a sor hiányzott, és ezért maradt olvashatatlan a méret
+    a rózsaszín gombon: a kártyán belül a `.themecard .meret` szabály
+    (`color: var(--muted)`) nyerte a versenyt — az a kártya ALJÁN álló halk
+    méretadatnak szól, nem egy tömör hátterű gomb feliratának. A `color`
+    hiányában nem a gomb fehérje öröklődött, hanem a szürke szabály ült rá,
+    és a rózsaszínen a szürke gyakorlatilag eltűnik.
+
+    Az `inherit` a gomb saját színét veszi át, bármi is legyen az — így a
+    szabály akkor is helyes marad, ha a gomb egyszer más hátteret kap.
+  */
+  color: inherit;
   font-size: 11px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -3364,21 +3376,38 @@ textarea:focus {
 }
 
 /*
-  MINDEN SOR UGYANOLYAN MAGAS.
+  MINDEN SOR UGYANOLYAN MAGAS, ÉS MINDEN OSZLOPA EGY VONALBAN ÁLL.
 
   A sor magasságát eddig a benne álló szöveg szabta meg: a hosszú név két
   sorba tört, a sok jelvény harmadikba — húsz különböző magasságú sor alatt a
-  szem nem talál vissza oda, ahol az előbb járt, és a kapcsolók sem állnak
-  egy vonalban. A rögzített két sorban ami nem fér el, az levágódik, a teljes
-  szöveg pedig a buboréksúgóban olvasható.
+  szem nem talál vissza oda, ahol az előbb járt. A rögzített két sorban ami
+  nem fér el, az levágódik, a teljes szöveg pedig a buboréksúgóban olvasható.
+
+  A NÉGY OSZLOP: név · nyíl · csereszöveg · kapcsoló. Korábban az első három
+  egy rugalmas dobozban (`.fmain`) ült, és a nyíl helyét a NÉV hossza szabta
+  meg — sorról sorra máshol állt, a csereszöveg mezői pedig mind más
+  szélesek lettek. A `fr` egységek ezt megszüntetik: minden sor ugyanolyan
+  széles, tehát a `fr`-ek ugyanoda esnek, akármit tartalmaz a cella.
+
+  A VEZÉRLŐOSZLOP RÖGZÍTETT SZÉLESSÉGŰ (66px = „Ki" felirat + 42px kapcsoló).
+  `auto`-val a tartalma méretezte: ahol a kapcsoló helyett egy jelvény állt,
+  ott az egész oszlop kiszélesedett, és a szomszédos sorok kapcsolói
+  elcsúsztak alatta.
 */
 .findrow {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(70px, 1fr) 13px minmax(96px, 1.1fr) 66px;
   grid-template-rows: 28px 24px;
-  gap: 3px 12px;
+  column-gap: 8px;
+  /*
+    A KÉT SOR KÖZÖTT LEVEGŐ. Hét képponttal a „Végignézem" gomb teteje két
+    képpontra állt a fölötte lévő csereszöveg-mező aljától: a kettő egyetlen
+    összenőtt dobozként látszott, és a gomb inkább a mező tartozékának, mint
+    a névhez tartozó magyarázósor részének.
+  */
+  row-gap: 12px;
   align-items: center;
-  padding: 8px 13px;
+  padding: 9px 13px;
   border-bottom: 1px solid var(--line-soft);
 }
 .findrow:last-child {
@@ -3387,40 +3416,43 @@ textarea:focus {
 .findrow:hover {
   background: #fdf9fb;
 }
-/* A LÉPEGETETT SOR kap egy halk keretet: az irat és a lista ugyanarra a
-   találatra mutat, és ezt mindkét oldalon látni kell. */
+/*
+  A LÉPEGETETT SOR: HÁTTÉR, NEM OLDALSÓ CSÍK.
+
+  Itt egy 3 képpontos bal oldali csík állt (`inset 3px 0 0`), és az a
+  csereszöveg mezője mellett egy MÁSODIK függőleges vonalnak látszott — a
+  mező saját kerete mellé odarajzolt még egyet. A háttér ugyanazt mondja el,
+  vonal nélkül.
+*/
 .findrow.aktiv {
-  background: color-mix(in srgb, var(--fgszin, var(--rose)) 5%, white);
-  box-shadow: inset 3px 0 0 var(--fgszin, var(--rose));
-}
-.fmain {
-  grid-column: 1;
-  display: flex;
-  align-items: center;
-  flex-wrap: nowrap;
-  gap: 7px;
-  min-width: 0;
-  overflow: hidden;
+  background: color-mix(in srgb, var(--fgszin, var(--rose)) 7%, white);
 }
 .findrow .orig {
+  grid-column: 1;
+  grid-row: 1;
   font-weight: 600;
   font-size: 13.5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 0 1 auto;
-  max-width: 48%;
 }
+/* A nyíl SAJÁT OSZLOPA: enélkül a név hossza tolta ide-oda soronként. */
 .findrow .farrow {
+  grid-column: 2;
+  grid-row: 1;
   color: var(--muted);
-  flex: 0 0 auto;
+  text-align: center;
 }
 /* A csereszöveg mező, nem címke: a ragozó néha mellényúl egy ritka névnél, és
-   akkor itt egy helyen kell javítani, nem a kész iratban végigkeresve. */
+   akkor itt egy helyen kell javítani, nem a kész iratban végigkeresve.
+
+   A SZÉLESSÉGET A RÁCS ADJA, nem a tartalom: `width: 100%` a saját oszlopában,
+   tehát minden sor mezője pontosan ugyanott kezdődik és ugyanott ér véget. */
 .findrow .frepl {
-  flex: 1 1 150px;
-  width: auto;
-  min-width: 110px;
+  grid-column: 3;
+  grid-row: 1;
+  width: 100%;
+  min-width: 0;
   padding: 5px 8px;
   font-size: 13px;
   font-weight: 600;
@@ -3431,27 +3463,24 @@ textarea:focus {
   background: var(--surface);
 }
 /*
-  A VEZÉRLŐOSZLOP a rács széléhez zárva: a sorok gombjai így egy vonalban
-  állnak akkor is, ha a mellettük álló név más hosszú.
+  A VEZÉRLŐOSZLOP: CSAK A KAPCSOLÓ, RÖGZÍTETT SZÉLESSÉGGEL.
 
-  KAPCSOLÓ HELYETT HÁROM GOMB áll itt. A kapcsoló csak két állást ismert
-  (cserél / marad), egy név viszont sokszor szerepel az iratban, és nem
-  mindenhol ugyanaz a helyzet: a „Szabó" az egyik mondatban vezetéknév, a
-  másikban köznév. A „Következő" a Word Csere párbeszédének mozdulata, és
-  ugyanazért kell, amiért ott.
+  A szélességet a rács adja (66px), nem a tartalom — így a kapcsolók akkor is
+  egy vonalban állnak, ha egy sorban éppen nincs is kapcsoló (a törvény
+  szerint bent maradó neveknél, ahol a döntés a szakasz fejlécében van).
 */
 .fctl {
-  grid-column: 2;
-  grid-row: 1 / span 2;
+  grid-column: 4;
+  grid-row: 1;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 6px;
 }
-/* A sor kapcsolójának „Be/Ki" felirata rögzített helyet kap, hogy a
-   kapcsolók oszlopa ne mozogjon a két betű szélessége szerint. */
+/* A „Be/Ki" felirat rögzített helyet kap, hogy a kapcsolók oszlopa ne
+   mozogjon a két betű szélessége szerint. */
 .fctl .tstate {
-  min-width: 16px;
+  min-width: 15px;
   text-align: right;
 }
 .seg.sm {
@@ -3477,8 +3506,10 @@ textarea:focus {
    közös eltolást egyetlen érték kézi átírása pont ott törné el, ahol a
    lényege van. Mező helyett tehát olvasható szöveg. */
 .findrow .frepl.static {
-  flex: 1 1 150px;
-  min-width: 110px;
+  /* A szélességet a RÁCS adja, mint a szerkeszthető mezőnek: saját
+     `min-width` innen kikerült, mert az a rács minimumát felülírva szűk
+     panelen kitolta volna az oszlopot. */
+  min-width: 0;
   padding: 5px 8px;
   font-size: 13px;
   font-weight: 600;
@@ -3488,7 +3519,8 @@ textarea:focus {
   text-overflow: ellipsis;
 }
 .fmeta {
-  grid-column: 1;
+  grid-column: 1 / -1;
+  grid-row: 2;
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
@@ -3543,11 +3575,20 @@ textarea:focus {
   előfordulásról. A világító gomb az AKTUÁLIS előfordulás állását mutatja:
   ez nem díszítés, hanem az egyetlen hely, ahol az állás a sorból látszik.
 */
+/*
+  A LÉPEGETŐ A MAGYARÁZÓSOR JOBB SZÉLÉN — de nem a sor széléhez tapadva.
+
+  A bal oldali térköz azért kell, hogy a gomb ne érjen hozzá a mellette álló
+  szöveghez; a fölötte álló csereszöveg-mezőtől pedig a rács `row-gap`-je
+  tartja távol. Enélkül a „Végignézem" gomb pontosan a mező alsó kerete alatt
+  ült, és a kettő egyetlen összenőtt dobozként látszott.
+*/
 .lepteto {
   display: inline-flex;
   align-items: center;
   gap: 3px;
   margin-left: auto;
+  padding-left: 10px;
   flex: 0 0 auto;
 }
 .lepbtn {
@@ -3590,6 +3631,7 @@ textarea:focus {
    szerkezete nem ugrik át a megnyitástól. */
 .lepnyit {
   margin-left: auto;
+  margin-right: 2px;
   flex: 0 0 auto;
   white-space: nowrap;
 }
@@ -3617,35 +3659,16 @@ textarea:focus {
   egy MÁSIK szín adja, hanem ugyanannak a színnek a megléte vagy hiánya —
   pontosan úgy, ahogy a többi csoportnál.
 */
-/* A TÖRVÉNY SZERINTI SOR UGYANOLYAN MAGAS, mint a találatsor: a hivatalos
-   szereplők kapcsolgatásakor a kettő egymást váltja, és ha más magasak
-   volnának, a lista ugrana egyet a felhasználó keze alatt. */
-.keeprow {
-  display: grid;
-  grid-template-rows: 28px 24px;
-  gap: 3px 0;
-  align-items: center;
-  padding: 8px 13px;
-  border-bottom: 1px solid var(--line-soft);
-}
-.keeprow:last-child {
-  border-bottom: 0;
-}
-.keeprow .val {
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.keeprow .why {
-  font-size: 11.5px;
-  color: var(--muted);
-  line-height: 1.4;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+/*
+  A `.keeprow` INNEN KIKERÜLT.
+
+  A törvény szerint bent maradó nevek saját sorfajtát kaptak: két egymás
+  alatti szöveg, nyíl nélkül, mező nélkül, kapcsoló nélkül. A szakasz
+  bekapcsolásakor tehát nem egy ÁLLAPOT változott, hanem az egész lista más
+  alakot öltött — és mivel a két sorfajta más forrásból vette a nevet, még a
+  név is átugrott („dr. Bach Tivadar" → „Bach Tivadar"). Ma ugyanaz a
+  `.findrow` áll ott is, `off` állapotban.
+*/
 
 /*
   A HIVATALOS SZEREPLŐK KAPCSOLÓJA — a zöld kereten belül.

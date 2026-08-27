@@ -994,11 +994,32 @@ function CsereLap({
       <FelismeroSav fut={fut} felirat={vizsgalatFelirat} onVizsgalat={onUjraVizsgalat} />
 
       <div className="ds-teteje">
-        <Sor
-          cim="Bizonytalansági küszöb"
+        {/*
+          MI EZ A KÜSZÖB — mert a nevéből nem derül ki, és a felhasználó
+          jogosan kérdezte meg, hogy a nyelvi modellhez van-e köze.
 
+          NINCS. A modell azt találja meg, KIK a felek; ez a szám azt szabja
+          meg, hogy a nevük melyik ELŐFORDULÁSÁHOZ nyúlunk hozzá kérdezés
+          nélkül. A programnak minden egyes előfordulásra van egy
+          magabiztossága: a teljes név 100%, a puszta vezetéknév 80%, a
+          monogram 60%, egy ismeretlen toldalék 50%. Ez a küszöb húzza meg,
+          hol kezdődik a „kérdezz rá".
+
+          Ezért a küszöb modell nélkül is dolgozik — sőt, olyankor a
+          legfontosabb, mert a szerkezeti felismerés kevesebbet tud a
+          szövegkörnyezetről.
+        */}
+        <Sor
+          cim="Csere kérdés nélkül eddig a magabiztosságig"
           vezerloId={az('thr')}
-          leiras="Ez alatt a találat „bizonytalan” jelvényt kap, és a cserét kérni kell rá."
+          leiras={
+            <>
+              A program minden megtalált <b>névelőforduláshoz</b> magabiztosságot számol: a teljes
+              név 100%, a puszta vezetéknév 80%, a monogram 60%. Ami ez alá esik, azt nem cseréljük
+              magától — döntésre vár. <b>A nyelvi modellhez nincs köze:</b> az azt találja meg, kik
+              a felek, ez pedig azt, hogy a nevük melyik előfordulását cseréljük kérdezés nélkül.
+            </>
+          }
         >
           <span className="rangeval" aria-hidden="true">
             {szazalek}%
@@ -1308,12 +1329,34 @@ function HivatalosSzakasz({
             />
           ))
         : bentMaradok.map((b) => (
-            <div className="keeprow" key={`${b.name}|${b.why}`}>
-              <div className="val" title={b.name}>
+            /*
+              UGYANAZ A SOR, KIKAPCSOLVA.
+
+              Itt korábban egy MÁSFAJTA sor állt: két egymás alatti szöveg,
+              nyíl nélkül, mező nélkül, kapcsoló nélkül. A szakasz
+              bekapcsolásakor tehát nem egy állapot változott, hanem az egész
+              lista más alakot öltött — a felhasználó ezt joggal nézte
+              hibának. Ma ugyanaz a négy oszlop áll itt is: a név, a nyíl, a
+              „marad az eredeti" jelzés a csereszöveg helyén, és az üres
+              vezérlőoszlop (a kapcsoló a szakasz fejlécében van, mert a
+              döntés az egész szakaszra szól).
+            */
+            <div className="findrow off" key={`${b.name}|${b.why}`}>
+              <span className="orig" title={b.name}>
                 {b.name}
-              </div>
-              <div className="why" title={b.why}>
-                {b.why}
+              </span>
+              <span className="farrow" aria-hidden="true">
+                →
+              </span>
+              <span className="frepl static" title="A törvény szerint bent marad.">
+                {b.name}
+              </span>
+              <div className="fctl" />
+              <div className="fmeta">
+                <span className="pill kind" title={b.why}>
+                  {b.why}
+                </span>
+                <span className="occ">a Bszi. 166. § (2) szerint bent marad</span>
               </div>
             </div>
           ))}
@@ -1381,14 +1424,24 @@ function TalaltSor({
   const aktiv = lepes !== null && lepes.entityId === tetel.id;
 
   return (
+    /*
+      A SOR NÉGY OSZLOPA: név · nyíl · csereszöveg · kapcsoló.
+
+      A `.fmain` burkoló INNEN KIKERÜLT. Amíg megvolt, a három cella egy
+      rugalmas dobozban ült, és a nyíl helyét a NÉV hossza szabta meg: a
+      „Kiss Erika" sorban 77 képpontnál állt, az „Aranykalász Agrár Kft."
+      sorában 155-nél — húsz sor alatt cikcakkban futott, és a csereszöveg
+      mezői is mind más szélesek lettek. Burkoló nélkül a három cella a sor
+      SAJÁT rácsába kerül, és mivel minden sor ugyanolyan széles, az oszlopok
+      is mind egy vonalban állnak.
+    */
     <div className={`findrow${!be && !nincsBenne ? ' off' : ''}${aktiv ? ' aktiv' : ''}`}>
-      <div className="fmain">
-        <span className="orig" title={tetel.eredeti}>
-          {tetel.eredeti}
-        </span>
-        <span className="farrow" aria-hidden="true">
-          →
-        </span>
+      <span className="orig" title={tetel.eredeti}>
+        {tetel.eredeti}
+      </span>
+      <span className="farrow" aria-hidden="true">
+        →
+      </span>
         {/* A csereszöveg NEM címke, hanem szerkeszthető mező: a ragozó motor
             néha mellényúl egy ritka névnél, és ilyenkor az ügyvéd egyetlen
             helyen javítja, nem a kész iratban keresi végig.
@@ -1396,33 +1449,38 @@ function TalaltSor({
             Az összeg és a dátum kivétel: ott a csereszöveget MÉRÉS adja (közös
             szorzó, közös eltolás), és egyetlen érték kézi átírása pont azt az
             összefüggést törné el, amiért a közös szorzó van. */}
-        {tetel.fajta === 'amount' || tetel.fajta === 'date' ? (
-          <span
-            className="frepl static"
-            title={
-              tetel.elofordulas > 1
-                ? 'Példa az első előfordulásra — a többivel ugyanez történik.'
-                : undefined
-            }
-          >
-            {be ? ertek : tetel.eredeti}
-          </span>
-        ) : (
-          <input
-            type="text"
-            className="frepl"
-            value={be || tetel.bizonytalanDb > 0 ? ertek : tetel.eredeti}
-            disabled={(!be && tetel.bizonytalanDb === 0) || nincsBenne}
-            aria-label={`${tetel.eredeti} helyére kerülő szöveg`}
-            onChange={(e) => onCsereSzoveg(tetel.id, e.target.value)}
-          />
-        )}
-      </div>
+      {tetel.fajta === 'amount' || tetel.fajta === 'date' ? (
+        <span
+          className="frepl static"
+          title={
+            tetel.elofordulas > 1
+              ? 'Példa az első előfordulásra — a többivel ugyanez történik.'
+              : undefined
+          }
+        >
+          {be ? ertek : tetel.eredeti}
+        </span>
+      ) : (
+        <input
+          type="text"
+          className="frepl"
+          value={be || tetel.bizonytalanDb > 0 ? ertek : tetel.eredeti}
+          disabled={(!be && tetel.bizonytalanDb === 0) || nincsBenne}
+          aria-label={`${tetel.eredeti} helyére kerülő szöveg`}
+          onChange={(e) => onCsereSzoveg(tetel.id, e.target.value)}
+        />
+      )}
 
+      {/*
+        A VEZÉRLŐOSZLOP CSAK A KAPCSOLÓÉ, semmi másé.
+
+        A „nem szerepel az iratban" jelvény innen a magyarázósorba költözött:
+        szélesebb volt a kapcsolónál, tehát ahol megjelent, ott az EGÉSZ
+        oszlop kiszélesedett, és a fölötte-alatta álló sorok kapcsolói
+        elcsúsztak. Ráadásul nem is vezérlő volt, hanem közlés.
+      */}
       <div className="fctl">
-        {nincsBenne ? (
-          <span className="pill kind">nem szerepel az iratban</span>
-        ) : (
+        {!nincsBenne && (
           <Kapcsolo
             id={`sor-${tetel.id.replace(/[^\w-]/g, '_')}`}
             cimke={`${tetel.eredeti} ${tetel.fajta === 'date' ? 'eltolása' : 'cseréje'}`}
@@ -1434,6 +1492,7 @@ function TalaltSor({
 
       <div className="fmeta">
         <span className="pill kind">{tetel.szerep}</span>
+        {nincsBenne && <span className="pill kind">nem szerepel az iratban</span>}
         <span className="occ">
           {nincsBenne ? (
             ''
