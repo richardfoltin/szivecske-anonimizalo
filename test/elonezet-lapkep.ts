@@ -94,10 +94,32 @@ check(
 // egy ilyen összeszámolás nullát adna egy 45 cserét tartalmazó iraton.
 const csereDb = a.matches.filter((m) => matchOutcome(m) === 'csere' && m.replacement).length;
 check('van kiemelés az előnézeten', elonezet.highlights.length > 0, `${elonezet.highlights.length} db`);
+/*
+  MINDEN CSERE MEG VAN JELÖLVE — ez a kérdés, nem a darabszám egyezése.
+
+  A régi mérés azt kérte számon, hogy ne legyen TÖBB kiemelés, mint csere. Ez a
+  bekezdésenkénti újratördelés óta nem igaz, és helyesen nem az: egy álnév,
+  ami a sor végén átnyúlik a következőbe („Kvarcos / Bazaltnak"), KÉT
+  téglalapot kap — egyetlen, két sort átfogó doboz a köztük lévő sort is
+  bekarikázná.
+
+  Ami viszont továbbra is számít, sőt ez a lényeg: EGYETLEN csere se maradjon
+  jelöletlenül. Egy lecserélt, de meg nem jelölt név a képernyőn úgy néz ki,
+  mintha a program nem nyúlt volna hozzá.
+*/
+const cserelt = new Set(
+  a.matches.filter((m) => matchOutcome(m) === 'csere' && m.replacement).map((m) => m.id),
+);
+const jelolt = new Set(elonezet.highlights.map((h) => h.matchId));
+const jeloletlen = [...cserelt].filter((id) => !jelolt.has(id));
 check(
-  'nem több kiemelés, mint amennyi csere',
-  elonezet.highlights.length <= csereDb,
-  `${elonezet.highlights.length} kiemelés / ${csereDb} csere`,
+  'minden csere meg van jelölve az előnézeten',
+  jeloletlen.length === 0,
+  `${csereDb} cseréből ${jeloletlen.length} jelöletlen`,
+);
+check(
+  'nincs kiemelés csere nélküli találaton',
+  [...jelolt].every((id) => cserelt.has(id)),
 );
 
 const kilog = elonezet.highlights.filter(

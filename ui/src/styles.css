@@ -4377,3 +4377,36 @@ textarea:focus {
     display: none !important;
   }
 }
+
+/*
+  A TÖRDELÉS KAPCSOLÓJA az előnézet mellett.
+
+  Nem a nézetváltó harmadik szakasza, és ez szándékos: a nézetváltó azt dönti
+  el, MIT nézek (eredetit vagy előnézetet), ez pedig azt, MILYEN LESZ A FÁJL.
+  Egy sávba olvasztva a kettő egyetlen háromállású választásnak látszana,
+  holott két különböző kérdés.
+
+  BEKAPCSOLVA HANGSÚLYOS, kikapcsolva halvány: az alapállás a bekezdésenkénti
+  tördelés, mert az ad iratszerű kimenetet. A felirat mindig azt mondja, ami
+  ÉPP TÖRTÉNIK — nem azt, amire váltana; a mellette álló buboréksúgó mondja
+  meg, mit tesz a kattintás.
+*/
+.tordeleskapcs {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+}
+.tordeleskapcs.be {
+  background: var(--rose-soft);
+  border-color: var(--rose-tint);
+  color: var(--rose-deep);
+  font-weight: 600;
+}
+.tordeleskapcs::before {
+  content: '¶';
+  font-size: 13px;
+  line-height: 1;
+  opacity: 0.75;
+}

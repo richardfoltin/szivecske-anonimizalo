@@ -148,6 +148,20 @@ export interface AnalyzeInput {
   /** A dátumok egységes eltolása ügyenként. */
   shiftDates?: boolean;
   /**
+   * BEKEZDÉSENKÉNTI ÚJRATÖRDELÉS a kimeneti PDF-ben. Alapból igaz.
+   *
+   * A PDF-ben nincs bekezdés, csak SOROK: mindegyik külön rajzolási utasítás.
+   * Soronként újrarajzolva a csere két dolgot ront el — a sorkizárás elvész (a
+   * mi sorunk normál szóközökkel áll, tehát csipkés a jobb széle), és egy
+   * hosszabb álnév kifut a margóból, mert a szöveg nem tud a következő sorba
+   * csordulni.
+   *
+   * Bekapcsolva a bekezdés EGÉSZ szövegét tördeljük újra a saját szélességére,
+   * és a sorokat kizárjuk. A részletes indoklás a motoroldali párjánál áll
+   * (`AnalyzeInput`, src/app/session.ts).
+   */
+  paragraphReflow?: boolean;
+  /**
    * Fogadja el a program az ÁTNÉZÉSRE váró találatokat is, emberi döntés nélkül.
    *
    * Ez a „Csak csináld" mód motoroldali kapcsolója (`Settings.autoMode`), és

@@ -575,6 +575,20 @@ export default function App() {
    */
   const [autoThreshold, setAutoThreshold] = useState<number | undefined>(undefined);
   const [replaceAmounts, setReplaceAmounts] = useState(false);
+  /**
+   * BEKEZDÉSENKÉNTI ÚJRATÖRDELÉS a kimeneti PDF-ben — alapból BE.
+   *
+   * A PDF-ben nincs bekezdés, csak sorok. Soronként újrarajzolva a csere
+   * elveszi a sorkizárást (a mi sorunk normál szóközökkel áll, tehát csipkés
+   * lesz a jobb széle), egy hosszabb álnév pedig egyszerűen kifut a margóból —
+   * a szöveg nem tud a következő sorba csordulni, mert a sor a fájlban egy
+   * önálló utasítás.
+   *
+   * Bekapcsolva a bekezdés EGÉSZ szövegét tördeljük újra a saját szélességére.
+   * Ez az alapállás, mert ez ad iratszerű kimenetet; a kikapcsolás annak való,
+   * aki a lehető legkevesebb bájtot akarja megváltoztatni a fájlban.
+   */
+  const [paragraphReflow, setParagraphReflow] = useState(true);
   const [shiftDates, setShiftDates] = useState(false);
   /**
    * A CÍMKÉK NYELVE a szerep-, adatfajta- és számozott módban.
@@ -772,6 +786,7 @@ export default function App() {
           labelLang,
           replaceAmounts,
           shiftDates,
+          paragraphReflow,
           acceptReview: accept,
           /*
             A MEGTARTANDÓ LISTA ÜRES, ha a felhasználó ezeket is cserélteti.
@@ -812,6 +827,7 @@ export default function App() {
       replaceAmounts,
       replaceOfficials,
       shiftDates,
+      paragraphReflow,
       identifiers,
       autoModeForDoc,
       detected,
@@ -3453,6 +3469,39 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
                 visz; ezen az egy helyen ez a félreértés drága, mert a
                 nyomtatás a képernyő tartalmát viszi papírra.
               */}
+              {/*
+                A TÖRDELÉS KAPCSOLÓJA — csak az előnézeten van értelme.
+
+                Az EREDETI nézeten nincs mit tördelni: az az irat, ahogy
+                érkezett. A kapcsoló ezért az előnézettel együtt jelenik meg,
+                közvetlenül a nézetváltó mellett — ott, ahol a hatása látszik.
+
+                A FÁJLRA IS HAT, nem csak a képre: a lapkép a kész kimeneti
+                bájtokból készül. Ezért nem „megjelenítés" a felirata, hanem
+                az, amit tesz.
+              */}
+              {analysis && view === 'preview' && doc.format === 'pdf' && (
+                <button
+                  /* NEM `ghost`: az átlátszóra állítja a hátteret és a keretet (`.btn.ghost`,
+                     nagyobb fajsúllyal, mint a mi szabályunk), és a kikapcsolt állapot
+                     keret nélkül nem néz ki kapcsolónak — a felhasználó nem is
+                     sejtené, hogy rá lehet kattintani. */
+                  className={`btn sm tordeleskapcs${paragraphReflow ? ' be' : ''}`}
+                  aria-pressed={paragraphReflow}
+                  onClick={() => {
+                    setParagraphReflow(!paragraphReflow);
+                    setHasWork(true);
+                    ujraKert();
+                  }}
+                  title={
+                    paragraphReflow
+                      ? 'A bekezdések újratördelve: a sorkizárás megmarad, és a hosszabb álnév a következő sorba csordul. Kattints: soronkénti csere.'
+                      : 'Soronkénti csere: a program a legkevesebbet változtatja a fájlon, de a csere helyén a sorkizárás elvész. Kattints: bekezdésenkénti tördelés.'
+                  }
+                >
+                  {paragraphReflow ? 'Bekezdésenként' : 'Soronként'}
+                </button>
+              )}
               {/* Elemzés nélkül nincs mire váltani: az előnézet az elemzésből
                   áll elő. Egy ilyenkor is kint álló váltó azt ígérné, hogy van
                   már kimenet — a kattintás után pedig ugyanaz az üres nézet

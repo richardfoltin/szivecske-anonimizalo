@@ -74,6 +74,7 @@ import {
   type TextSegment,
 } from '../pdf/textRuns.js';
 import { readPageStreams } from '../pdf/resources.js';
+import { bekezdesekre, ujratordel, type TordeltSor } from '../pdf/bekezdes.js';
 import { formatPdfWarnings, type PageWarnings } from '../pdf/warnings.js';
 import {
   buildPageText,
@@ -245,6 +246,24 @@ export interface AnalyzeInput {
   /** A dátumok egységes eltolása ügyenként. */
   shiftDates?: boolean;
   /**
+   * BEKEZDÉSENKÉNTI ÚJRATÖRDELÉS a kimeneti PDF-ben. Alapból igaz.
+   *
+   * A PDF-ben nincs bekezdés, csak sorok: mindegyik külön rajzolási utasítás.
+   * Soronként újrarajzolva a csere két dolgot ront el — a sorkizárás elvész
+   * (a mi sorunk normál szóközökkel áll, tehát csipkés a jobb széle), és egy
+   * hosszabb álnév egyszerűen kifut a margóból, mert a szöveg nem tud a
+   * következő sorba csordulni.
+   *
+   * Bekapcsolva a bekezdés EGÉSZ szövegét tördeljük újra a saját szélességére,
+   * és a sorokat kizárjuk. Kikapcsolva a régi, soronkénti viselkedés marad —
+   * kevesebbet nyúlunk a fájlhoz, cserébe a tördelés a csere helyén meglátszik.
+   *
+   * MIÉRT AZ ELEMZÉS BEMENETÉN. Így az előnézet és a mentés UGYANABBÓL az egy
+   * értékből dolgozik. Két külön úton átadva a képernyő és a fájl elcsúszhatna
+   * — és épp az előnézet ígérete volna oda, hogy amit látsz, az kerül a fájlba.
+   */
+  paragraphReflow?: boolean;
+  /**
    * Fogadja el a program az ÁTNÉZÉSRE váró találatokat is, emberi döntés nélkül
    * („Csak csináld" mód; `Settings.autoMode`).
    *
@@ -362,6 +381,11 @@ export class DocumentSession {
    * képernyő és a fájl idővel eltérne egymástól.
    */
   private lastAutoAccepted: AutoDecisionRow[] = [];
+  /**
+   * Bekezdésenként tördelünk-e a kimenetben. Az elemzés bemenetéről érkezik,
+   * és a MENTÉS is ezt olvassa — így az előnézet és a fájl nem csúszhat szét.
+   */
+  private reflow = true;
   /** Az összeg- és dátumtervek figyelmeztetései — ezeket ki KELL írni. */
   private planWarnings: string[] = [];
   private docx: DocxAnalysis | null = null;
@@ -847,6 +871,7 @@ export class DocumentSession {
 
     this.planWarnings = [...planWarnings];
     this.lastAutoAccepted = autoAccepted;
+    this.reflow = input.paragraphReflow !== false;
 
     const cast: CastRow[] = parties.map((p) => {
       const a = assignments.get(p.id);
@@ -1339,9 +1364,75 @@ export class DocumentSession {
       const page = doc.getPage(unit.page);
       const streams = readPageStreams(page, pdf.rootId);
 
+      // A szakaszok ÚJ szövege és a csereszövegek helye — egyszer, előre.
+      const tervek = pdf.pageText.spans.map((span) => ({
+        span,
+        ...segmentEditPlan(span, edits),
+      }));
+      const tervSzakaszSzerint = new Map(tervek.map((t) => [t.span.segment, t]));
+
       const toDelete: ByteRange[] = [];
-      for (const span of pdf.pageText.spans) {
-        const { text: newText, placements } = segmentEditPlan(span, edits);
+      /** Amit a bekezdéses út már elintézett — a soronkénti ág átugorja. */
+      const elintezett = new Set<TextSegment>();
+
+      /*
+        ELŐBB A BEKEZDÉSEK, HA KÉRTÉK.
+
+        A bekezdés EGÉSZ szövegét tördeljük újra a saját szélességére, és a
+        sorokat kizárjuk — így a jobb margó megmarad, és a hosszabb álnév a
+        következő sorba csordul ahelyett, hogy kifutna a lapról. Amelyik
+        bekezdésre ez nem megy (nem férne el a saját soraiban), az érintetlenül
+        átesik a soronkénti ágra: egy alsó szomszédjára csúszott bekezdés
+        rosszabb a csipkés jobb szélnél.
+      */
+      if (this.reflow) {
+        for (const b of bekezdesekre(pdf.pageText.spans.map((sp) => sp.segment))) {
+          const sajatTervek = b.sorok.map((sor) => tervSzakaszSzerint.get(sor)).filter((t) => t !== undefined);
+          if (sajatTervek.length !== b.sorok.length) continue;
+          if (sajatTervek.every((t) => t.text === t.span.segment.text)) continue;
+
+          // A bekezdés új szövege — ugyanúgy szóközzel fűzve, ahogy az
+          // oldalszintű szöveg is épül (`buildPageText`).
+          const eltolasok: number[] = [];
+          let bekezdesSzoveg = '';
+          for (const t of sajatTervek) {
+            if (bekezdesSzoveg.length > 0) bekezdesSzoveg += ' ';
+            eltolasok.push(bekezdesSzoveg.length);
+            bekezdesSzoveg += t.text;
+          }
+
+          const meret = b.sorok[0]!.fontSize;
+          const tordelt = ujratordel(b, tisztitottBekezdes(bekezdesSzoveg), (t) =>
+            merSzelesseg(embedded, t, meret),
+          );
+          if (tordelt === null) continue;
+
+          for (const sor of b.sorok) {
+            toDelete.push(...sor.opRanges);
+            elintezett.add(sor);
+          }
+          for (const sor of tordelt) {
+            for (const szo of sor.szavak) {
+              redraws.push({ page: unit.page, x: szo.x, y: sor.y, size: meret, text: szo.szoveg });
+            }
+          }
+          // A kiemelés a KÉSZ tördelésben: a csereszöveg másik sorba is kerülhet,
+          // mint ahol az eredeti állt.
+          sajatTervek.forEach((t, i) => {
+            for (const hely of t.placements) {
+              if (hely.edit.matchId === undefined) continue;
+              const kezd = eltolasok[i]! + hely.start;
+              const veg = eltolasok[i]! + hely.end;
+              for (const box of tordeltKiemelesek(tordelt, kezd, veg, meret, pdf)) {
+                highlights.push({ matchId: hely.edit.matchId, page: unit.page, ...box });
+              }
+            }
+          });
+        }
+      }
+
+      for (const { span, text: newText, placements } of tervek) {
+        if (elintezett.has(span.segment)) continue;
         if (newText === span.segment.text) continue;
         toDelete.push(...span.segment.opRanges);
         redraws.push({
@@ -2643,6 +2734,78 @@ function redrawHighlight(
     width: w / pdf.pageWidth,
     height: (ascent + descent) / pdf.pageHeight,
   };
+}
+
+/**
+ * A BEKEZDÉS SZÖVEGÉNEK RENDBETÉTELE A TÖRDELÉS ELŐTT.
+ *
+ * A csere a szakaszhatáron ÁTNYÚLHAT: a „Kovács" a sor végén áll, a „Jánosnak."
+ * a következő sor elején. Ilyenkor az álnév teljes egészében az ELSŐ szakaszba
+ * kerül, a másodikból pedig csak a lefedett rész marad ki — a maradék („.
+ * Kis összegű…") a szóközös összefűzés után szóközzel kezdődik, és a
+ * bekezdésben „Bazaltnak . Kis" áll.
+ *
+ * Soronkénti rajzolásnál ez a sortörés mögé bújt; a bekezdés újratördelése
+ * viszont egy sorba hozza a kettőt, és ott már kiabál. Magyarul a pont, a
+ * vessző és a záró idézőjel elé sosem kerül szóköz — a javítás tehát nem
+ * kozmetika, hanem az, amit a szedő is tett volna.
+ */
+function tisztitottBekezdes(szoveg: string): string {
+  return szoveg
+    .replace(/\s+([.,;:!?%)\]}»”"])/g, '$1')
+    .replace(/([(\[{«„])\s+/g, '$1')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+/**
+ * A SZÖVEG SZÉLESSÉGE — a beágyazott betűvel, hibatűrően.
+ *
+ * A `widthOfTextAtSize` a betűkészletből hiányzó jelre dobhat. A tördelés
+ * ilyenkor sem állhat le: a becslés (0,55 × betűméret karakterenként) ugyanaz
+ * az arány, amit a kiemelés téglalapja is használ — pontatlanabb, de a
+ * bekezdés kirajzolódik.
+ */
+function merSzelesseg(font: PDFFont, szoveg: string, meret: number): number {
+  try {
+    const w = font.widthOfTextAtSize(szoveg, meret);
+    return Number.isFinite(w) ? w : szoveg.length * meret * 0.55;
+  } catch {
+    return szoveg.length * meret * 0.55;
+  }
+}
+
+/**
+ * EGY CSERESZÖVEG KIEMELÉSEI AZ ÚJRATÖRDELT BEKEZDÉSBEN.
+ *
+ * Soronként egy téglalap: a csereszöveg átnyúlhat a sor végén a következőbe
+ * („Kristályos<sortörés>Ametiszt"), és egyetlen, két sort átfogó doboz a
+ * köztük lévő sort is bekarikázná.
+ */
+function tordeltKiemelesek(
+  sorok: TordeltSor[],
+  kezd: number,
+  veg: number,
+  meret: number,
+  pdf: NonNullable<TextUnit['pdf']>,
+): { left: number; top: number; width: number; height: number }[] {
+  const ascent = meret * 0.82;
+  const descent = meret * 0.24;
+  const out: { left: number; top: number; width: number; height: number }[] = [];
+  for (const sor of sorok) {
+    const erintett = sor.szavak.filter((sz) => sz.kezd < veg && kezd < sz.veg);
+    if (erintett.length === 0) continue;
+    const bal = Math.min(...erintett.map((sz) => sz.x));
+    const jobb = Math.max(...erintett.map((sz) => sz.x + sz.szelesseg));
+    if (jobb <= bal) continue;
+    out.push({
+      left: bal / pdf.pageWidth,
+      top: (pdf.pageHeight - (sor.y + ascent)) / pdf.pageHeight,
+      width: (jobb - bal) / pdf.pageWidth,
+      height: (ascent + descent) / pdf.pageHeight,
+    });
+  }
+  return out;
 }
 
 async function renderPdfPages(bytes: Uint8Array, pageCount: number, units: TextUnit[]): Promise<PageImage[]> {

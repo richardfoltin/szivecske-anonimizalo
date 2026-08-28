@@ -128,6 +128,16 @@ interface AnalyzeInput {
   replaceAmounts?: boolean;
   shiftDates?: boolean;
   /**
+   * BEKEZDÉSENKÉNTI ÚJRATÖRDELÉS a kimeneti PDF-ben. Alapból igaz.
+   *
+   * Ugyanaz a helyzet, mint a fentieknél: a munkamenet nem olvas
+   * beállításfájlt. Ha a felület nem küldi át, a kapcsoló a képernyőn mozogna,
+   * a kimenet viszont változatlanul soronként cserélne — a felhasználó pedig
+   * azt hinné, hogy a program elrontotta a tördelést, holott meg sem kapta a
+   * kérését.
+   */
+  paragraphReflow?: boolean;
+  /**
    * A CÍMKÉK NYELVE a szerep-, adatfajta- és számozott módban.
    *
    * Ugyanaz a helyzet, mint a fenti hármé: a munkamenet nem olvas
