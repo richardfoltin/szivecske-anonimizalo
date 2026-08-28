@@ -37,6 +37,24 @@ export interface ModelClientOptions {
   /** Ennyi ideig várunk egy válaszra, utána feladjuk. */
   timeoutMs?: number;
   /**
+   * HÁNY SZÁLON SZÁMOLHAT A MODELL. Alapból kettőn.
+   *
+   * A felismerő modell (110M paraméter) a háttérben fut, MIKÖZBEN a felhasználó
+   * az iratot nézi — ott a két szál tudatos önmérséklet: a gép maradjon
+   * használható. A névkészlet-gyártó (4 milliárd paraméter) viszont pont
+   * fordítva működik: a felhasználó beírja a témát, és semmi mást nem tud
+   * csinálni, amíg a készlet el nem készül.
+   *
+   * MÉRVE ezen a gépen (20 szál), ugyanazzal a rövid kérdéssel: két szálon 0,86
+   * token/másodperc, hat, tíz és tizennyolc szálon egyaránt 4,3 — ÖTSZÖRÖS
+   * különbség, és a kettőn felül a szálszám már nem számít. (A gyártás valódi,
+   * hosszú kérésén ugyanez 1,4 token/másodperc: ott a szövegkörnyezet hossza a
+   * szűk keresztmetszet, nem a szálak száma.)
+   *
+   * Ez nem hangolási finomság: ezen múlik, hogy a funkció használható-e.
+   */
+  szalak?: number;
+  /**
    * Hol tart a modell az iraton belül.
    *
    * A hosszú irat átolvasása percekbe telhet, és eddig ez alatt SEMMI nem
@@ -45,6 +63,16 @@ export interface ModelClientOptions {
    * dolgozik, tehát van mit számolni — ez a visszahívás viszi ki a felületig.
    */
   onProgress?: (h: AblakHaladas) => void;
+  /**
+   * Hol tart a SZÖVEGÍRÁS — a névkészlet-gyártáshoz.
+   *
+   * Ugyanaz a gond, mint a hosszú iratnál, csak rosszabb: egy csoport
+   * legyártása processzoron percekbe telik, és eddig ez alatt semmi nem
+   * látszott. A `kesz`/`keret` szavakban értendő, nem tokenekben — a
+   * folyamatjelzőnek ez épp elég, és nem állítunk vele többet, mint amit
+   * tudunk.
+   */
+  onGenProgress?: (h: { kesz: number; keret: number }) => void;
 }
 
 export class ModelClient {
@@ -85,10 +113,11 @@ export class ModelClient {
     if (!existsSync(this.opts.workerPath)) {
       throw new Error(`Hiányzik a modell-folyamat: ${this.opts.workerPath}`);
     }
+    const szalak = String(Math.max(1, Math.floor(this.opts.szalak ?? 2)));
     const child = fork(this.opts.workerPath, [], {
       stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
-      // A modell számítási szálai ne éheztessék ki a felületet.
-      env: { ...process.env, OMP_NUM_THREADS: '2', ORT_NUM_THREADS: '2' },
+      // A modell számítási szálai ne éheztessék ki a felületet — lásd `szalak`.
+      env: { ...process.env, OMP_NUM_THREADS: szalak, ORT_NUM_THREADS: szalak },
     });
 
     child.on('message', (msg: WorkerResponse) => {
@@ -107,6 +136,14 @@ export class ModelClient {
       if (msg.type === 'progress') {
         p.ujraIndit();
         this.opts.onProgress?.({ ablak: msg.ablak, ablakok: msg.ablakok });
+        return;
+      }
+      // A szövegírás haladása UGYANÍGY közbenső: az óra újraindul, a kérés
+      // nyitva marad. Ha ez kimaradna, egy lassú gépen a saját időkorlátunk
+      // lőné ki a modellt, miközben az rendben dolgozik.
+      if (msg.type === 'gen') {
+        p.ujraIndit();
+        this.opts.onGenProgress?.({ kesz: msg.kesz, keret: msg.keret });
         return;
       }
       this.pending.delete(msg.id);
@@ -138,6 +175,7 @@ export class ModelClient {
     req:
       | Omit<Extract<WorkerRequest, { type: 'load' }>, 'id'>
       | Omit<Extract<WorkerRequest, { type: 'extract' }>, 'id'>
+      | Omit<Extract<WorkerRequest, { type: 'generate' }>, 'id'>
       | Omit<Extract<WorkerRequest, { type: 'dispose' }>, 'id'>,
   ): Promise<WorkerResponse> {
     const child = this.start();
@@ -197,6 +235,33 @@ export class ModelClient {
     const r = await this.request({ type: 'extract', text, minScore });
     if (r.type !== 'entities') throw new Error('Váratlan válasz a modelltől.');
     return { entities: r.entities, ms: r.ms, unmapped: r.unmapped ?? {} };
+  }
+
+  /**
+   * SZÖVEG ÍRATÁSA a modellel — a névkészlet-gyártás egyetlen kérése.
+   *
+   * Nem a felismerő úton van: ez a hívás iratot nem lát, és a felismerő
+   * modellek nem is tudják teljesíteni. Amelyik modell nem szöveggyártónak
+   * indult (`task: 'generate'`), annál a folyamat magyarul megmondja, hogy
+   * nincs betöltve gyártó — nem néma üres választ ad.
+   *
+   * @param kerdes a modellnek szóló kérés (`temagyar.ts` állítja össze)
+   * @returns a modell válasza a gondolatmenettel együtt; a levágást a
+   *          `olvasdAJavaslatot` végzi
+   */
+  async generate(
+    kerdes: string,
+    opts: { maxNewTokens?: number; thinkBudget?: number } = {},
+  ): Promise<string> {
+    if (!this.info) await this.load();
+    const r = await this.request({
+      type: 'generate',
+      prompt: kerdes,
+      ...(opts.maxNewTokens !== undefined ? { maxNewTokens: opts.maxNewTokens } : {}),
+      ...(opts.thinkBudget !== undefined ? { thinkBudget: opts.thinkBudget } : {}),
+    });
+    if (r.type !== 'text') throw new Error('Váratlan válasz a modelltől.');
+    return r.text;
   }
 
   /**

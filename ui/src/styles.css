@@ -1437,11 +1437,18 @@ textarea {
   font-size: 17px;
   font-weight: 600;
 }
+/*
+  A FEJLÉC MAGYARÁZATA A PÁRBESZÉD TELJES SZÉLESSÉGÉT KAPJA.
+
+  Állt itt egy `max-width: 62ch` a sorhossz miatt. Rossz volt: a párbeszéd
+  fejléce nem folyószöveg, hanem két-három soros eligazítás, és a korlát
+  hatására a szöveg a doboz közepén tört el, alatta tenyérnyi üres hellyel —
+  ami nem szellősnek, hanem félbehagyottnak látszott.
+*/
 .dialog-head p {
   margin: 0;
   color: var(--muted);
   font-size: 12.5px;
-  max-width: 62ch;
   line-height: 1.5;
 }
 .dialog-body {

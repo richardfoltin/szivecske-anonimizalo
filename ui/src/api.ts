@@ -491,6 +491,14 @@ export interface TemaGenStatus {
   lepes: number;
   /** Hány csoport lesz összesen. */
   lepesek: number;
+  /**
+   * Hol tart a modell a MOSTANI csoporton belül, 0-tól 1-ig.
+   *
+   * Egy csoport percekbe telik. Nélküle a jelző négy ugrásban mozogna, és a
+   * köztes percekben megkülönböztethetetlen volna a lefagyástól. Nem
+   * időbecslés: azt mutatja, hogy a modell ír.
+   */
+  resz?: number;
 }
 
 /* ─────────────────────────── frissítés ─────────────────────────── */
@@ -667,6 +675,17 @@ interface SzivecskeApi {
     jóváhagyás előtt, mert a modell a magyar ragozást nem tudja megbízhatóan.
   */
   generateTheme(temaSzoveg: string): Promise<TemaEredmeny>;
+  /**
+   * A FUTÓ GYÁRTÁS LEÁLLÍTÁSA.
+   *
+   * A gyártás negyedóra nagyságrend, tehát a meggondolás valódi eset, nem
+   * elméleti. A párbeszéd bezárása magában nem elég: a modell a főfolyamatban
+   * fut, és a bezárásról nem tud — dolgozna tovább, több gigabájttal és a gép
+   * magjainak javával.
+   *
+   * @returns volt-e egyáltalán mit leállítani
+   */
+  cancelThemeGeneration(): Promise<boolean>;
   /**
    * A LEGUTÓBB LEGYÁRTOTT készlet elmentése. Szándékosan nincs paramétere: a
    * felület nem adhat át kész témát, csak jóváhagyhatja azt, amit a program

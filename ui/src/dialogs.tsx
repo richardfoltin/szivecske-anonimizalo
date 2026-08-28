@@ -1344,8 +1344,19 @@ export function SajatKeszletDialog({
   // enélkül a felhasználó egy mozdulatlan pörgőt nézne, és azt hinné, megállt.
   useEffect(() => api.onThemeGenStatus((s) => setAllapot(s)), []);
 
+  /**
+   * MEGSZAKÍTOTTUK-E MI MAGUNK.
+   *
+   * A leállítás után a gyártás hibával tér vissza — de az nem hiba, hanem a
+   * felhasználó döntése. Ha piros sávban kiírnánk, azt közölnénk vele, hogy
+   * elromlott valami, amikor épp azt kapta, amit kért. `useRef`, mert a
+   * `gyart()` már futó, lezárt függvényében kell látszania.
+   */
+  const megszakitottuk = useRef(false);
+
   const gyart = async (): Promise<void> => {
     setHiba(null);
+    megszakitottuk.current = false;
     setAllapot({ uzenet: 'A modell indítása…', lepes: 0, lepesek: 4 });
     setLepes('gyart');
     try {
@@ -1353,9 +1364,25 @@ export function SajatKeszletDialog({
       setEredmeny(r);
       setLepes('atnez');
     } catch (e) {
+      if (megszakitottuk.current) return;
       setHiba((e as Error).message);
       setLepes('tema');
     }
+  };
+
+  /**
+   * BEZÁRÁS — a futó gyártás leállításával együtt.
+   *
+   * A párbeszéd bezárása magában nem állítja meg a modellt: az a főfolyamatban
+   * fut, és a bezárásról nem tud. Enélkül a felhasználó azt látná, hogy
+   * abbahagyta, a gép meg negyedóráig dolgozna tovább több gigabájttal.
+   */
+  const bezar = (): void => {
+    if (lepes === 'gyart') {
+      megszakitottuk.current = true;
+      void api.cancelThemeGeneration().catch(() => undefined);
+    }
+    onClose();
   };
 
   const ment = async (): Promise<void> => {
@@ -1375,7 +1402,7 @@ export function SajatKeszletDialog({
   const jelentes = eredmeny?.jelentes;
 
   return (
-    <Overlay onClose={onClose}>
+    <Overlay onClose={bezar}>
       <div className="dialog" onMouseDown={(e) => e.stopPropagation()}>
         <div className="dialog-head">
           <h2>Készlet hozzáadása</h2>
@@ -1458,10 +1485,25 @@ export function SajatKeszletDialog({
           {lepes === 'gyart' && (
             <>
               <div className="progress">
+                {/*
+                  A CSÍK A CSOPORTON BELÜL IS MOZOG.
+
+                  Korábban a `lepes / lepesek` hányadost mutatta, vagyis négy
+                  ugrásban állt egy helyben — közben percek teltek el, és a
+                  felhasználó szemében ez megkülönböztethetetlen a lefagyástól.
+                  A kész csoportok után a mostani csoport saját haladása jön
+                  (`resz`), amit a modell szavanként jelent.
+                */}
                 <div
                   className="bar"
                   style={{
-                    width: `${Math.round((((allapot?.lepes ?? 0) / (allapot?.lepesek || 4)) * 100))}%`,
+                    width: `${Math.round(
+                      Math.min(
+                        1,
+                        (Math.max(0, (allapot?.lepes ?? 0) - 1) + (allapot?.resz ?? 0)) /
+                          (allapot?.lepesek || 4),
+                      ) * 100,
+                    )}%`,
                   }}
                 />
                 <div className="ptext">
@@ -1571,8 +1613,8 @@ export function SajatKeszletDialog({
         </div>
 
         <div className="dialog-foot">
-          <button className="btn ghost" onClick={onClose}>
-            {lepes === 'atnez' ? 'Elvetem' : 'Mégse'}
+          <button className="btn ghost" onClick={bezar}>
+            {lepes === 'atnez' ? 'Elvetem' : lepes === 'gyart' ? 'Leállítom' : 'Mégse'}
           </button>
           {lepes === 'tema' && (
             <button className="btn primary" disabled={tema.trim().length < 3} onClick={() => void gyart()}>

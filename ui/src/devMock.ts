@@ -1107,6 +1107,8 @@ export function installDevMock(): void {
     (névkészlet-gyártás, frissítés letöltése) böngészőben is mozogjanak.
   */
   let genStatus: ((s: TemaGenStatus) => void) | null = null;
+  /** A gyártás megszakítása — élesben a modell-folyamat kilövése felel meg neki. */
+  let gyartasMegszakitva = false;
   let updateProgress: ((p: UpdateProgress) => void) | null = null;
   let detectStatus: ((s: string) => void) | null = null;
   let detectProgress: ((p: DetectProgress) => void) | null = null;
@@ -1303,15 +1305,32 @@ export function installDevMock(): void {
       helyettesítővel. A négy lépés itt gyorsított.
     */
     generateTheme: async (_temaSzoveg: string) => {
+      gyartasMegszakitva = false;
       for (let i = 1; i <= 4; i++) {
-        genStatus?.({
-          uzenet: `A modell javaslatokat készít (${i}. csoport)…`,
-          lepes: i,
-          lepesek: 4,
-        });
-        await wait(undefined, 500);
+        // A csoporton BELÜLI haladás is végigmegy: élesben ez a rész tart
+        // percekig, és a csík ettől mozog. Ha itt csak a négy ugrás volna, a
+        // fejlesztői előnézet pont azt nem mutatná meg, ami a felhasználónak
+        // a legtöbb ideig látszik.
+        for (let r = 0; r <= 4; r++) {
+          if (gyartasMegszakitva) {
+            const e = new Error('A gyártást megszakítottuk.');
+            e.name = 'AbortError';
+            throw e;
+          }
+          genStatus?.({
+            uzenet: `A modell javaslatokat készít (${i}. csoport)…`,
+            lepes: i,
+            lepesek: 4,
+            resz: r / 4,
+          });
+          await wait(undefined, 150);
+        }
       }
       return GYARTOTT;
+    },
+    cancelThemeGeneration: async () => {
+      gyartasMegszakitva = true;
+      return wait(true, 60);
     },
     saveGeneratedTheme: () => {
       if (!THEMES.some((t) => t.id === 'sajat_gorog_mitologia')) {

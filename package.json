@@ -58,7 +58,8 @@
     "test:elonezet": "tsx test/elonezet-lapkep.ts",
     "test:reteg": "tsx test/szovegreteg.ts",
     "test:alnev": "tsx test/alnev-allandosag.ts",
-    "test:bekezdes": "tsx test/bekezdes-tests.ts"
+    "test:bekezdes": "tsx test/bekezdes-tests.ts",
+    "test:gyartas": "tsx test/nevkeszlet-gyartas.ts"
   },
   "devDependencies": {
     "@napi-rs/canvas": "^1.0.8",

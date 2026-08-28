@@ -87,6 +87,8 @@ export interface TemaGenStatus {
   uzenet: string;
   lepes: number;
   lepesek: number;
+  /** Hol tart a modell a mostani csoporton belül, 0-tól 1-ig. */
+  resz?: number;
 }
 
 /**
@@ -283,6 +285,7 @@ const api = {
     az iratba.
   */
   generateTheme: (temaSzoveg: string) => ipcRenderer.invoke('themes:generate', temaSzoveg),
+  cancelThemeGeneration: () => ipcRenderer.invoke('themes:cancelGenerate'),
   saveGeneratedTheme: () => ipcRenderer.invoke('themes:saveGenerated'),
   removeCustomTheme: (id: string) => ipcRenderer.invoke('themes:removeCustom', id),
   onThemeGenStatus: (cb: (s: unknown) => void) => {

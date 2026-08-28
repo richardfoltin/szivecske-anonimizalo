@@ -28,6 +28,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
   indul. Kimérve: a köteg első sora és ez az import ütközött.
 */
 import { createRequire as igenylotKeszit } from 'node:module';
+import { cpus } from 'node:os';
 import { basename, dirname, extname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -325,6 +326,17 @@ let sajatTemaMappa = '';
  * kerülnének az iratba — épp az, amit az ellenőrzés kiszűr.
  */
 let utolsoGyartott: TemaEredmeny | null = null;
+
+/**
+ * A FUTÓ NÉVKÉSZLET-GYÁRTÁS — hogy le lehessen állítani.
+ *
+ * MIÉRT KELL: a gyártás negyedóra nagyságrend, és eddig nem volt mód
+ * megszakítani. Aki meggondolta magát, bezárta a párbeszédet — a 4 milliárd
+ * paraméteres háló viszont a háttérben dolgozott tovább, több gigabájt
+ * memóriával és a gép magjainak javával. A felhasználó azt látta, hogy „bezárta”,
+ * a gép meg azt, hogy nem.
+ */
+let gyartoKliens: ModelClient | null = null;
 
 /**
  * A kézzel ellenőrzött ragozási kivételek (`data/name-overrides.json`).
@@ -1410,19 +1422,6 @@ const GYARTASI_CSOPORTOK: readonly { csoport: JavaslatCsoport; nev: string }[] =
 ];
 
 /**
- * Amit a névkészlet-gyártáshoz a modell futtatójától várunk.
- *
- * A meglévő futtató (`ModelClient`, src/ai/client.ts) ma CÍMKÉZ: szöveget kap,
- * entitásokat ad vissza. A gyártáshoz szövegre van szükség, és ezt a kérést a
- * munkafolyamat (`src/ai/worker.ts`) ismeri majd — a kettő ugyanaz a folyamat,
- * csak másik kérésfajta. Amíg a futtató ezt nem tudja, a `generate` egyszerűen
- * nincs meg, és a felhasználó erről KAP ÜZENETET, nem egy néma hibát.
- */
-interface Szoveggyarto {
-  generate(kerdes: string, maxUjToken?: number): Promise<string>;
-}
-
-/**
  * A saját névkészlet legyártása: téma → nyers javaslatok → ellenőrzött készlet.
  *
  * A MUNKAMEGOSZTÁS itt látszik a legjobban: a modell csak JAVASOL, a magyar
@@ -1460,14 +1459,46 @@ async function nevkeszletetGyart(
     );
   }
 
+  /*
+    A CSOPORT, AMIN ÉPP DOLGOZUNK — a folyamatjelzőhöz.
+
+    A modell szavanként jelent, a felület viszont csoportokban gondolkodik. A
+    kettőt itt kötjük össze: a visszahívás nem tudhatja, hányadik csoportnál
+    tartunk, a ciklus viszont nem lát bele a generálásba.
+  */
+  let csoportHatar: { lepes: number; nev: string } | null = null;
+
   const kliens = new ModelClient({
     workerPath: join(HERE, 'ai-worker.cjs'),
+    /*
+      A GYÁRTÁS KAPJA A GÉP JAVÁT — a felismeréssel ellentétben.
+
+      A felismerés a háttérben fut, miközben a felhasználó az iratot nézi: ott a
+      két szál tudatos önmérséklet. Itt viszont a felhasználó egy párbeszédet
+      néz, és semmi mást nem tud csinálni, amíg a készlet el nem készül —
+      visszafogni a számolást annyi volna, mint feleslegesen várakoztatni.
+      Két magot meghagyunk, hogy a felület és a rendszer ne akadjon meg.
+    */
+    szalak: Math.max(2, cpus().length - 2),
+    onGenProgress: ({ kesz, keret }) => {
+      if (!csoportHatar) return;
+      jelez({
+        uzenet: `A modell ${csoportHatar.nev} javasol a(z) „${tema}" témához…`,
+        lepes: csoportHatar.lepes,
+        lepesek: GYARTASI_CSOPORTOK.length,
+        // A rész a CSOPORTON BELÜL tart 0-tól 1-ig. Nem pontos időbecslés, és
+        // nem is annak adjuk ki: azt mutatja, hogy a modell ír, nem áll.
+        resz: keret > 0 ? Math.min(1, kesz / keret) : 0,
+      });
+    },
     config: {
       modelId: spec.id,
       repo: spec.repo,
       cacheDir: models.rootFor(spec),
       labelMap: spec.labelMap,
       engine: spec.engine,
+      // A futtató ebből tudja, hogy ez a modell ÍR, nem címkéz.
+      task: 'generate',
       // A nyilvántartás a 4 bites hálót szállítja (lásd a `files` listát): a
       // fp16 8,1 GB-os változat nem fér el egy 16 GB-os gépen a program mellett.
       dtype: 'q4',
@@ -1477,17 +1508,7 @@ async function nevkeszletetGyart(
     // ide kevés lenne — és a lejárt idő itt elveszett munkát jelentene.
     timeoutMs: 900_000,
   });
-
-  const gyarto = kliens as unknown as Partial<Szoveggyarto>;
-  const generalj = gyarto.generate?.bind(kliens);
-  if (typeof generalj !== 'function') {
-    await kliens.dispose().catch(() => undefined);
-    throw new Error(
-      `A(z) „${spec.name}" le van töltve, de a programnak ez a változata még nem tudja ` +
-        'futtatni: hiányzik hozzá a szöveggyártó rész. Jelezd a program készítőjének — addig ' +
-        'a programmal szállított névkészletekből tudsz választani.',
-    );
-  }
+  gyartoKliens = kliens;
 
   const javaslatok: NevJavaslat[] = [];
   try {
@@ -1498,13 +1519,18 @@ async function nevkeszletetGyart(
         lepes: i + 1,
         lepesek: GYARTASI_CSOPORTOK.length,
       });
-      const valasz = await generalj(epitsdAJavaslatKerest(tema, cs.csoport));
+      // A csoporton BELÜLI haladás a `kliens` visszahívásán jön (lásd fent):
+      // enélkül a jelző percekig állna egy helyben, ami a felhasználó szemében
+      // megkülönböztethetetlen a lefagyástól.
+      csoportHatar = { lepes: i + 1, nev: cs.nev };
+      const valasz = await kliens.generate(epitsdAJavaslatKerest(tema, cs.csoport));
       // A csoportot alapértelmezésként is átadjuk: ha a modell elhagyta a
       // "kind" mezőt, a javaslat így sem vész el.
       javaslatok.push(...olvasdAJavaslatot(valasz, cs.csoport));
     }
   } finally {
     // A memóriát AKKOR IS visszaadjuk, ha a gyártás félbeszakadt.
+    gyartoKliens = null;
     await kliens.dispose().catch(() => undefined);
   }
 
@@ -1757,6 +1783,17 @@ function registerHandlers(): void {
     utolsoGyartott = eredmeny;
     return eredmeny;
   });
+
+  /**
+   * A GYÁRTÁS LEÁLLÍTÁSA — a modell-folyamat elengedésével.
+   *
+   * Nincs más megbízható mód: a modell egyetlen natív hívásban tölti az idő nagy
+   * részét, oda nem lehet „állj” jelzést küldeni. A folyamat kilövése viszont
+   * azonnal hat, és a több gigabájtot is visszaadja a gépnek.
+   *
+   * @returns volt-e egyáltalán mit leállítani
+   */
+  handle('themes:cancelGenerate', () => gyartoKliens?.cancel() ?? false);
 
   handle('themes:saveGenerated', () => {
     const kesz = utolsoGyartott;

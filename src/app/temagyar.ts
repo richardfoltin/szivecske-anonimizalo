@@ -267,6 +267,57 @@ export interface TemaBemenet {
  * ------------------------------------------------------------------ */
 
 /**
+ * MILYEN ALAKBAN KÉRJÜK A VÁLASZT — csoportonként külön.
+ *
+ * MIÉRT NEM MINDENHOL UGYANAZ AZ OBJEKTUM: mert a válasz hossza IDŐ. Mérve,
+ * ezen a gépen, a valódi kéréssel: 1,4 token másodpercenként. Egy
+ * `{"form": "Olümposz", "kind": "org"}` alakú elem 13-15 token, ugyanaz sima
+ * szövegként 4 — harminc névnél ez perceket jelent, és a mezők közben SEMMIT
+ * nem tesznek hozzá: a csoportot úgyis mi mondtuk meg a kérésben, és az
+ * elemző (`olvasdAJavaslatot`) a sima szöveget is elfogadja, ha megkapja
+ * mellé, melyik csoportot kérte.
+ *
+ * Az utónév a kivétel: ott a nem nem elhagyható. A program a férfi és a női
+ * utóneveket külön kezeli, nem nélkül a javaslat kiesik (lásd `keszitsTemat`,
+ * 'nem_nelkul') — vagyis ott a rövidítés nem időt spórolna, hanem a válasz
+ * felét dobná ki.
+ */
+const VALASZ_ALAK: Record<JavaslatCsoport, string[]> = {
+  given: [
+    'Válaszolj CSAK egy JSON tömbbel, más szöveg nélkül. Egy elem így néz ki:',
+    '  {"form": "Akhilleusz", "gender": "M"}',
+    'A "gender" kötelező: "M" férfi, "F" női utónév.',
+  ],
+  surname: [
+    'Válaszolj CSAK egy JSON tömbbel, más szöveg nélkül. A tömb elemei sima szövegek:',
+    '  ["Olümposzi", "Thébai", "Küklopszi"]',
+    'Vezetéknevet kérek: a témából képzett, magyaros alakot (-i, -s képző, összetétel).',
+  ],
+  org: [
+    'Válaszolj CSAK egy JSON tömbbel, más szöveg nélkül. A tömb elemei sima szövegek:',
+    '  ["Olümposz", "Delphoi", "Aigisz"]',
+    'Cégnév-előtagot kérek: a témából vett egyszavas nevet, amiből cégnév lehet.',
+  ],
+  place: [
+    'Válaszolj CSAK egy JSON tömbbel, más szöveg nélkül. A tömb elemei sima szövegek:',
+    '  ["Thébafalva", "Olümposzhalom", "Delphoivár"]',
+    'Kitalált településnevet kérek: a téma szava + magyar utótag (-falva, -halom, -vár).',
+  ],
+};
+
+/** Ha egyszerre kérjük mind a négy csoportot, a fajtát az elemnek kell vinnie. */
+const TELJES_VALASZ_ALAK: string[] = [
+  'Válaszolj CSAK egy JSON tömbbel, más szöveg nélkül. Egy elem így néz ki:',
+  '  {"form": "Akhilleusz", "kind": "given", "gender": "M"}',
+  '',
+  'A "kind" lehetséges értékei:',
+  '  "given"   utónév — ilyenkor a "gender" kötelező: "M" férfi, "F" női',
+  '  "surname" vezetéknév — a témából képzett, magyaros alak (-i, -s képző, összetétel)',
+  '  "org"     cégnév-előtag — a témából vett egyszavas név, amiből cégnév lehet',
+  '  "place"   kitalált településnév — a téma szava + magyar utótag (-falva, -halom, -vár)',
+];
+
+/**
  * A modellnek szóló kérés szövege.
  *
  * MIÉRT MAGYARUL: a kérés nyelve elhúzza a választ is. Magyar kérésre a modell
@@ -298,14 +349,7 @@ export function epitsdAJavaslatKerest(temaSzoveg: string, csoport?: JavaslatCsop
     '',
     `A felhasználó által megadott téma: „${tema}”`,
     '',
-    'Válaszolj CSAK egy JSON tömbbel, más szöveg nélkül. Egy elem így néz ki:',
-    '  {"form": "Akhilleusz", "kind": "given", "gender": "M"}',
-    '',
-    'A "kind" lehetséges értékei:',
-    '  "given"   utónév — ilyenkor a "gender" kötelező: "M" férfi, "F" női',
-    '  "surname" vezetéknév — a témából képzett, magyaros alak (-i, -s képző, összetétel)',
-    '  "org"     cégnév-előtag — a témából vett egyszavas név, amiből cégnév lehet',
-    '  "place"   kitalált településnév — a téma szava + magyar utótag (-falva, -halom, -vár)',
+    ...(csoport ? VALASZ_ALAK[csoport] : TELJES_VALASZ_ALAK),
     '',
     'Szabályok:',
     '1. MAGYAR HELYESÍRÁSSAL írj: Akhilleusz, nem Achilles; Poszeidón, nem Poseidon.',

@@ -13,6 +13,7 @@
 import type { EntityExtractor, ExtractOptions, ExtractedEntity, ExtractorInfo } from './types.js';
 import { TokenClassifier, type TokenClassifierConfig } from './tokenClassifier.js';
 import { HubertNer } from './hubertNer.js';
+import { TextGenerator } from './generator.js';
 
 /**
  * Melyik futtatóval megy a modell.
@@ -26,7 +27,21 @@ import { HubertNer } from './hubertNer.js';
  */
 export type EngineKind = 'onnx' | 'transformers';
 
-export type LoadConfig = TokenClassifierConfig & { engine?: EngineKind; fileName?: string };
+/**
+ * MIT CSINÁL EZ A MODELL: címkéz vagy ír.
+ *
+ * Nem elhagyható részlet: a két útnak MÁS a betöltője (`TokenClassifier` és
+ * `HubertNer` szemben a `TextGenerator`-ral), és más a kérése is. Enélkül a
+ * futtató a tároló nevéből találgatna — a névkészlet-gyártót pedig épp az
+ * választja el a felismerőktől, hogy iratot soha nem lát.
+ */
+export type ModelTask = 'ner' | 'generate';
+
+export type LoadConfig = TokenClassifierConfig & {
+  engine?: EngineKind;
+  fileName?: string;
+  task?: ModelTask;
+};
 
 /**
  * A haladás típusa a KÖZÖS felülettől jön (src/ai/types.ts), és innen csak
@@ -44,6 +59,14 @@ export type { AblakHaladas } from './types.js';
 export type WorkerRequest =
   | { type: 'load'; id: number; config: LoadConfig }
   | { type: 'extract'; id: number; text: string; minScore?: number }
+  /**
+   * SZÖVEGKÉRÉS — csak a névkészlet-gyártó ismeri.
+   *
+   * Ugyanaz a folyamat, másik kérésfajta: a modellt külön folyamatban futtatni
+   * ugyanúgy kell (a gyártó háló 2,9 GB), és a megszakítás is ugyanúgy a
+   * folyamat elengedésével megy.
+   */
+  | { type: 'generate'; id: number; prompt: string; maxNewTokens?: number; thinkBudget?: number }
   | { type: 'dispose'; id: number };
 
 export type WorkerResponse =
@@ -69,6 +92,14 @@ export type WorkerResponse =
    * eredmény már nem találna vissza a hívóhoz.
    */
   | { type: 'progress'; id: number; ablak: number; ablakok: number }
+  | { type: 'text'; id: number; text: string; ms: number }
+  /**
+   * KÖZBENSŐ üzenet a szövegíráshoz — a `progress` párja.
+   *
+   * Ugyanúgy nyitva hagyja a kérést, és ugyanúgy újraindítja a hívó óráját.
+   * Külön fajta, mert mást számol: itt nincsenek ablakok, hanem szavak.
+   */
+  | { type: 'gen'; id: number; kesz: number; keret: number }
   | { type: 'disposed'; id: number }
   | { type: 'error'; id: number; message: string };
 
@@ -79,6 +110,7 @@ interface Installable extends EntityExtractor {
 }
 
 let extractor: Installable | null = null;
+let generator: TextGenerator | null = null;
 
 function buildExtractor(cfg: LoadConfig): Installable {
   if (cfg.engine === 'onnx') {
@@ -105,6 +137,29 @@ process.on('message', (raw: WorkerRequest) => {
 
 async function handle(req: WorkerRequest): Promise<void> {
   if (req.type === 'load') {
+    /*
+      A SZÖVEGÍRÓ ÚT ITT VÁLIK EL, a betöltésnél.
+
+      Nem duplikáció: a két modellfajta ugyanabban a folyamatban fut (ugyanaz a
+      memóriaszempont, ugyanaz a megszakítás), de a betöltőjük és a kérésük más.
+      A `task` a nyilvántartásból jön (`purpose: 'namegen'`), tehát nem a
+      futtató találgat a tároló nevéből.
+    */
+    if (req.config.task === 'generate') {
+      generator = new TextGenerator({
+        modelId: req.config.modelId,
+        repo: req.config.repo,
+        cacheDir: req.config.cacheDir,
+        ...(req.config.dtype ? { dtype: req.config.dtype } : {}),
+      });
+      if (!generator.isInstalled()) {
+        throw new Error('A modell nincs letöltve. Nyisd meg a Beállítások → Nyelvi modellek lapot.');
+      }
+      const genInfo = await generator.load();
+      send({ type: 'loaded', id: req.id, info: genInfo });
+      return;
+    }
+
     extractor = buildExtractor(req.config);
     if (!extractor.isInstalled()) {
       throw new Error('A modell nincs letöltve. Nyisd meg a Beállítások → Nyelvi modellek lapot.');
@@ -138,9 +193,23 @@ async function handle(req: WorkerRequest): Promise<void> {
     return;
   }
 
+  if (req.type === 'generate') {
+    if (!generator) throw new Error('A szöveggyártó modell nincs betöltve.');
+    const t0 = Date.now();
+    const text = await generator.generate(req.prompt, {
+      ...(req.maxNewTokens !== undefined ? { maxNewTokens: req.maxNewTokens } : {}),
+      ...(req.thinkBudget !== undefined ? { thinkBudget: req.thinkBudget } : {}),
+      onToken: (kesz, keret) => send({ type: 'gen', id: req.id, kesz, keret }),
+    });
+    send({ type: 'text', id: req.id, text, ms: Date.now() - t0 });
+    return;
+  }
+
   if (req.type === 'dispose') {
     await extractor?.dispose();
+    await generator?.dispose();
     extractor = null;
+    generator = null;
     send({ type: 'disposed', id: req.id });
     // A memória csak a folyamat kilépésével adódik vissza teljesen.
     setTimeout(() => process.exit(0), 50);
