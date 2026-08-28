@@ -74,6 +74,7 @@ import type {
   PreviewPages,
   ThemeSummary,
 } from '../src/app/types.js';
+import type { Gender } from '../src/hu/names.js';
 import type { Assignment, Theme } from '../src/pseudonym.js';
 import type {
   AppInfo,
@@ -1413,8 +1414,14 @@ function kulcsFajta(original: string): string {
  *
  * A megnevezés magyarul áll, mert a felhasználó ezt olvassa a folyamatjelzőn.
  */
-const GYARTASI_CSOPORTOK: readonly { csoport: JavaslatCsoport; nev: string }[] = [
-  { csoport: 'given', nev: 'utóneveket' },
+const GYARTASI_CSOPORTOK: readonly {
+  csoport: JavaslatCsoport;
+  /** Utónévnél a nemet a KÉRDÉS dönti el, nem a modell — lásd `temagyar.ts`. */
+  nem?: Gender;
+  nev: string;
+}[] = [
+  { csoport: 'given', nem: 'M', nev: 'férfi utóneveket' },
+  { csoport: 'given', nem: 'F', nev: 'női utóneveket' },
   { csoport: 'surname', nev: 'vezetékneveket' },
   { csoport: 'org', nev: 'cégnév-előtagokat' },
   { csoport: 'place', nev: 'helységneveket' },
@@ -1512,10 +1519,11 @@ async function nevkeszletetGyart(
       // enélkül a jelző percekig állna egy helyben, ami a felhasználó szemében
       // megkülönböztethetetlen a lefagyástól.
       csoportHatar = { lepes: i + 1, nev: cs.nev };
-      const valasz = await kliens.generate(epitsdAJavaslatKerest(tema, cs.csoport));
-      // A csoportot alapértelmezésként is átadjuk: ha a modell elhagyta a
-      // "kind" mezőt, a javaslat így sem vész el.
-      javaslatok.push(...olvasdAJavaslatot(valasz, cs.csoport));
+      const valasz = await kliens.generate(epitsdAJavaslatKerest(tema, cs.csoport, cs.nem));
+      // A csoportot és a nemet alapértelmezésként is átadjuk: ha a modell
+      // elhagyta a mezőket, a javaslat így sem vész el, és a nem sem lesz
+      // találgatás — abból következik, melyik kérdésre felelt.
+      javaslatok.push(...olvasdAJavaslatot(valasz, cs.csoport, cs.nem));
     }
   } finally {
     // A memóriát AKKOR IS visszaadjuk, ha a gyártás félbeszakadt.

@@ -280,8 +280,8 @@ export interface TemaBemenet {
  * fűszernövény-témájú kéréssel, a mondat önmagában pedig gyenge.
  */
 const PELDA_FIGYELMEZTETES =
-  'A példák CSAK az alakot mutatják, más témából valók — a bennük szereplő ' +
-  'neveket NE vedd át a válaszodba.';
+  'A csúcsos zárójelben álló rész helyére kerül a te javaslatod — magát a ' +
+  'mintaszöveget NE írd le.';
 
 /**
  * MILYEN ALAKBAN KÉRJÜK A VÁLASZT — csoportonként külön.
@@ -301,27 +301,28 @@ const PELDA_FIGYELMEZTETES =
  */
 const VALASZ_ALAK: Record<JavaslatCsoport, string[]> = {
   given: [
-    'Válaszolj CSAK egy JSON tömbbel, más szöveg nélkül. Egy elem így néz ki:',
-    '  {"form": "Zsálya", "gender": "F"}',
-    'A "gender" kötelező: "M" férfi, "F" női utónév.',
+    'Válaszolj CSAK egy JSON tömbbel, más szöveg nélkül; az elemek sima szövegek:',
+    '  ["<utónév>", "<utónév>", "<utónév>"]',
     PELDA_FIGYELMEZTETES,
   ],
   surname: [
-    'Válaszolj CSAK egy JSON tömbbel, más szöveg nélkül. A tömb elemei sima szövegek:',
-    '  ["Zsályás", "Kakukkfüvi", "Borsikás"]',
-    'Vezetéknevet kérek: a témából képzett, magyaros alakot (-i, -s képző, összetétel).',
+    'VEZETÉKNEVEKET kérek: a téma szavaiból képzett, magyaros alakokat',
+    '(-i vagy -s képzővel, vagy összetétellel).',
+    'Válaszolj CSAK egy JSON tömbbel, más szöveg nélkül; az elemek sima szövegek:',
+    '  ["<vezetéknév>", "<vezetéknév>", "<vezetéknév>"]',
     PELDA_FIGYELMEZTETES,
   ],
   org: [
-    'Válaszolj CSAK egy JSON tömbbel, más szöveg nélkül. A tömb elemei sima szövegek:',
-    '  ["Zsálya", "Kakukkfű", "Borsika"]',
-    'Cégnév-előtagot kérek: a témából vett egyszavas nevet, amiből cégnév lehet.',
+    'CÉGNÉV-ELŐTAGOKAT kérek: a témából vett egyszavas neveket, amikből cégnév lehet.',
+    'Válaszolj CSAK egy JSON tömbbel, más szöveg nélkül; az elemek sima szövegek:',
+    '  ["<cégnév-előtag>", "<cégnév-előtag>", "<cégnév-előtag>"]',
     PELDA_FIGYELMEZTETES,
   ],
   place: [
-    'Válaszolj CSAK egy JSON tömbbel, más szöveg nélkül. A tömb elemei sima szövegek:',
-    '  ["Zsályafalva", "Kakukkfűhalom", "Borsikavár"]',
-    'Kitalált településnevet kérek: a téma szava + magyar utótag (-falva, -halom, -vár).',
+    'KITALÁLT TELEPÜLÉSNEVEKET kérek: a téma egy szava + magyar utótag',
+    '(-falva, -halom, -vár, -szállás).',
+    'Válaszolj CSAK egy JSON tömbbel, más szöveg nélkül; az elemek sima szövegek:',
+    '  ["<településnév>", "<településnév>", "<településnév>"]',
     PELDA_FIGYELMEZTETES,
   ],
 };
@@ -330,7 +331,7 @@ const VALASZ_ALAK: Record<JavaslatCsoport, string[]> = {
 /** Ha egyszerre kérjük mind a négy csoportot, a fajtát az elemnek kell vinnie. */
 const TELJES_VALASZ_ALAK: string[] = [
   'Válaszolj CSAK egy JSON tömbbel, más szöveg nélkül. Egy elem így néz ki:',
-  '  {"form": "Zsálya", "kind": "given", "gender": "F"}',
+  '  {"form": "<név>", "kind": "given", "gender": "F"}',
   PELDA_FIGYELMEZTETES,
   '',
   'A "kind" lehetséges értékei:',
@@ -364,7 +365,11 @@ const TELJES_VALASZ_ALAK: string[] = [
  * @param temaSzoveg amit a felhasználó beírt
  * @param csoport    ha megadod, csak ezt a csoportot kéri
  */
-export function epitsdAJavaslatKerest(temaSzoveg: string, csoport?: JavaslatCsoport): string {
+export function epitsdAJavaslatKerest(
+  temaSzoveg: string,
+  csoport?: JavaslatCsoport,
+  nem?: Gender,
+): string {
   const tema = temaSzoveg.trim();
   const sorok: string[] = [
     'Magyar jogi iratok álnevesítéséhez állítunk össze névkészletet. A valódi neveket',
@@ -395,9 +400,28 @@ export function epitsdAJavaslatKerest(temaSzoveg: string, csoport?: JavaslatCsop
   ];
 
   if (csoport) {
-    sorok.push(`Ebből a csoportból kérek ${KERT_DARAB[csoport]} darabot: "${csoport}".`);
     if (csoport === 'given') {
-      sorok.push('Fele férfi, fele női utónév legyen.');
+      /*
+        A NEMET A KÉRDÉS DÖNTI EL, NEM A MODELL.
+
+        Korábban egy kéréssel kértük mind a harminc utónevet, és a modellnek
+        kellett minden névhez `"gender"` mezőt írnia. Mérve, valódi futásokon:
+        ez az a pont, ahol a kisebb hálók elvéreznek — vagy elrontják a JSON-t,
+        vagy minden nevet ugyanahhoz a nemhez sorolnak. Egy futásban 28
+        javaslatból NULLA női név maradt, és a készlet emiatt nem állt össze.
+
+        Két külön kérés ezt megszünteti: a válasz sima névsor, a nem pedig
+        abból következik, hogy melyik kérdésre felelt. Amit nem kell
+        eltalálnia, azt nem is ronthatja el.
+      */
+      const db = Math.ceil(KERT_DARAB.given / 2);
+      sorok.push(
+        nem === 'F'
+          ? `Kérek ${db} darab NŐI utónevet.`
+          : `Kérek ${db} darab FÉRFI utónevet.`,
+      );
+    } else {
+      sorok.push(`Ebből a csoportból kérek ${KERT_DARAB[csoport]} darabot.`);
     }
     sorok.push('A lista sorrendje számít: elöl a legjellemzőbb nevek.');
   } else {
@@ -433,7 +457,11 @@ export function epitsdAJavaslatKerest(temaSzoveg: string, csoport?: JavaslatCsop
  * @param valasz      a modell nyers kimenete
  * @param alapCsoport ha az elemből hiányzik a "kind", ezt vesszük
  */
-export function olvasdAJavaslatot(valasz: string, alapCsoport?: JavaslatCsoport): NevJavaslat[] {
+export function olvasdAJavaslatot(
+  valasz: string,
+  alapCsoport?: JavaslatCsoport,
+  alapNem?: Gender,
+): NevJavaslat[] {
   const valaszResz = vagdLeAGondolatmenetet(valasz);
   const tomb = kereskJsonTombot(valaszResz) ?? soronkentiObjektumok(valaszResz);
   if (tomb === null) return [];
@@ -441,7 +469,10 @@ export function olvasdAJavaslatot(valasz: string, alapCsoport?: JavaslatCsoport)
   const out: NevJavaslat[] = [];
   for (const elem of tomb) {
     if (typeof elem === 'string') {
-      if (alapCsoport) out.push({ form: elem, csoport: alapCsoport });
+      // A nem a KÉRDÉSBŐL jön, ha a hívó megmondta — lásd a kérésépítőt.
+      if (alapCsoport) {
+        out.push({ form: elem, csoport: alapCsoport, ...(alapNem ? { gender: alapNem } : {}) });
+      }
       continue;
     }
     if (typeof elem !== 'object' || elem === null) continue;
@@ -450,7 +481,7 @@ export function olvasdAJavaslatot(valasz: string, alapCsoport?: JavaslatCsoport)
     if (form === null) continue;
     const csoport = olvasCsoportot(elsoSzoveg(rec, ['kind', 'csoport', 'fajta', 'type'])) ?? alapCsoport;
     if (!csoport) continue;
-    const gender = olvasNemet(elsoSzoveg(rec, ['gender', 'nem', 'sex']));
+    const gender = olvasNemet(elsoSzoveg(rec, ['gender', 'nem', 'sex'])) ?? alapNem;
     out.push({ form, csoport, ...(gender ? { gender } : {}) });
   }
   return out;

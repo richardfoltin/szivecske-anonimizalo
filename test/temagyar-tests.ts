@@ -150,8 +150,26 @@ const keres = epitsdAJavaslatKerest('görög mitológia');
 ell(keres.includes('görög mitológia'), 'a kérésben benne van a beírt téma');
 ell(keres.includes('MAGYAR HELYESÍRÁSSAL'), 'a kérés magyar helyesírást kér (Akhilleusz, nem Achilles)');
 ell(
-  epitsdAJavaslatKerest('csillagképek', 'given').includes('"given"'),
-  'csoportonként is lehet kérni (rövidebb válasz, kevesebb elrontott JSON)',
+  epitsdAJavaslatKerest('csillagképek', 'given').length < keres.length,
+  'csoportonként is lehet kérni (rövidebb kérés, rövidebb válasz)',
+);
+
+/*
+  A NEM A KÉRDÉSBŐL JÖN, NEM A MODELLTŐL.
+
+  Mérve derült ki, hogy a kisebb hálók a `"gender"` mezőt vagy elrontják, vagy
+  minden nevet ugyanahhoz a nemhez sorolnak — egy futásban 28 javaslatból nulla
+  női név maradt. Két külön kérés ezt kizárja: a válasz sima névsor, a nem
+  pedig abból következik, melyik kérdésre felelt.
+*/
+ell(
+  epitsdAJavaslatKerest('csillagképek', 'given', 'M').includes('FÉRFI') &&
+    epitsdAJavaslatKerest('csillagképek', 'given', 'F').includes('NŐI'),
+  'az utónevet nemenként külön kérjük',
+);
+ell(
+  olvasdAJavaslatot('["Vega", "Rigel"]', 'given', 'F').every((j) => j.gender === 'F'),
+  'a sima névsor a KÉRDÉS neméből kapja a nemet',
 );
 
 const javaslatok = olvasdAJavaslatot(MODELLVALASZ);

@@ -18,21 +18,25 @@
  * csoportot kérjük le (cégnév-előtagok). A többi csoport is kipróbálható:
  *
  *     SZIVECSKE_CSOPORT=given npm run test:gyartas
+ *     SZIVECSKE_CSOPORT=mind  npm run test:gyartas   ← a TELJES készlet
  *
  * Az utónév azért érdekes külön, mert egyedül ott kérünk mezős alakot (a nem
  * nélkül a javaslat kiesik) — a másik három sima szöveglistát ad vissza.
  */
 
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { cpus, homedir } from 'node:os';
 import { ModelClient } from '../src/ai/client.js';
 import { namegenModel } from '../src/app/models.js';
 import {
   epitsdAJavaslatKerest,
+  keszitsTemat,
   olvasdAJavaslatot,
   type JavaslatCsoport,
+  type NevJavaslat,
 } from '../src/app/temagyar.js';
+import type { NameOverrides } from '../src/hu/inflect.js';
 
 const MUNKAFOLYAMAT = join(process.cwd(), 'dist-electron/ai-worker.cjs');
 
@@ -53,6 +57,24 @@ function modellGyoker(repo: string): string | null {
   }
   return null;
 }
+
+/*
+  A SZŰRŐ ADATAI — ugyanazok, amikkel a program is dolgozik.
+
+  A valódi magyar nevek listája (`homonyms.json`) az, ami a modell gyengéjét
+  helyrehozza: ha „Kálmán”-t vagy „Kovács”-ot javasol, az itt esik ki. A
+  ragozási kivételek ugyanígy a program tudása, nem a modellé.
+*/
+const hom = JSON.parse(readFileSync(join(process.cwd(), 'data/homonyms.json'), 'utf8')) as {
+  surnames: { form: string }[];
+  given_names: { form: string }[];
+};
+const homonimak = new Set([...hom.surnames, ...hom.given_names].map((x) => x.form.toLowerCase()));
+const nevKivetelek = (
+  JSON.parse(readFileSync(join(process.cwd(), 'data/name-overrides.json'), 'utf8')) as {
+    names: Record<string, NameOverrides>;
+  }
+).names;
 
 let hibak = 0;
 function all(felteves: boolean, mit: string): void {
@@ -119,71 +141,121 @@ const kliens = new ModelClient({
 });
 
 /**
- * MELYIK CSOPORTOT KÉRJÜK. Alapból a legkisebbet, hogy a teszt ne tartson
- * negyedóráig; a többi a környezeti változóval kérhető.
+ * AZ ÖT KÉRÉS, abban a sorrendben, ahogy a főfolyamat is küldi őket.
+ *
+ * Öt, nem négy: az utónevet nemenként külön kérjük, mert a nemet a KÉRDÉS
+ * dönti el, nem a modell (lásd `temagyar.ts`). Ha ez itt négy maradna, a teszt
+ * mást mérne, mint amit a felhasználó kap.
  */
-const csoport = ((): JavaslatCsoport => {
+const MIND: { csoport: JavaslatCsoport; nem?: 'M' | 'F'; cimke: string }[] = [
+  { csoport: 'given', nem: 'M', cimke: 'utónév M' },
+  { csoport: 'given', nem: 'F', cimke: 'utónév F' },
+  { csoport: 'surname', cimke: 'vezetéknév' },
+  { csoport: 'org', cimke: 'cégelem' },
+  { csoport: 'place', cimke: 'helynév' },
+];
+
+/**
+ * MELYIK CSOPORTOT KÉRJÜK. Alapból a legkisebbet, hogy a teszt gyors legyen;
+ * a 》mind《 a teljes készletet gyártja le, és a végén meg is építi a témát.
+ */
+const csoportok = ((): typeof MIND => {
   const k = (process.env.SZIVECSKE_CSOPORT ?? 'org').trim();
-  const ismert: JavaslatCsoport[] = ['given', 'surname', 'org', 'place'];
-  const talalt = ismert.find((x) => x === k);
-  if (!talalt) {
+  if (k === 'mind') return MIND;
+  const talalt = MIND.filter((x) => x.csoport === k);
+  if (talalt.length === 0) {
     console.log(`  (ismeretlen csoport: „${k}” — marad az „org”)`);
-    return 'org';
+    return MIND.filter((x) => x.csoport === 'org');
   }
   return talalt;
 })();
-console.log(`  csoport: ${csoport}`);
+console.log(`  csoport: ${csoportok.map((c) => c.cimke).join(', ')}`);
+
+const TEMA = 'görög mitológia';
+const osszes: NevJavaslat[] = [];
+let mindLezart = true;
+let voltValasz = false;
 
 const t0 = Date.now();
 try {
   const info = await kliens.load();
   console.log(`\n  betöltés: ${(info.loadMs / 1000).toFixed(1)} s`);
 
-  const kerdes = epitsdAJavaslatKerest('görög mitológia', csoport);
-  const t1 = Date.now();
-  // Keret nélkül: pontosan úgy, ahogy a főfolyamat kéri. A teszt attól ér
-  // valamit, hogy azt méri, amit a felhasználó kap.
-  const gondolkodas = process.env.SZIVECSKE_GONDOLKODAS;
-  const valasz = await kliens.generate(
-    kerdes,
-    gondolkodas === undefined ? {} : { thinkBudget: Number(gondolkodas) },
-  );
-  const mp = (Date.now() - t1) / 1000;
-  console.log(`  gyártás:  ${mp.toFixed(1)} s`);
+  for (const { csoport, nem, cimke } of csoportok) {
+    const kerdes = epitsdAJavaslatKerest(TEMA, csoport, nem);
+    const t1 = Date.now();
+    // Keret nélkül: pontosan úgy, ahogy a főfolyamat kéri. A teszt attól ér
+    // valamit, hogy azt méri, amit a felhasználó kap.
+    const gondolkodas = process.env.SZIVECSKE_GONDOLKODAS;
+    const valasz = await kliens.generate(
+      kerdes,
+      gondolkodas === undefined ? {} : { thinkBudget: Number(gondolkodas) },
+    );
+    const mp = (Date.now() - t1) / 1000;
+    const javaslatok = olvasdAJavaslatot(valasz, csoport, nem);
+    voltValasz ||= valasz.length > 0;
+    mindLezart &&= valasz.includes('</think>');
+    osszes.push(...javaslatok);
 
-  const javaslatok = olvasdAJavaslatot(valasz, csoport);
-  console.log(`  javaslat: ${javaslatok.length} darab`);
-  if (javaslatok.length === 0) {
-    // A BUKÁS MUTASSA MEG, MIT LÁTOTT. Egy „0 javaslat” sorból nem derül ki,
-    // hogy a modell hallgatott, prózát írt, vagy elrontotta a JSON-t — pedig
-    // a három egészen más teendő.
-    console.log(`  a válasz ${valasz.length} karakter, a vége:`);
-    console.log('  …' + valasz.slice(-400).split('\n').join('\n  '));
+    console.log(
+      `  ${cimke.padEnd(11)} ${mp.toFixed(1).padStart(6)} s → ${String(javaslatok.length).padStart(2)} javaslat` +
+        `   ${javaslatok.slice(0, 6).map((j) => j.form).join(', ')}`,
+    );
+    if (javaslatok.length === 0) {
+      // A BUKÁS MUTASSA MEG, MIT LÁTOTT. Egy „0 javaslat” sorból nem derül ki,
+      // hogy a modell hallgatott, prózát írt, vagy elrontotta a JSON-t — pedig
+      // a három egészen más teendő.
+      console.log(`  a válasz ${valasz.length} karakter, a vége:`);
+      console.log('  …' + valasz.slice(-400).split('\n').join('\n  '));
+    }
+    all(
+      javaslatok.every((j) => j.csoport === csoport),
+      `„${cimke}”: minden javaslat a kért csoportba került`,
+    );
   }
-  console.log(`    ${javaslatok.slice(0, 8).map((j) => j.form).join(', ')}`);
 
   console.log('');
-  all(valasz.length > 0, 'a modell válaszolt');
+  all(voltValasz, 'a modell válaszolt');
   all(jelentesek > 0, 'a haladás kijutott a futtatóból (a hívó órája újraindul)');
-  all(valasz.includes('</think>'), 'a gondolatmenet le van zárva (a keret működik)');
-  all(javaslatok.length > 0, 'a válaszból lett értelmezhető javaslat');
-  all(
-    javaslatok.every((j) => j.csoport === csoport),
-    'minden javaslat a kért csoportba került',
-  );
-  if (csoport === 'given') {
+  all(mindLezart, 'a gondolatmenet le van zárva (a keret működik)');
+  all(osszes.length > 0, 'a válaszokból lett értelmezhető javaslat');
+  if (csoportok.some((c) => c.csoport === 'given')) {
     // Az utónévnél a nem nem elhagyható: enélkül a `keszitsTemat` kidobja a
     // javaslatot ('nem_nelkul'). Ez az egyetlen csoport, ahol mezős alakot
     // kérünk — itt derül ki, hogy a modell meg is adja.
     all(
-      javaslatok.filter((j) => j.gender === 'M' || j.gender === 'F').length > 0,
+      osszes.some((j) => j.csoport === 'given' && (j.gender === 'M' || j.gender === 'F')),
       'az utóneveknél a modell megadta a nemet is',
     );
   }
   all(
-    javaslatok.every((j) => j.form.trim().length > 0),
+    osszes.every((j) => j.form.trim().length > 0),
     'egyetlen üres név sincs a javaslatok között',
   );
+
+  if (csoportok.length === MIND.length) {
+    /*
+      A VÉGSŐ KÉRDÉS: LESZ-E EBBŐL KÉSZLET.
+
+      A javaslatok száma önmagában semmit nem mond: a program kidobja azt, ami
+      nem ragozható, ami valódi magyar névvel ütközik, és ami ismétlődik. Az
+      számít, hogy a maradékból összeáll-e egy használható téma — ezt a
+      `keszitsTemat` mondja meg, ugyanaz, amit a főfolyamat is hív.
+    */
+    const eredmeny = keszitsTemat({
+      temaSzoveg: TEMA,
+      javaslatok: osszes,
+      homonimak,
+      nevKivetelek,
+    });
+    const j = eredmeny.jelentes;
+    console.log(
+      `  a készlet: ${j.javaslatokSzama} javaslatból ${j.elfogadva.length} ment át, ` +
+        `${j.elutasitva.length} kiesett`,
+    );
+    for (const h of j.hianyok) console.log(`   hiány: ${h.uzenet}`);
+    all(j.hasznalhato, 'a legyártott készlet HASZNÁLHATÓ — a téma összeáll');
+  }
 } finally {
   await kliens.dispose().catch(() => undefined);
 }

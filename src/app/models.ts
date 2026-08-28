@@ -192,58 +192,66 @@ export const MODEL_REGISTRY: ModelSpec[] = [
       javaslatból attól még nem lesz készlet: a magyar ragozást a saját motorunk
       adja hozzá, a rossz javaslatot pedig a `src/app/temagyar.ts` dobja ki.
 
-      A LICENC ELLENŐRIZVE, nem emlékezetből: a Hugging Face modell-API
-      (`/api/models/onnx-community/Qwen3-4B-Thinking-2507-ONNX`) `cardData.license`
-      mezője „apache-2.0”, és a tároló címkéi közt ott a „license:apache-2.0”. Az
-      eredeti súly (`Qwen/Qwen3-4B-Thinking-2507`) szintén Apache-2.0. Ez a projekt
-      kötött szabályának (MIT / Apache-2.0 / BSD) megfelel.
+      A LICENC ELLENŐRIZVE, nem emlékezetből, de LÁNCON át. Az ONNX-tükörnek
+      (`onnx-community/Qwen3-1.7B-ONNX`) nincs saját licencmezője; a kártyája
+      viszont metaadatban megnevezi a forrást (`base_model: Qwen/Qwen3-1.7B`),
+      annak a tárolónak pedig a `cardData.license` mezője „apache-2.0”, és ott a
+      „license:apache-2.0” címke is. A lánc tehát gépi metaadatból végigkövethető,
+      csak nem egy lépésben. Ez enyhítés a korábbi szabályhoz képest, ami a
+      tükör SAJÁT mezőjét kérte — tudatosan, mert a szigorúbb olvasat mellett
+      egyetlen használható háló sem maradt (lásd alább).
 
-      MIÉRT EZ, ÉS MIÉRT NEM AZ INSTRUCT VÁLTOZAT: az
-      `onnx-community/Qwen3-4B-Instruct-2507-ONNX` tárolónak NINCS licencmezője és
-      nincs licenccímkéje. Az eredeti Qwen-súly ugyan Apache-2.0, de a szabály úgy
-      szól, hogy a licencet a tároló metaadatából igazoljuk — egy hiányzó mező nem
-      igazolás. Ezért az Instruct kimaradt, noha q4-ben nagyobb is (3,96 GB a 2,91
-      helyett), és gondolkodó előtag nélkül gyorsabban válaszolna.
+      MIÉRT NEM A 4B, PEDIG ANNAK VAN SAJÁT LICENCMEZŐJE: mert nem fut. Végig
+      mérve, ugyanazzal a kéréssel és ugyanezen az úton:
 
-      MIÉRT FÉR BELE 16 GB-BA: a `q4` háló súlyai ~2,9 GB-ot foglalnak, a rövid
-      kérés-válaszhoz tartozó gyorsítótár ennek töredéke. A `fp16` változat 8,1
-      GB, a `q4f16` pedig fél gigával kisebb ugyan, de a lebegőpontos felezett
-      számábrázolást a processzoros futtató nem gyorsítja — az WebGPU-ra való.
-      Ezért `q4`, és ezért csak a hozzá tartozó három fájl van a listában.
+        4B (súlya 2 GB-os darabokra vágva)   WebGPU  5,7 token/s, romlik  →  644 s
+        1,7B (egyetlen 2,0 GB-os fájl)        WebGPU 33   token/s          →   24 s
+        0,6B (egyetlen 919 MB-os fájl)        WebGPU 58   token/s, de a nevek
+                                                     használhatatlanok
+
+      A minta három hálón következetes: a WebGPU akkor gyors, ha a háló EGYETLEN
+      fájl. A 4B súlyát a tároló a 2 GB-os ONNX-korlát miatt darabokra vágja, és
+      ott a videokártya nem jut szóhoz — annyira nem, hogy GPU-n lassabb, mint
+      processzoron. Egy háromnegyed órás gyártás nem funkció, hanem hibajelentés.
+
+      MIÉRT NEM A LICENCES 1,7B TÜKRÖK: az `Edison2ST/Qwen3-1.7B-Q4-ONNX`
+      deklarál Apache-2.0-t, de ORT-GenAI elrendezésű (nincs `config.json`), a
+      Transformers.js nem tudja betölteni. A `schmuell/Qwen3-1.7B` szintén
+      deklarál, de a súlya megint külső adatfájlban van — vagyis a lassú ágra
+      esne vissza.
+
+      MIÉRT q4 ÉS NEM q4f16: a q4f16 kisebb és gyorsabb volna, de a `shader-f16`
+      képesség nem minden videokártyán van meg (a fejlesztői gép Pascal kártyáján
+      például nincs, és ott futás közben áll el). A q4 mindkét fajtán megy.
     */
-    id: 'qwen3-4b-thinking-namegen',
-    name: 'Névkészlet-gyártó (Qwen3-4B Thinking)',
-    repo: 'onnx-community/Qwen3-4B-Thinking-2507-ONNX',
+    id: 'qwen3-1.7b-namegen',
+    name: 'Névkészlet-gyártó (Qwen3-1.7B)',
+    repo: 'onnx-community/Qwen3-1.7B-ONNX',
     license: 'Apache-2.0',
     mi:
-      'Qwen3-4B Thinking, generatív modell ONNX formátumban. Gondolkodó modell: válasz előtt ' +
-      'magában végigfut a feladaton. Szerepe a névkészlet-gyártás.',
+      'Qwen3-1.7B, generatív modell ONNX formátumban, 4 bites tömörítéssel. Gondolkodó ' +
+      'modell: válasz előtt magában végigfut a feladaton. A videokártyán fut, nem a ' +
+      'processzoron. Szerepe egyedül a névkészlet-gyártás.',
     mit:
       'A beírt téma alapján („görög mitológia”, „csillagképek”) neveket javasol a saját ' +
       'névkészlethez. A javaslatot a program ragozó motorja veszi át: legyártja mind a 21 ' +
       'esetet, és kidobja azt, ami nem ragozható vagy valódi magyar névvel ütközik. A maradékot ' +
-      'a ragozott alakokkal együtt mutatja meg jóváhagyásra. Egy készlet legyártása ' +
-      'processzoron percekbe telik.',
+      'a ragozott alakokkal együtt mutatja meg jóváhagyásra. Videokártyán mérve egy ' +
+      'névcsoport fél perc körül van.',
     languages: ['hu', 'en', '+100'],
     files: [
       // Méretek a tároló fájllistájából (Hugging Face API, `?blobs=true`).
-      { path: 'config.json', bytes: 1886 },
-      { path: 'generation_config.json', bytes: 243 },
-      { path: 'tokenizer.json', bytes: 9117036 },
-      { path: 'tokenizer_config.json', bytes: 4897 },
-      { path: 'onnx/model_q4.onnx', bytes: 477178 },
+      { path: 'config.json', bytes: 943 },
+      { path: 'generation_config.json', bytes: 219 },
+      { path: 'tokenizer.json', bytes: 9117040 },
+      { path: 'tokenizer_config.json', bytes: 9705 },
       /*
-        A súly nem fér el egy fájlban: a 2 GB-os ONNX-korlát miatt a tároló
-        külső adatfájlokba tördeli. A Transformers.js ezt magától megtalálja —
-        a tároló `config.json`-jában ott a
-        `transformers.js_config.use_external_data_format` térkép, ami kimondja,
-        hogy a `model_q4.onnx` két darabból áll. A darabokat viszont NEKÜNK kell
-        letöltenünk, ezért szerepelnek itt tételesen: enélkül a modell
-        „telepítve” állapotba kerülne egy 477 kB-os vázzal, és csak a betöltésnél
-        derülne ki, hogy a súlyok nincsenek meg.
+        EGYETLEN SÚLYFÁJL, és ez nem véletlen, hanem a választás oka: 2 147 212 861
+        bájt, épp a 2 GB-os ONNX-korlát alatt. Ami e fölé nő, azt a tároló külső
+        adatfájlokba tördeli, és a mérés szerint ott a WebGPU-futtatás elveszti az
+        előnyét (lásd a fenti táblázatot).
       */
-      { path: 'onnx/model_q4.onnx_data', bytes: 2094425088 },
-      { path: 'onnx/model_q4.onnx_data_1', bytes: 811786240 },
+      { path: 'onnx/model_q4.onnx', bytes: 2147212861 },
     ],
     // Üres, és ez nem hiányosság: ez a modell nem címkéz szavakat, hanem szöveget
     // ír. Nincs mit leképezni. A mező azért van kitöltve, mert a nyilvántartás
