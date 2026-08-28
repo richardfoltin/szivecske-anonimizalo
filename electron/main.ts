@@ -931,7 +931,15 @@ function sajatOldal(url: string, sajat: string): boolean {
 type FeluletTema = 'vilagos' | 'sotet';
 
 /** A gombsáv magassága; a felületi fejléc (`.titlebar`) magasságával EGYEZIK. */
-const KERET_MAGASSAG = 46;
+/*
+  A GOMBSÁV EGY KÉPPONTTAL ALACSONYABB A FEJLÉCNÉL.
+
+  A fejléc 46 képpont magas, és a `box-sizing: border-box` miatt ebbe BELE
+  tartozik az alsó, elválasztó vonala is. Egy ugyanilyen magas gombsáv tehát
+  eltakarta az utolsó képpontsort: a vonal a képernyő közepén megszakadt, a
+  gombok alatt nem folytatódott.
+*/
+const KERET_MAGASSAG = 45;
 
 /**
  * A KICSINYÍTÉS / TELJES MÉRET / BEZÁRÁS gomb színe témánként.
@@ -2555,7 +2563,7 @@ function registerHandlers(): void {
         // A kijelölhető szövegréteg IRATONKÉNT más, mint a lapkép: eltolást
         // nem igényel, mert nem hivatkozik találatra.
         textSpans: res.textSpans ?? [],
-        paragraphBreaks: res.paragraphBreaks ?? [],
+        paragraphs: res.paragraphs ?? [],
         highlights: res.highlights.map((h) => ({ ...h, matchId: h.matchId + eltolas })),
         previewText: res.previewText,
         matchIdTol: eltolas,
@@ -2607,7 +2615,7 @@ function registerHandlers(): void {
       doc: elsoSzakasz.doc,
       pages: elsoSzakasz.pages,
       textSpans: elsoSzakasz.textSpans ?? [],
-      paragraphBreaks: elsoSzakasz.paragraphBreaks ?? [],
+      paragraphs: elsoSzakasz.paragraphs ?? [],
       previewText: elsoSzakasz.previewText,
       highlights: elsoSzakasz.highlights,
       docs: szakaszok,

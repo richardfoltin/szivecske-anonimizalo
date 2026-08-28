@@ -525,7 +525,7 @@ export function OsszevetesView({
   onSelect: (id: number | null) => void;
 }) {
   const szoveg = szakasz?.previewText ?? analysis.previewText;
-  const hatarok = szakasz?.paragraphBreaks ?? analysis.paragraphBreaks ?? [];
+  const bekezdesek = szakasz?.paragraphs ?? analysis.paragraphs ?? [];
   const tolIg: [number, number] | null = szakasz
     ? [szakasz.matchIdTol, szakasz.matchIdIg]
     : null;
@@ -533,11 +533,20 @@ export function OsszevetesView({
   useEffect(() => gorgessOda(ref.current, selected), [selected]);
 
   /*
-    UGYANAZ A DARABOLÁS, mint a jelölt eredeti nézeté (`TextView`): pozíció
-    szerint, az átfedéseket eldobva. Két külön darabolás ugyanarra a szövegre
-    előbb-utóbb két különböző helyre tenné ugyanazt a nevet.
+    A SZÖVEG BEKEZDÉSEKRE BONTVA, ÉS BEKEZDÉSEN BELÜL DARABOKRA.
+
+    Két dolgot kell egyszerre megoldani: a találatok a szöveg POZÍCIÓIRA
+    hivatkoznak (`previewStart`), a szedés viszont bekezdéseket kíván. Ezért
+    előbb bekezdésekre vágjuk a szöveget a motor határai mentén, aztán
+    bekezdésen BELÜL daraboljuk a találatokra — a pozíciók végig a teljes
+    szövegre értendők, tehát nem csúszhat el semmi.
+
+    MIÉRT NEM ELÉG A SORTÖRÉS. Egy `\n\n` szövegcsomópont bekezdésnek
+    LÁTSZIK, de nem az: nem lehet sorkizárttá tenni, nem lehet középre zárni,
+    és a szedés minden szabálya (behúzás, térköz) elérhetetlen marad. A
+    bekezdés akkor bekezdés, ha saját eleme van.
   */
-  const darabok = useMemo(() => {
+  const szedes = useMemo(() => {
     const jelolt = analysis.matches
       .filter((m) => tolIg === null || (m.id >= tolIg[0] && m.id <= tolIg[1]))
       .filter(
@@ -549,45 +558,41 @@ export function OsszevetesView({
       )
       .sort((a, b) => a.previewStart - b.previewStart);
 
-    const out: { kulcs: string; szoveg: string; m?: MatchRow }[] = [];
-    let poz = 0;
-    /*
-      A BEKEZDÉSHATÁR SORTÖRÉSSÉ VÁLIK — a szöveg megváltoztatása nélkül.
+    // A bekezdések határai; ha a motor nem adott (DOCX, TXT), a szöveg saját
+    // sortörései tagolják — ott eleve van tagolás.
+    const hatarok =
+      bekezdesek.length > 0
+        ? [...new Set([0, ...bekezdesek.map((b) => b.start)])].sort((a, b) => a - b)
+        : [0, ...[...szoveg.matchAll(/\n{2,}/g)].map((m) => (m.index ?? 0) + m[0].length)];
+    const kozepre = new Set(bekezdesek.filter((b) => b.center).map((b) => b.start));
 
-      A PDF-ből kiolvasott szövegben nincs sortörés (a sorokat szóközzel
-      fűzzük össze, hogy a sortörésen átnyúló nevet is megtaláljuk), tehát a
-      képernyőn egyetlen végtelen bekezdés állna. A motor megmondja, hol
-      kezdődik új bekezdés; itt csak KIRAJZOLJUK a törést.
-
-      Magához a szöveghez nem nyúlunk, és a pozíciókat sem toljuk el: a
-      találatok helye (`previewStart`) erre a szövegre hivatkozik. A törés
-      külön elemként ül a két darab között.
-    */
-    const hatarHalmaz = new Set(hatarok.filter((h) => h > 0 && h < szoveg.length));
-    const tolddSzoveget = (tol: number, ig: number, kulcs: string): void => {
-      let k = tol;
-      for (const h of [...hatarHalmaz].filter((h) => h > tol && h < ig).sort((a, b) => a - b)) {
-        out.push({ kulcs: `${kulcs}-${k}`, szoveg: szoveg.slice(k, h) });
-        out.push({ kulcs: `br${h}`, szoveg: '\n\n' });
-        k = h;
+    let mutato = 0;
+    return hatarok.map((kezd, i) => {
+      const veg = hatarok[i + 1] ?? szoveg.length;
+      const darabok: { kulcs: string; szoveg: string; m?: MatchRow }[] = [];
+      let poz = kezd;
+      while (mutato < jelolt.length && jelolt[mutato]!.previewEnd <= kezd) mutato++;
+      for (let j = mutato; j < jelolt.length; j++) {
+        const m = jelolt[j]!;
+        if (m.previewStart >= veg) break;
+        if (m.previewStart < poz) continue;
+        if (m.previewStart > poz) {
+          darabok.push({ kulcs: `t${poz}`, szoveg: szoveg.slice(poz, m.previewStart) });
+        }
+        darabok.push({ kulcs: `m${m.id}`, szoveg: szoveg.slice(m.previewStart, m.previewEnd), m });
+        poz = m.previewEnd;
       }
-      out.push({ kulcs: `${kulcs}-${k}`, szoveg: szoveg.slice(k, ig) });
-    };
-
-    for (const m of jelolt) {
-      if (m.previewStart < poz) continue;
-      if (m.previewStart > poz) tolddSzoveget(poz, m.previewStart, `t${poz}`);
-      out.push({ kulcs: `m${m.id}`, szoveg: szoveg.slice(m.previewStart, m.previewEnd), m });
-      poz = m.previewEnd;
-    }
-    if (poz < szoveg.length) tolddSzoveget(poz, szoveg.length, `t${poz}`);
-    return out;
-  }, [szoveg, analysis.matches, tolIg, hatarok]);
+      if (poz < veg) darabok.push({ kulcs: `t${poz}`, szoveg: szoveg.slice(poz, veg) });
+      return { kulcs: `b${kezd}`, kozepre: kozepre.has(kezd), darabok };
+    });
+  }, [szoveg, analysis.matches, tolIg, bekezdesek]);
 
   return (
     <div className="viewport osszevetes" ref={ref}>
-      <div className="textview">
-        {darabok.map((d) => {
+      <div className="textview szedett">
+        {szedes.map((b) => (
+          <p key={b.kulcs} className={b.kozepre ? 'kozepre' : undefined}>
+        {b.darabok.map((d) => {
           if (d.m === undefined) return <span key={d.kulcs}>{d.szoveg}</span>;
           const m = frissSor(d.m, dontesek);
           const fajta = matchKind(m, hivatalosIdk);
@@ -623,6 +628,8 @@ export function OsszevetesView({
             </span>
           );
         })}
+          </p>
+        ))}
       </div>
     </div>
   );

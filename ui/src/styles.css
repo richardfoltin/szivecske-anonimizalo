@@ -4637,16 +4637,26 @@ textarea:focus {
   tartalommal. Egyetlen jellel ez egy hosszúkás, félrecsúszott folt lett. Egy
   ikongombnak azonos a két oldala, és a jel pontosan a közepén ül.
 */
-.tordeleskapcs {
+/*
+  A FAJSÚLY MIATT KELL A `.btn` IS A VÁLASZTÓBA.
+
+  A `.btn.sm` szabálya `padding: 4px 9px`-et ad, és két osztálynévvel nagyobb
+  a fajsúlya, mint egy magányos `.tordeleskapcs`-nak — a `padding: 0` tehát
+  némán hatástalan maradt, a jel pedig egy szélesebb doboz bal oldalán ült.
+  Ugyanaz a csapda, mint korábban a `.btn.ghost` átlátszó hátterénél: nem a
+  sorrend dönt, hanem a fajsúly.
+*/
+.btn.tordeleskapcs {
   width: 30px;
   height: 30px;
+  min-width: 30px;
   padding: 0;
   gap: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
-.tordeleskapcs .jel {
+.btn.tordeleskapcs .jel {
   font-size: 15px;
   line-height: 1;
   /* A ¶ alapvonal alá lógó szárral készül: optikailag lejjebb ül, mint
@@ -4802,4 +4812,35 @@ textarea:focus {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+/*
+  A VÁLTOZÁS NÉZET MEGSZEDVE — ne csak szöveg legyen, hanem irat.
+
+  Az előnézeten a kész PDF-lap áll, sorkizártan, középre zárt címekkel; a
+  változásnézet mellette gépelt jegyzetnek látszott. Pedig ugyanazt a szöveget
+  mutatja, csak a régi alakokkal együtt — tehát ugyanúgy kell kinéznie.
+
+  A `white-space` itt NEM `pre-wrap`: a bekezdéseket saját elem tartja, nem
+  sortörés-karakterek. Enélkül a sorkizárás nem is működne (a `pre-wrap` a
+  szövegben lévő töréseket megtartja, és a sorok nem tudnak kifutni a margóig).
+*/
+.textview.szedett {
+  white-space: normal;
+  text-align: justify;
+  hyphens: auto;
+}
+.textview.szedett p {
+  margin: 0 0 0.85em;
+}
+.textview.szedett p:last-child {
+  margin-bottom: 0;
+}
+/* A címek középre, ahogy az iratban: a motor mondja meg, melyik az
+   (`AnalysisResult.paragraphs`), a bal margótól való eltérésből. */
+.textview.szedett p.kozepre {
+  text-align: center;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin: 1.4em 0 1.1em;
 }

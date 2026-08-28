@@ -921,7 +921,7 @@ export class DocumentSession {
       doc: this.info,
       pages: this.pages,
       textSpans: this.textSpans(),
-      paragraphBreaks: this.paragraphBreaks(),
+      paragraphs: this.paragraphs(),
       cast,
       matches,
       highlights,
@@ -1036,18 +1036,38 @@ export class DocumentSession {
    * erre a szövegre hivatkoznak. Csak azt mondjuk meg, hol kezdődik új
    * bekezdés; a tördelést a felület rajzolja meg belőle.
    */
-  private paragraphBreaks(): number[] {
-    const out: number[] = [];
+  private paragraphs(): { start: number; center: boolean }[] {
+    const out: { start: number; center: boolean }[] = [];
     let eltolas = 0;
     for (const unit of this.units) {
       const pdf = unit.pdf;
       if (pdf) {
         // Szakasz → kezdőpozíció az oldalszintű szövegben.
         const kezdet = new Map(pdf.pageText.spans.map((sp) => [sp.segment, sp.start]));
-        for (const b of bekezdesekre(pdf.pageText.spans.map((sp) => sp.segment))) {
+        const osszes = bekezdesekre(pdf.pageText.spans.map((sp) => sp.segment));
+        /*
+          A LAP BAL MARGÓJA: a leggyakoribb kezdő x.
+
+          Ehhez képest dől el, hogy egy bekezdés KÖZÉPRE van-e zárva. Nem
+          abszolút értékkel mérünk, mert a margó iratonként más; a törzsszöveg
+          viszont mindig ugyanonnan indul, tehát a leggyakoribb x maga a margó.
+        */
+        const gyakorisag = new Map<number, number>();
+        for (const b of osszes) {
+          const k = Math.round(b.x);
+          gyakorisag.set(k, (gyakorisag.get(k) ?? 0) + b.sorok.length);
+        }
+        let margo = 0;
+        let legtobb = -1;
+        for (const [x, n] of gyakorisag) if (n > legtobb) [margo, legtobb] = [x, n];
+
+        for (const b of osszes) {
           const elso = b.sorok[0];
           const hol = elso ? kezdet.get(elso) : undefined;
-          if (hol !== undefined) out.push(eltolas + hol);
+          if (hol === undefined) continue;
+          // Középre zárt: beljebb kezdődik a margónál, és egy sorból áll (cím).
+          const center = b.sorok.length === 1 && Math.round(b.x) - margo > 20;
+          out.push({ start: eltolas + hol, center });
         }
       }
       // Az egységek `\n\n`-nel fűződnek össze (`anonymizedText`, `fullText`).

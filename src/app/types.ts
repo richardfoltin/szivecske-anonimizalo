@@ -520,7 +520,7 @@ export interface DocSection {
    *
    * Üres lista DOCX-en és TXT-n: ott a szövegben eleve ott a sortörés.
    */
-  paragraphBreaks?: number[];
+  paragraphs?: { start: number; center: boolean }[];
   matchIdTol: number;
   matchIdIg: number;
 }
@@ -555,7 +555,7 @@ export interface AnalysisResult {
   /** A kijelölhető szövegréteg az ELSŐ irathoz — a `docs` első elemének mása. */
   textSpans?: TextSpan[];
   /** Bekezdéshatárok az ELSŐ irat szövegében — a `docs` első elemének mása. */
-  paragraphBreaks?: number[];
+  paragraphs?: { start: number; center: boolean }[];
   /**
    * MINDEN betöltött irat, betöltési sorrendben. Egy iratnál egyelemű.
    *

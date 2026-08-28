@@ -6,6 +6,8 @@ import {
   // állapot és a jelmagyarázat ebből következik, nem külön tárolt adatból.
   matchKind,
   matchOutcome,
+  AMOUNT_ENTITY_ID,
+  DATE_ENTITY_ID,
   // A motor szótára az azonosítófajtákhoz — a jobb gombos menü ebből épül.
   AZONOSITO_NEV,
   type AnalysisResult,
@@ -581,7 +583,16 @@ export default function App() {
    * kézi átbillentés) — enélkül a program a régi palettán ragadna, amíg újra
    * nem indítják, és pont az volna a benyomás, hogy nem követi a rendszert.
    */
-  const [tema, setTema] = useState<FeluletTema>('vilagos');
+  const [rendszerTema, setRendszerTema] = useState<FeluletTema>('vilagos');
+  /**
+   * A FELHASZNÁLÓ VÁLASZTÁSA: kövesse a rendszert, vagy rögzítse valamelyikre.
+   *
+   * A tényleges téma ebből és a rendszer állásából adódik. Két külön állapot,
+   * mert két külön dolog: a rendszer változhat menet közben is, a választás
+   * viszont a felhasználóé, és a beállításfájlban él tovább.
+   */
+  const [temaValasztas, setTemaValasztas] = useState<'auto' | 'vilagos' | 'sotet'>('auto');
+  const tema: FeluletTema = temaValasztas === 'auto' ? rendszerTema : temaValasztas;
   const [view, setView] = useState<View>('source');
   /**
    * A JOBB GOMBOS MENÜ ÁLLÁSA — hol áll, és mi van benne.
@@ -1630,9 +1641,9 @@ export default function App() {
   useEffect(() => {
     let el = true;
     void api.rendszerTema?.().then((t) => {
-      if (el && (t === 'sotet' || t === 'vilagos')) setTema(t);
+      if (el && (t === 'sotet' || t === 'vilagos')) setRendszerTema(t);
     });
-    const le = api.onTemaValtozott?.((t) => setTema(t));
+    const le = api.onTemaValtozott?.((t) => setRendszerTema(t));
     return () => {
       el = false;
       le?.();
@@ -1946,7 +1957,17 @@ export default function App() {
     ).catch(() => {
       // Az elutasítást elnyeljük: a keret színe díszítés, a munka nem áll meg tőle.
     });
-  }, [dialog]);
+    /*
+      A TÉMA IS FÜGGŐSÉG — ezen csúszott el.
+
+      A hatás eddig CSAK a párbeszéd nyitására-zárására futott le. A rendszer
+      témája viszont a betöltés után, egy hídhívásból érkezik: mire megjött, a
+      hatás már lefutott, és a natív ablakgombok a világos sávon maradtak egy
+      sötét felület tetején. Egészen addig, amíg a felhasználó ki nem nyitott
+      egy párbeszédet — akkor „magától" átváltottak, ami a hibát még
+      rejtélyesebbé tette.
+    */
+  }, [dialog, tema]);
 
   useEffect(() => {
     // A mentett értékeket induláskor kell betölteni. Enélkül a felhasználó
@@ -1963,6 +1984,11 @@ export default function App() {
         // beleegyezésnek venni. Kérdezés nélkül csak az az irat futhat végig,
         // amelyikre a felhasználó ezt kérte.
         setAutoMode(saved.autoMode === true);
+        // A téma választása: hiányzó mezőnél a rendszert követjük — ez az
+        // alapállás, és egy régi beállításfájlban nincs is benne.
+        if (saved.uiTheme === 'vilagos' || saved.uiTheme === 'sotet' || saved.uiTheme === 'auto') {
+          setTemaValasztas(saved.uiTheme);
+        }
         setAutoModeForDoc(saved.autoMode === true);
       } catch {
         // A beállítások hiánya nem végzetes: a beépített alapállással megyünk tovább.
@@ -2386,34 +2412,45 @@ export default function App() {
       kétféle felületet mutatott ugyanarra a döntésre, és az iraton semmi nem
       jelezte, hol vannak. Innentől ugyanaz a sor, ugyanazok a gombok.
     */
-    for (const [entityId, fajta] of [
-      ['#osszeg', 'amount'],
-      ['#datum', 'date'],
-    ] as const) {
-      const a = allapot(entityId);
-      if (a.elofordulas === 0) continue;
-      /*
-        A SOR EGY VALÓDI PÉLDÁT MUTAT, nem összefoglaló címet.
+    /*
+      MINDEN ÉRTÉK KÜLÖN SOR — nem egyetlen, összevont tétel.
 
-        „Összegek az iratban → Összegek az iratban” semmit nem mondott volna
-        arról, mi fog történni. Az ELSŐ megtalált érték és a hozzá kiszámolt
-        csereszöveg viszont pontosan megmutatja a szorzót, illetve az eltolást
-        — a csoport fejléce már úgyis kimondja, hogy összegekről van szó, az
-        előfordulásszám pedig azt, hogy nem csak erről az egyről.
-      */
-      const minta = (talalatok.get(entityId) ?? [])[0];
-      if (minta === undefined) continue;
-      sorok.set(entityId, {
-        id: entityId,
-        fajta,
-        eredeti: minta.surface,
-        szerep: fajta === 'amount' ? 'összeg' : 'dátum',
-        elofordulas: a.elofordulas,
-        cserelodik: a.cserelodik,
-        bizonytalanDb: a.bizonytalanDb,
-        vanKovetkezo: a.vanKovetkezo,
-        csere: minta.replacement ?? '—',
-      });
+      Korábban mind a tizenhárom dátum EGY sorba került, és a listán az első
+      értéke állt („1968. április 3. → 1967. szeptember 15."), mellette hogy
+      „13 helyen". A felhasználó tehát nem látta, milyen dátumok vannak az
+      iratban, és egyenként dönteni sem tudott róluk — pedig egy iratban a
+      születési dátum és a teljesítési határidő két külön kérdés, és lehet,
+      hogy az egyiket el akarja tolni, a másikat nem.
+
+      A CSOPORT MARAD: a „cseréljük-e egyáltalán az összegeket" kérdés
+      továbbra is egy kapcsoló a csoport fejlécén.
+    */
+    for (const [entityId, fajta] of [
+      [AMOUNT_ENTITY_ID, 'amount'],
+      [DATE_ENTITY_ID, 'date'],
+    ] as const) {
+      const ertekenkent = new Map<string, typeof analysis.matches>();
+      for (const m of talalatok.get(entityId) ?? []) {
+        const lista = ertekenkent.get(m.surface) ?? [];
+        lista.push(m);
+        ertekenkent.set(m.surface, lista);
+      }
+      for (const [ertek, lista] of ertekenkent) {
+        const cserelodik = lista.filter((m) => kimenetMost(m) === 'csere').length;
+        const bizonytalanDb = lista.filter((m) => kimenetMost(m) === 'bizonytalan').length;
+        const id = `${entityId}|${ertek}`;
+        sorok.set(id, {
+          id,
+          fajta,
+          eredeti: ertek,
+          szerep: fajta === 'amount' ? 'összeg' : 'dátum',
+          elofordulas: lista.length,
+          cserelodik,
+          bizonytalanDb,
+          vanKovetkezo: cserelodik < lista.length,
+          csere: lista[0]?.replacement ?? '—',
+        });
+      }
     }
 
     return [...sorok.values()];
@@ -2528,11 +2565,29 @@ export default function App() {
    * `skipped` mezőt kezelni, tehát a befűzésük egyetlen ponton (a `runAnalysis`
    * elején) marad.
    */
+  /**
+   * EGY TALÁLAT SORAZONOSÍTÓJA A LISTÁN.
+   *
+   * A neveknél ez a fél azonosítója: egy név egy sor, akárhány alakban
+   * szerepel. Az ÖSSZEGEK és a DÁTUMOK viszont nem felek, hanem az iratban
+   * megtalált ÉRTÉKEK — ott az érték maga a tétel.
+   *
+   * Korábban mind a tizenhárom dátum egyetlen sorba került, és a listán az
+   * ELSŐ értéke állt („1968. április 3. → 1967. szeptember 15."), mellette
+   * hogy „13 helyen". A felhasználó tehát nem látta, milyen dátumok vannak az
+   * iratban, és egyenként dönteni sem tudott róluk — pedig egy iratban a
+   * születési dátum és a teljesítési határidő két külön kérdés.
+   */
+  const sorAzonosito = (m: MatchRow): string =>
+    m.entityId === AMOUNT_ENTITY_ID || m.entityId === DATE_ENTITY_ID
+      ? `${m.entityId}|${m.surface}`
+      : m.entityId;
+
   const dontesekre = (id: string, valtozas: (matchId: number) => 'accept' | 'skip' | null): void => {
     if (!analysis) return;
     const next = { ...decisions };
     for (const m of analysis.matches) {
-      if (m.entityId !== id) continue;
+      if (sorAzonosito(m) !== id) continue;
       const d = valtozas(m.id);
       if (d === null) continue;
       next[m.id] = d;
@@ -2549,12 +2604,15 @@ export default function App() {
    * ki = egyik sem.
    */
   const sorKapcsol = (id: string, be: boolean): void => {
-    // Az összeg és a dátum FAJTAKAPCSOLÓJA is átbillen: a találatonkénti
-    // döntés önmagában működne, de a kapcsoló a képernyőn az ellenkező
-    // állásban maradna, és az új találatok (más csere-mód, újraszámolás)
-    // megint kimaradnának.
-    if (id === '#osszeg') setReplaceAmounts(be);
-    if (id === '#datum') setShiftDates(be);
+    /*
+      A SOR CSAK A SAJÁT ÉRTÉKÉRE HAT.
+
+      Az összegek és a dátumok soronként külön tételek („3 550 000 Ft",
+      „2025. március 14."), tehát egy sor átbillentése CSAK annak az egy
+      értéknek az előfordulásait érinti. A fajta egészét a csoport fejlécének
+      kapcsolója állítja (`setupCsoport`) — ott van a helye, mert ott látszik
+      is, hogy az egész csoportról szól.
+    */
     dontesekre(id, () => (be ? 'accept' : 'skip'));
   };
 
@@ -2574,9 +2632,17 @@ export default function App() {
     if (!analysis) return;
     const idk = new Set(tetelek.filter((t) => t.fajta === fajta).map((t) => t.id));
     if (idk.size === 0) return;
+    /*
+      A FAJTAKAPCSOLÓ A CSOPORT FEJLÉCÉN ÁLL, és az egész fajtára szól: az
+      összegek és a dátumok soronként külön tételek, de a „cseréljük-e
+      egyáltalán" kérdés közös. Enélkül a fejléc kapcsolója némán csak azokra
+      a sorokra hatna, amelyek épp a listán állnak.
+    */
+    if (fajta === 'amount') setReplaceAmounts(be);
+    if (fajta === 'date') setShiftDates(be);
     const next = { ...decisions };
     for (const m of analysis.matches) {
-      if (!idk.has(m.entityId)) continue;
+      if (!idk.has(sorAzonosito(m))) continue;
       next[m.id] = be ? 'accept' : 'skip';
     }
     setDecisions(next);
@@ -2587,7 +2653,8 @@ export default function App() {
 
   /** Egy tétel találatai az IRATBELI sorrendjükben — a lépegetés pályája. */
   const entitasSorrend = useCallback(
-    (id: string): MatchRow[] => (analysis ? analysis.matches.filter((m) => m.entityId === id) : []),
+    (id: string): MatchRow[] =>
+      analysis ? analysis.matches.filter((m) => sorAzonosito(m) === id) : [],
     [analysis],
   );
 
@@ -2603,7 +2670,7 @@ export default function App() {
     if (selected === null || !analysis) return null;
     const m = analysis.matches.find((x) => x.id === selected);
     if (!m) return null;
-    const lista = analysis.matches.filter((x) => x.entityId === m.entityId);
+    const lista = analysis.matches.filter((x) => sorAzonosito(x) === sorAzonosito(m));
     return {
       entityId: m.entityId,
       index: lista.findIndex((x) => x.id === selected),
@@ -4148,7 +4215,15 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
             névkészlettel dolgozna tovább, mint amit a lapon látott. Ugyanaz a
             hiba, ami miatt a hat érték egyáltalán elköltözött innen.
           */
-          onChanged={(s) => setAutoDetect(s.autoDetect)}
+          onChanged={(s) => {
+            setAutoDetect(s.autoDetect);
+            // A téma AZONNAL érvényre jut, nem a következő indításkor: a
+            // Beállításokban választani és nem látni a hatását ugyanolyan
+            // néma hiba, mint amikor a kapcsoló nem ér el a motorig.
+            if (s.uiTheme === 'auto' || s.uiTheme === 'vilagos' || s.uiTheme === 'sotet') {
+              setTemaValasztas(s.uiTheme);
+            }
+          }}
         />
       )}
 

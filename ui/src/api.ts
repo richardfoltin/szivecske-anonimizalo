@@ -66,6 +66,15 @@ export type {
 export { matchKind, matchOutcome } from '../../src/app/types.js';
 
 /*
+  AZ ÖSSZEG ÉS A DÁTUM AZONOSÍTÓJA — a motor konstansaiból, nem leírva.
+
+  A felület is hivatkozik rájuk (az összegek és a dátumok soronként külön
+  tételek a listán), és egy leírt „#osszeg" némán elcsúszna, ha a motor
+  valaha megváltoztatná.
+*/
+export { AMOUNT_ENTITY_ID, DATE_ENTITY_ID } from '../../src/app/types.js';
+
+/*
   AZ AZONOSÍTÓFAJTÁK MAGYAR NEVE — a motor szótára, nem felületi másolat.
 
   A jobb gombos menü „Azonosító" almenüje ebből épül, és a szereplap ugyanezt
@@ -293,6 +302,13 @@ export interface DetectProgress {
 }
 
 export interface AppSettings {
+  /**
+   * A FELÜLET SZÍNVILÁGA: 'auto' (a Windowst követi), 'vilagos', 'sotet'.
+   *
+   * Opcionális, mert egy RÉGEBBI beállításfájlban nincs meg; hiányában a
+   * program a rendszert követi, ami az alapállás is.
+   */
+  uiTheme?: 'auto' | 'vilagos' | 'sotet';
   themeId: string;
   mode: ReplacementMode;
   keepKey: boolean;

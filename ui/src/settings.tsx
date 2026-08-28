@@ -75,7 +75,7 @@ function generaloModell(m: ModelStatus): boolean {
  * állítható maradna, ugyanaz a dolog két helyen élne, és a használó nem tudná,
  * melyik az érvényes.
  */
-type Tab = 'models' | 'what' | 'about';
+type Tab = 'altalanos' | 'models' | 'what' | 'about';
 
 function fmt(n: number): string {
   if (n < 1024) return `${n} B`;
@@ -363,6 +363,12 @@ export function SettingsDialog({
         </div>
 
         <div className="tabs" style={{ padding: '9px 21px 0' }}>
+          <button
+            className={`tab${tab === 'altalanos' ? ' active' : ''}`}
+            onClick={() => setTab('altalanos')}
+          >
+            Általános
+          </button>
           <button className={`tab${tab === 'models' ? ' active' : ''}`} onClick={() => setTab('models')}>
             Nyelvi modellek
           </button>
@@ -376,6 +382,53 @@ export function SettingsDialog({
 
         <div className="dialog-body">
           {error && <div className="note bad">{error}</div>}
+
+          {/*
+            ÁLTALÁNOS — egyelőre egyetlen beállítással.
+
+            A téma nem fér el a másik három fül egyikén sem: nem a nyelvi
+            modellről szól, nem arról, mit csinál a program, és nem is a
+            programról mint olyanról. Egy fül egy beállítással soványnak
+            látszik, de a helye pontos — és ez az a fül, ahova a következő
+            hasonló, „az egész programra szóló" kapcsoló kerül majd.
+          */}
+          {tab === 'altalanos' && (
+            <>
+              <div className="ds-szakasz" style={{ padding: 0 }}>
+                <h3>A felület színvilága</h3>
+                <p>
+                  Alapból azt követi, amit a Windowsban beállítottál. Ha ettől el akarsz térni —
+                  például mert a rendszered sötét, de az iratot világos felületen olvasod
+                  szívesebben —, itt rögzítheted.
+                </p>
+              </div>
+              <div className="seg" role="radiogroup" aria-label="A felület színvilága">
+                {(
+                  [
+                    ['auto', 'Rendszer szerint'],
+                    ['vilagos', 'Világos'],
+                    ['sotet', 'Sötét'],
+                  ] as const
+                ).map(([ertek, cimke]) => (
+                  <button
+                    key={ertek}
+                    role="radio"
+                    aria-checked={(settings?.uiTheme ?? 'auto') === ertek}
+                    className={`segbtn${(settings?.uiTheme ?? 'auto') === ertek ? ' active' : ''}`}
+                    onClick={() => void patch({ uiTheme: ertek })}
+                  >
+                    {cimke}
+                  </button>
+                ))}
+              </div>
+              {/* AZ IRAT MAGA NEM SÖTÉTEDIK EL, és ezt ki kell mondani: aki
+                  sötét témát választ, joggal várná, hogy a lap is az legyen. */}
+              <p className="hint" style={{ marginTop: 4 }}>
+                Az irat maga mindkét témában fehér papír marad: a bíróságra menő szöveget nem
+                színezzük át, és így az előnézet is azt mutatja, ami a fájlba kerül.
+              </p>
+            </>
+          )}
 
           {tab === 'models' && (
             <>

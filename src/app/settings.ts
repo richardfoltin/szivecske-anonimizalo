@@ -10,7 +10,23 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type { ReplacementMode } from './types.js';
 
+/**
+ * A FELÜLET SZÍNVILÁGA.
+ *
+ *  'auto'    — a Windows beállítását követi (ez az alapállás),
+ *  'vilagos' — mindig világos,
+ *  'sotet'   — mindig sötét.
+ *
+ * Az „auto" azért az alapértelmezés, mert egy irodai programtól azt várja az
+ * ember, hogy úgy nézzen ki, mint a többi ablak a képernyőn. A másik kettő
+ * annak való, aki ettől el akar térni — például mert a rendszere sötét, de az
+ * iratot világos felületen olvassa szívesebben.
+ */
+export type TemaValasztas = 'auto' | 'vilagos' | 'sotet';
+
 export interface Settings {
+  /** A felület színvilága; alapból a rendszert követi. */
+  uiTheme: TemaValasztas;
   /** Alapértelmezett névkészlet. */
   themeId: string;
   /** Alapértelmezett csere-mód. */
@@ -70,6 +86,7 @@ export const DEFAULT_SETTINGS: Settings = {
     állapot való — aki vissza akarja majd nézni, ki kicsoda volt, az egy
     kapcsolóval kéri, és akkor tudatosan vállalja a következményét is.
   */
+  uiTheme: 'auto',
   keepKey: false,
   autoDetect: true,
   useModel: true,
@@ -125,6 +142,9 @@ function pick(raw: Partial<Settings>): Partial<Settings> {
   if (typeof raw.themeId === 'string') out.themeId = raw.themeId;
   if (raw.mode === 'theme' || raw.mode === 'role' || raw.mode === 'type' || raw.mode === 'numbered') {
     out.mode = raw.mode;
+  }
+  if (raw.uiTheme === 'auto' || raw.uiTheme === 'vilagos' || raw.uiTheme === 'sotet') {
+    out.uiTheme = raw.uiTheme;
   }
   if (typeof raw.keepKey === 'boolean') out.keepKey = raw.keepKey;
   if (typeof raw.autoDetect === 'boolean') out.autoDetect = raw.autoDetect;
