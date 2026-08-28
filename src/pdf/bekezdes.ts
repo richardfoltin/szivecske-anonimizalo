@@ -148,6 +148,142 @@ export interface TordeltSor {
   szavak: TordeltSzo[];
 }
 
+/** Egy szó a bemeneti szövegben, a helyével együtt. */
+export interface Szo {
+  szoveg: string;
+  kezd: number;
+  veg: number;
+}
+
+/** A szöveg szavakra bontva, a helyükkel — a kiemelésnek erre van szüksége. */
+export function szavakra(szoveg: string): Szo[] {
+  const ki: Szo[] = [];
+  const re = /\S+/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(szoveg)) !== null) {
+    ki.push({ szoveg: m[0], kezd: m.index, veg: m.index + m[0].length });
+  }
+  return ki;
+}
+
+/**
+ * MOHÓ SORTÖRÉS, ahogy a szövegszerkesztők: a sorba addig teszünk szót, amíg
+ * elfér.
+ *
+ * Egy szó, ami magában sem fér el (hosszú azonosító, bankszámlaszám), a saját
+ * sorát kapja — kilóg, de nem tünteti el a következő szót. Ez a kevesebb kár:
+ * a kilógás LÁTSZIK, az eltűnt szó nem.
+ */
+export function sorokraTor(
+  szavak: Szo[],
+  szelesseg: number,
+  mer: (t: string) => number,
+  szokoz: number,
+): Szo[][] {
+  const sorok: Szo[][] = [];
+  let sor: Szo[] = [];
+  let sorSzelesseg = 0;
+  for (const szo of szavak) {
+    const w = mer(szo.szoveg);
+    const uj = sor.length === 0 ? w : sorSzelesseg + szokoz + w;
+    if (sor.length > 0 && uj > szelesseg) {
+      sorok.push(sor);
+      sor = [szo];
+      sorSzelesseg = w;
+      continue;
+    }
+    sor.push(szo);
+    sorSzelesseg = uj;
+  }
+  if (sor.length > 0) sorok.push(sor);
+  return sorok;
+}
+
+/**
+ * ÖSSZEVETŐ TÖRDELÉS: a bekezdés a helyén marad, de ELFÉR benne a hosszabb szöveg.
+ *
+ * A régi és az új alak EGYÜTT nagyjából 40%-kal hosszabb, mint az új önmagában
+ * — a bekezdés tehát nem fér el a saját sorhelyein. Ha viszont ragaszkodunk
+ * ahhoz, hogy a bekezdés a saját FÜGGŐLEGES SÁVJÁBAN maradjon (a felső sora és
+ * a következő bekezdés között), akkor a lap szerkezete sértetlen: minden
+ * bekezdés ott áll, ahol az iratban, csak sűrűbben szedve.
+ *
+ * A sűrítés két lépcsős, és ebben a sorrendben:
+ *   1. előbb a SORKÖZ szűkül — ez a kevésbé zavaró, a betű mérete marad;
+ *   2. ha az sem elég, a BETŰ is kisebb lesz, és újratördelünk vele.
+ *
+ * A betűméretnek van alsó határa: egy bizonyos méret alatt a szöveg
+ * olvashatatlan, és akkor jobb kilógni, mint úgy tenni, mintha elfért volna.
+ *
+ * @param elerheto  a bekezdés rendelkezésére álló függőleges hely pontban.
+ * @param mer       szélességmérés ADOTT betűmérettel — a méret változik, tehát
+ *                  a mérésnek is tudnia kell róla.
+ */
+export function osszevetoTordeles(
+  b: Bekezdes,
+  szoveg: string,
+  alapMeret: number,
+  elerheto: number,
+  mer: (t: string, meret: number) => number,
+): { sorok: TordeltSor[]; meret: number } | null {
+  const szavak = szavakra(szoveg);
+  if (szavak.length === 0) return null;
+  const szelesseg = b.jobbSzel - b.x;
+  if (szelesseg <= 0 || elerheto <= 0) return null;
+
+  /** A sorköz nem mehet a betűméret alá: az egymásba érő sorok olvashatatlanok. */
+  const MIN_SORKOZ_ARANY = 1.06;
+  /** A betű nem mehet az eredeti 62%-a alá — ott már nem irat, hanem folt. */
+  const MIN_MERET = alapMeret * 0.62;
+
+  let meret = alapMeret;
+  for (let kor = 0; kor < 8; kor++) {
+    const sorok = sorokraTor(szavak, szelesseg, (t) => mer(t, meret), mer(' ', meret));
+    const kellSorkoz = elerheto / sorok.length;
+    if (kellSorkoz >= meret * MIN_SORKOZ_ARANY || meret <= MIN_MERET) {
+      return { sorok: elhelyez(b, sorok, meret, Math.min(alapSorkoz(b, alapMeret), kellSorkoz), mer), meret };
+    }
+    meret = Math.max(MIN_MERET, meret * 0.93);
+  }
+  return null;
+}
+
+/** A bekezdés eredeti sorköze; egysoros bekezdésnél a betűméretből becsülve. */
+function alapSorkoz(b: Bekezdes, meret: number): number {
+  const a = b.sorok[0];
+  const c = b.sorok[1];
+  return a && c ? a.y - c.y : meret * 1.5;
+}
+
+/** A kész sorok elhelyezése a bekezdés felső sorától lefelé. */
+function elhelyez(
+  b: Bekezdes,
+  sorok: Szo[][],
+  meret: number,
+  sorkoz: number,
+  mer: (t: string, meret: number) => number,
+): TordeltSor[] {
+  const felso = b.sorok[0]?.y ?? 0;
+  const szelesseg = b.jobbSzel - b.x;
+  const szokoz = mer(' ', meret);
+  return sorok.map((szavakASorban, i) => {
+    const utolso = i === sorok.length - 1;
+    const kizar = b.sorkizart && !utolso && szavakASorban.length > 1;
+    const sajat = szavakASorban.reduce((a, w) => a + mer(w.szoveg, meret), 0);
+    const resek = szavakASorban.length - 1;
+    const rescsak = kizar ? (szelesseg - sajat) / resek : szokoz;
+    const res = kizar && rescsak > szokoz * 4 ? szokoz : rescsak;
+    let x = b.x;
+    const ki: TordeltSzo[] = szavakASorban.map((w) => {
+      const sz = mer(w.szoveg, meret);
+      const t: TordeltSzo = { szoveg: w.szoveg, x, szelesseg: sz, kezd: w.kezd, veg: w.veg };
+      x += sz + res;
+      return t;
+    });
+    return { y: felso - i * sorkoz, szavak: ki };
+  });
+}
+
 /**
  * EGY BEKEZDÉS ÚJRATÖRDELÉSE — a saját szélességére, a saját sorhelyeire.
  *
@@ -170,37 +306,13 @@ export function ujratordel(
     a bekezdés szövegében — pedig a kiemelésnek épp az kell: a csereszöveg
     helyét a szövegben ismerjük, és meg kell találni, a lapon hova került.
   */
-  const szavak: { szoveg: string; kezd: number; veg: number }[] = [];
-  const re = /\S+/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(szoveg)) !== null) {
-    szavak.push({ szoveg: m[0], kezd: m.index, veg: m.index + m[0].length });
-  }
+  const szavak = szavakra(szoveg);
   if (szavak.length === 0) return [];
 
   const szelesseg = b.jobbSzel - b.x;
   if (szelesseg <= 0) return null;
   const szokoz = mer(' ');
-
-  // Mohó tördelés, ahogy a szövegszerkesztők: a sorba addig teszünk szót, amíg
-  // elfér. Egy szó, ami magában sem fér el (hosszú azonosító), a saját sorát
-  // kapja — kilóg, de nem tünteti el a következő szót.
-  const sorok: (typeof szavak)[] = [];
-  let sor: typeof szavak = [];
-  let sorSzelesseg = 0;
-  for (const szo of szavak) {
-    const w = mer(szo.szoveg);
-    const uj = sor.length === 0 ? w : sorSzelesseg + szokoz + w;
-    if (sor.length > 0 && uj > szelesseg) {
-      sorok.push(sor);
-      sor = [szo];
-      sorSzelesseg = w;
-      continue;
-    }
-    sor.push(szo);
-    sorSzelesseg = uj;
-  }
-  if (sor.length > 0) sorok.push(sor);
+  const sorok = sorokraTor(szavak, szelesseg, mer, szokoz);
 
   // NEM FÉR EL: a bekezdés alatt másik bekezdés áll, nincs hova nyúlnia.
   if (sorok.length > b.sorok.length) return null;

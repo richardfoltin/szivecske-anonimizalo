@@ -621,6 +621,15 @@ export default function App() {
    * döntés előtti kimenetet mutatná a friss elemzés alatt.
    */
   const [previewPages, setPreviewPages] = useState<PreviewPages | null>(null);
+  /**
+   * AZ ÖSSZEVETÉS LAPKÉPEI — a régi alak áthúzva, mellette az új.
+   *
+   * Külön az előnézetétől, mert MÁS rajz: ugyanabból a bekezdéskezelésből,
+   * de a régi szöveggel együtt. Két külön gyorsítótár, mert a felhasználó
+   * oda-vissza vált a két nézet között, és egyiket sem szabad újrarajzolni
+   * csak azért, mert a másikat megnézte.
+   */
+  const [valtozasPages, setValtozasPages] = useState<PreviewPages | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   // Mentés után ezzel nyílik a kulcsfájl-ablak: a most készült fájlt ne kelljen
   // újra megkeresni a tallózóban.
@@ -866,6 +875,7 @@ export default function App() {
         // érvényesült.
         setPreview(null);
         setPreviewPages(null);
+        setValtozasPages(null);
         setPreviewError(null);
         return res;
       } catch (e) {
@@ -1206,6 +1216,7 @@ export default function App() {
         // indulunk, hogy a felhasználó ne a régi kimenetet lássa új irat alatt.
         setPreview(null);
         setPreviewPages(null);
+        setValtozasPages(null);
         setPreviewError(null);
         setView('source');
         setHasWork(true);
@@ -1457,6 +1468,7 @@ export default function App() {
     setSajatDontes(false);
     setPreview(null);
     setPreviewPages(null);
+    setValtozasPages(null);
     setPreviewError(null);
     setView('source');
     setNyitandoNev(null);
@@ -1593,6 +1605,32 @@ export default function App() {
    * Ígéret helyett igazság: ha a lapkép nem jön össze, a szöveges nézet áll
    * be, és a fejléc sávja MEGMONDJA, hogy ilyenkor a tördelést nem látni.
    */
+  /**
+   * AZ ÖSSZEVETÉS LAPKÉPEINEK LEKÉRÉSE — PDF-en.
+   *
+   * Ugyanaz a rajzolás, mint az előnézeté, csak a régi alakokkal együtt.
+   * Nem PDF-en (vagy natív rajzoló híján) üresen marad, és a nézet a
+   * megszedett szöveges összevetésre esik vissza — az minden formátumon
+   * működik.
+   */
+  const valtozasKer = useCallback(async (): Promise<void> => {
+    if (doc?.format !== 'pdf' || api.previewPages === undefined) return;
+    const res = await api.previewPages(doc?.path, true);
+    if (res.pages.length > 0) setValtozasPages(res);
+  }, [doc?.format, doc?.path]);
+
+  useEffect(() => {
+    if (view !== 'valtozas' || !analysis || valtozasPages !== null) return;
+    let el = true;
+    void valtozasKer().catch(() => {
+      // A lapkép hiánya nem hiba: a szöveges összevetés áll be helyette.
+      if (el) setValtozasPages(null);
+    });
+    return () => {
+      el = false;
+    };
+  }, [view, analysis, valtozasPages, valtozasKer]);
+
   const elonezetKer = useCallback(async (): Promise<void> => {
     const kepesUt = doc?.format === 'pdf' && api.previewPages !== undefined;
     if (kepesUt) {
@@ -3187,6 +3225,7 @@ export default function App() {
     setAktivDoc(index);
     setPreview(null);
     setPreviewPages(null);
+    setValtozasPages(null);
     setPreviewError(null);
     setSelected(null);
   };
@@ -3227,6 +3266,7 @@ export default function App() {
         setSelected(null);
         setPreview(null);
         setPreviewPages(null);
+        setValtozasPages(null);
         setPreviewError(null);
         if (lista.length === 0) {
           setAnalysis(null);
@@ -3854,7 +3894,21 @@ export default function App() {
                 </div>
               </div>
             )}
-            {analysis && view === 'valtozas' ? (
+            {analysis && view === 'valtozas' && valtozasPages !== null ? (
+              /*
+                A LAPKÉPES ÖSSZEVETÉS: ugyanaz az irat, ahogy a fájlba kerül,
+                de a lecserélt alakok áthúzva ott állnak az új mellett. A
+                bekezdés a helyén marad — a hosszabb szöveg a saját
+                függőleges sávjában fér el, sűrűbben szedve.
+              */
+              <PreviewView
+                analysis={analysis}
+                text={null}
+                lapok={valtozasPages}
+                error={null}
+                hivatalosIdk={hivatalosIdk}
+              />
+            ) : analysis && view === 'valtozas' ? (
               <OsszevetesView
                 analysis={analysis}
                 {...(aktivSzakasz ? { szakasz: aktivSzakasz } : {})}

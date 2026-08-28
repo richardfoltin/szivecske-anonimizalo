@@ -313,7 +313,8 @@ const api = {
   /** Az álnevesített szöveg; útvonal nélkül az első betöltött iraté. */
   previewText: (path?: string) => ipcRenderer.invoke('doc:previewText', path),
   /** Az álnevesített irat LAPKÉPEI (PDF); útvonal nélkül az első betöltött iraté. */
-  previewPages: (path?: string) => ipcRenderer.invoke('doc:previewPages', path),
+  previewPages: (path?: string, osszevetes?: boolean) =>
+    ipcRenderer.invoke('doc:previewPages', path, osszevetes),
   /** Az ügy álnév-kiosztásának eldobása — a következő elemzés újraosztja. */
   reassignNames: () => ipcRenderer.invoke('doc:reassignNames'),
   /**

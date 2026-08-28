@@ -739,7 +739,17 @@ interface SzivecskeApi {
    * ismeri. Hiányában az előnézet a szöveges nézetre esik vissza — ugyanaz,
    * ami eddig volt.
    */
-  previewPages?(path?: string): Promise<PreviewPages>;
+  previewPages?(
+    path?: string,
+    /**
+     * ÖSSZEVETŐ LAPKÉP: a régi alak is ott áll, áthúzva, az új mellett.
+     *
+     * Ugyanaz a rajzolás, mint az előnézeté — a bekezdés a helyén marad, csak
+     * sűrűbben szedve, mert a régi és az új szöveg együtt hosszabb. CSAK
+     * képernyőre: a mentés sosem ezt kéri.
+     */
+    osszevetes?: boolean,
+  ): Promise<PreviewPages>;
   /**
    * A NEVEK ÚJRA KIOSZTÁSA — az ügy eddigi álnév-nyilvántartásának eldobása.
    *

@@ -74,7 +74,12 @@ import {
   type TextSegment,
 } from '../pdf/textRuns.js';
 import { readPageStreams } from '../pdf/resources.js';
-import { bekezdesekre, ujratordel, type TordeltSor } from '../pdf/bekezdes.js';
+import {
+  bekezdesekre,
+  osszevetoTordeles,
+  ujratordel,
+  type TordeltSor,
+} from '../pdf/bekezdes.js';
 import { formatPdfWarnings, type PageWarnings } from '../pdf/warnings.js';
 import {
   buildPageText,
@@ -1418,7 +1423,18 @@ export class DocumentSession {
    * a név pedig a helyén maradna. Ezért a `groupRangesByStream` szerinti
    * csoportosítás nem kényelmi lépés, hanem a helyesség feltétele.
    */
-  private async exportPdf(editsByUnit: Map<number, Edit[]>): Promise<PdfBuildResult> {
+  private async exportPdf(
+    editsByUnit: Map<number, Edit[]>,
+    /**
+     * ÖSSZEVETŐ RAJZ: a régi alak is ott áll, áthúzva, az új mellett.
+     *
+     * CSAK KÉPERNYŐRE. A mentés sosem hívja így — egy iratba, amiben a
+     * lecserélt nevek áthúzva ott maradnak, pont az kerülne bele, amit ki
+     * akartunk venni belőle. A `export` ezért a paraméter nélküli alakot
+     * hívja, és ez a mód a bájtokat nem is adja tovább senkinek.
+     */
+    osszevetes = false,
+  ): Promise<PdfBuildResult> {
     const doc = await PDFDocument.load(this.bytes);
     doc.registerFontkit(fontkit);
     const fontPath = FALLBACK_FONTS.find((f) => {
@@ -1434,7 +1450,17 @@ export class DocumentSession {
 
     const warnings: string[] = [];
     const highlights: Highlight[] = [];
-    const redraws: { page: number; x: number; y: number; size: number; text: string }[] = [];
+    const redraws: {
+      page: number;
+      x: number;
+      y: number;
+      size: number;
+      text: string;
+      /** Összevető módban a RÉGI alak: halványan. */
+      halvany?: boolean;
+      /** Összevető módban a régi alak áthúzása; az érték a szó szélessége. */
+      athuzva?: number;
+    }[] = [];
 
     this.units.forEach((unit, ui) => {
       const pdf = unit.pdf;
@@ -1466,8 +1492,9 @@ export class DocumentSession {
         átesik a soronkénti ágra: egy alsó szomszédjára csúszott bekezdés
         rosszabb a csipkés jobb szélnél.
       */
-      if (this.reflow) {
-        for (const b of bekezdesekre(pdf.pageText.spans.map((sp) => sp.segment))) {
+      if (this.reflow || osszevetes) {
+        const bekezdesek = bekezdesekre(pdf.pageText.spans.map((sp) => sp.segment));
+        for (const [bi, b] of bekezdesek.entries()) {
           const sajatTervek = b.sorok.map((sor) => tervSzakaszSzerint.get(sor)).filter((t) => t !== undefined);
           if (sajatTervek.length !== b.sorok.length) continue;
           if (sajatTervek.every((t) => t.text === t.span.segment.text)) continue;
@@ -1483,32 +1510,113 @@ export class DocumentSession {
           }
 
           const meret = b.sorok[0]!.fontSize;
-          const tordelt = ujratordel(b, tisztitottBekezdes(bekezdesSzoveg), (t) =>
-            merSzelesseg(embedded, t, meret),
-          );
-          if (tordelt === null) continue;
+
+          /*
+            ÖSSZEVETŐ MÓD: a bekezdés szövegébe a RÉGI alak is bekerül.
+
+            A csereszöveg elé odaírjuk azt, ami a helyén állt — a rajzoláskor
+            ez kapja az áthúzást. A helyeket menet közben jegyezzük: a
+            tördelés után már nem lehetne megmondani, melyik szó melyik.
+          */
+          let szoveg = bekezdesSzoveg;
+          const regiek: { kezd: number; veg: number }[] = [];
+          const ujak: { kezd: number; veg: number; matchId: number }[] = [];
+          if (osszevetes) {
+            szoveg = '';
+            const helyek: number[] = [];
+            sajatTervek.forEach((t, i) => {
+              if (szoveg.length > 0) szoveg += ' ';
+              helyek.push(szoveg.length);
+              // A szakasz szövegét a csereszövegek mentén darabolva építjük
+              // újra: minden csere elé bekerül az eredeti alak.
+              let poz = 0;
+              for (const hely of t.placements) {
+                szoveg += t.text.slice(poz, hely.start);
+                const eredeti = unit.text.slice(hely.edit.start, hely.edit.end).replace(/\s+/g, ' ');
+                if (eredeti.trim().length > 0) {
+                  regiek.push({ kezd: szoveg.length, veg: szoveg.length + eredeti.length });
+                  szoveg += `${eredeti} `;
+                }
+                const ujKezd = szoveg.length;
+                szoveg += t.text.slice(hely.start, hely.end);
+                if (hely.edit.matchId !== undefined) {
+                  ujak.push({ kezd: ujKezd, veg: szoveg.length, matchId: hely.edit.matchId });
+                }
+                poz = hely.end;
+              }
+              szoveg += t.text.slice(poz);
+            });
+            eltolasok.length = 0;
+            eltolasok.push(...helyek);
+          }
+
+          /*
+            A BEKEZDÉS FÜGGŐLEGES SÁVJA: a felső sorától a KÖVETKEZŐ bekezdés
+            felső soráig. Ebben kell elférnie — akkor is, ha a szöveg
+            megnőtt. Az utolsó bekezdésnél a saját magassága a mérték.
+          */
+          const kovetkezo = bekezdesek[bi + 1];
+          const utolsoSor = b.sorok[b.sorok.length - 1]!;
+          const also =
+            kovetkezo && kovetkezo.sorok[0] && kovetkezo.sorok[0].y < utolsoSor.y
+              ? kovetkezo.sorok[0].y
+              : utolsoSor.y - (b.sorok.length > 1 ? b.sorok[0]!.y - b.sorok[1]!.y : meret * 1.5);
+          const elerheto = b.sorok[0]!.y - also;
+
+          const eredmeny = osszevetes
+            ? osszevetoTordeles(b, tisztitottBekezdes(szoveg), meret, elerheto, (t, m) =>
+                merSzelesseg(embedded, t, m),
+              )
+            : (() => {
+                const t = ujratordel(b, tisztitottBekezdes(szoveg), (x) =>
+                  merSzelesseg(embedded, x, meret),
+                );
+                return t === null ? null : { sorok: t, meret };
+              })();
+          if (eredmeny === null) continue;
+          const { sorok: tordelt, meret: rajzMeret } = eredmeny;
 
           for (const sor of b.sorok) {
             toDelete.push(...sor.opRanges);
             elintezett.add(sor);
           }
+          const regiSzo = (sz: { kezd: number; veg: number }): boolean =>
+            regiek.some((r) => sz.kezd < r.veg && r.kezd < sz.veg);
           for (const sor of tordelt) {
             for (const szo of sor.szavak) {
-              redraws.push({ page: unit.page, x: szo.x, y: sor.y, size: meret, text: szo.szoveg });
+              const regi = osszevetes && regiSzo(szo);
+              redraws.push({
+                page: unit.page,
+                x: szo.x,
+                y: sor.y,
+                size: rajzMeret,
+                text: szo.szoveg,
+                // A régi alak halvány, és át van húzva: a szem az ÚJ szövegen
+                // fut végig, a régi csak hivatkozás.
+                ...(regi ? { halvany: true, athuzva: szo.szelesseg } : {}),
+              });
             }
           }
           // A kiemelés a KÉSZ tördelésben: a csereszöveg másik sorba is kerülhet,
           // mint ahol az eredeti állt.
-          sajatTervek.forEach((t, i) => {
-            for (const hely of t.placements) {
-              if (hely.edit.matchId === undefined) continue;
-              const kezd = eltolasok[i]! + hely.start;
-              const veg = eltolasok[i]! + hely.end;
-              for (const box of tordeltKiemelesek(tordelt, kezd, veg, meret, pdf)) {
-                highlights.push({ matchId: hely.edit.matchId, page: unit.page, ...box });
+          if (osszevetes) {
+            for (const u of ujak) {
+              for (const box of tordeltKiemelesek(tordelt, u.kezd, u.veg, rajzMeret, pdf)) {
+                highlights.push({ matchId: u.matchId, page: unit.page, ...box });
               }
             }
-          });
+          } else {
+            sajatTervek.forEach((t, i) => {
+              for (const hely of t.placements) {
+                if (hely.edit.matchId === undefined) continue;
+                const kezd = eltolasok[i]! + hely.start;
+                const veg = eltolasok[i]! + hely.end;
+                for (const box of tordeltKiemelesek(tordelt, kezd, veg, rajzMeret, pdf)) {
+                  highlights.push({ matchId: hely.edit.matchId, page: unit.page, ...box });
+                }
+              }
+            });
+          }
         }
       }
 
@@ -1562,13 +1670,27 @@ export class DocumentSession {
     // A kirajzolás a törlés UTÁN: a pdf-lib új tartalomfolyamot fűz a laphoz,
     // a törlés viszont a meglévőt cseréli le.
     for (const r of redraws) {
-      doc.getPage(r.page).drawText(r.text, {
+      const lap = doc.getPage(r.page);
+      lap.drawText(r.text, {
         x: r.x,
         y: r.y,
         size: r.size,
         font: embedded,
-        color: rgb(0, 0, 0),
+        // A régi alak szürke: az ÚJ szöveget kell elolvasni, a régi csak
+        // hivatkozás arra, mi állt ott.
+        color: r.halvany ? rgb(0.45, 0.42, 0.47) : rgb(0, 0, 0),
       });
+      if (r.athuzva !== undefined && r.athuzva > 0) {
+        // Az áthúzás a betűtest közepén fut, nem az alapvonalon: az alapvonalon
+        // álló vonal aláhúzásnak látszana, és épp az ellenkezőjét jelentené.
+        const y = r.y + r.size * 0.28;
+        lap.drawLine({
+          start: { x: r.x, y },
+          end: { x: r.x + r.athuzva, y },
+          thickness: Math.max(0.5, r.size * 0.055),
+          color: rgb(0.45, 0.42, 0.47),
+        });
+      }
     }
 
     warnings.push(...scrubPdfMetadata(doc));
@@ -1599,9 +1721,18 @@ export class DocumentSession {
    * Nem PDF-en üres listát ad — DOCX-hez és TXT-hez nincs lapképünk, ott az
    * előnézet marad a szöveg.
    */
-  async anonymizedPages(): Promise<{ pages: PageImage[]; highlights: Highlight[] }> {
+  async anonymizedPages(
+    /**
+     * ÖSSZEVETŐ LAPKÉP: a régi alak is ott áll, áthúzva, az új mellett.
+     *
+     * CSAK KÉPERNYŐRE. A mentés sosem ezt hívja — egy iratba, amiben a
+     * lecserélt nevek áthúzva ott maradnak, pont az kerülne bele, amit ki
+     * akartunk venni belőle. A bájtok itt sem hagyják el a memóriát.
+     */
+    osszevetes = false,
+  ): Promise<{ pages: PageImage[]; highlights: Highlight[] }> {
     if (this.info.format !== 'pdf') return { pages: [], highlights: [] };
-    const built = await this.exportPdf(this.editsByUnit());
+    const built = await this.exportPdf(this.editsByUnit(), osszevetes);
     const pages = await renderPdfPages(built.bytes, this.units.length, this.units);
     // Lapkép nélkül a kiemelésnek sincs mire ülnie: a felület ilyenkor a
     // szöveges előnézetre esik vissza, és ott a saját jelöléseit használja.

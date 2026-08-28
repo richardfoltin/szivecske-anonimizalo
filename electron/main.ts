@@ -2463,17 +2463,20 @@ function registerHandlers(): void {
    * nélkül a második irat előnézetén minden kiemelés az ELSŐ irat találatait
    * keresné meg — rossz szín, rossz buboréksúgó, néma hiba.
    */
-  handle('doc:previewPages', async (_e, path?: string): Promise<PreviewPages> => {
-    const i = path === undefined ? 0 : sessions.findIndex((x) => x.info.path === path);
-    const s = sessions[i < 0 ? 0 : i];
-    if (!s) throw new Error('Nincs megnyitott irat.');
-    const eltolas = (i < 0 ? 0 : i) * ID_LEPES;
-    const res = await s.anonymizedPages();
-    return {
-      pages: res.pages,
-      highlights: res.highlights.map((h) => ({ ...h, matchId: h.matchId + eltolas })),
-    };
-  });
+  handle(
+    'doc:previewPages',
+    async (_e, path?: string, osszevetes?: boolean): Promise<PreviewPages> => {
+      const i = path === undefined ? 0 : sessions.findIndex((x) => x.info.path === path);
+      const s = sessions[i < 0 ? 0 : i];
+      if (!s) throw new Error('Nincs megnyitott irat.');
+      const eltolas = (i < 0 ? 0 : i) * ID_LEPES;
+      const res = await s.anonymizedPages(osszevetes === true);
+      return {
+        pages: res.pages,
+        highlights: res.highlights.map((h) => ({ ...h, matchId: h.matchId + eltolas })),
+      };
+    },
+  );
 
   /**
    * MINDEN BETÖLTÖTT IRAT ELEMZÉSE, EGY EREDMÉNYBE FŰZVE.
