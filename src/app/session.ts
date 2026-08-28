@@ -269,6 +269,15 @@ export interface AnalyzeInput {
    */
   paragraphReflow?: boolean;
   /**
+   * KÉZI SZORZÓ az összegekhez; hiányában az ügy kulcsából számoljuk.
+   *
+   * Annak való, akinek kerek szorzó kell, mert az iratot valakinek el kell
+   * magyaráznia. Az összegek egymáshoz való aránya így is sértetlen.
+   */
+  amountFactor?: number;
+  /** KÉZI ELTOLÁS napban a dátumokhoz; hiányában a kulcsból jön. */
+  dateShiftDays?: number;
+  /**
    * Fogadja el a program az ÁTNÉZÉSRE váró találatokat is, emberi döntés nélkül
    * („Csak csináld" mód; `Settings.autoMode`).
    *
@@ -839,6 +848,7 @@ export class DocumentSession {
         const terv = tervezOsszegCsere(unitAmounts, {
           caseSecret: input.caseSecret,
           mod: amountMode,
+          ...(input.amountFactor !== undefined ? { szorzo: input.amountFactor } : {}),
           tovabbiErtekek: otherUnitAmounts(amountsByUnit, ui),
         });
         // A FIGYELMEZTETÉS CSAK BEKAPCSOLT CSERÉHEZ TARTOZIK. A terv kikapcsolva
@@ -859,7 +869,11 @@ export class DocumentSession {
       // 4. DÁTUMOK — csak ha a felhasználó kérte.
       const unitDates = datesByUnit[ui] ?? [];
       if (unitDates.length > 0) {
-        const terv = tervezDatumCsere(unitDates, { caseSecret: input.caseSecret, szoveg: unit.text });
+        const terv = tervezDatumCsere(unitDates, {
+          caseSecret: input.caseSecret,
+          ...(input.dateShiftDays !== undefined ? { eltolas: input.dateShiftDays } : {}),
+          szoveg: unit.text,
+        });
         // Lásd az összegeknél: kikapcsolt eltolásról nincs mit figyelmeztetni.
         if (input.shiftDates === true) for (const w of terv.figyelmeztetesek) planWarnings.add(w);
         for (const cs of terv.cserek) {
@@ -1563,14 +1577,32 @@ export class DocumentSession {
               : utolsoSor.y - (b.sorok.length > 1 ? b.sorok[0]!.y - b.sorok[1]!.y : meret * 1.5);
           const elerheto = b.sorok[0]!.y - also;
 
+          /*
+            A TISZTÍTÁS ÉS A TARTOMÁNYOK EGYÜTT MOZOGNAK.
+
+            A tisztítás karaktereket vesz ki (fölös szóköz, szóköz a pont
+            előtt), tehát a jegyzett tartományok elcsúsznának alatta. A térkép
+            a régi indexet az újra képezi le — enélkül az áthúzás a régi
+            alakról átvándorol az újra, és pont az ellenkezőjét állítja.
+          */
+          const tiszta = tisztitasTerkeppel(szoveg);
+          const at = (i: number): number => tiszta.terkep[i] ?? tiszta.szoveg.length;
+          for (const r of regiek) {
+            r.kezd = at(r.kezd);
+            r.veg = at(r.veg);
+          }
+          for (const u of ujak) {
+            u.kezd = at(u.kezd);
+            u.veg = at(u.veg);
+          }
+          for (let i = 0; i < eltolasok.length; i++) eltolasok[i] = at(eltolasok[i]!);
+
           const eredmeny = osszevetes
-            ? osszevetoTordeles(b, tisztitottBekezdes(szoveg), meret, elerheto, (t, m) =>
+            ? osszevetoTordeles(b, tiszta.szoveg, meret, elerheto, (t, m) =>
                 merSzelesseg(embedded, t, m),
               )
             : (() => {
-                const t = ujratordel(b, tisztitottBekezdes(szoveg), (x) =>
-                  merSzelesseg(embedded, x, meret),
-                );
+                const t = ujratordel(b, tiszta.szoveg, (x) => merSzelesseg(embedded, x, meret));
                 return t === null ? null : { sorok: t, meret };
               })();
           if (eredmeny === null) continue;
@@ -2988,11 +3020,51 @@ function redrawHighlight(
  * kozmetika, hanem az, amit a szedő is tett volna.
  */
 function tisztitottBekezdes(szoveg: string): string {
-  return szoveg
-    .replace(/\s+([.,;:!?%)\]}»”"])/g, '$1')
-    .replace(/([(\[{«„])\s+/g, '$1')
-    .replace(/\s{2,}/g, ' ')
-    .trim();
+  return tisztitasTerkeppel(szoveg).szoveg;
+}
+
+/**
+ * UGYANAZ A TISZTÍTÁS, A POZÍCIÓK ÁTSZÁMÍTÁSÁVAL EGYÜTT.
+ *
+ * EZ VOLT AZ A HIBA, AMITŐL AZ ÚJ SZÖVEG IS ÁT VOLT HÚZVA. A tisztítás
+ * karaktereket vesz ki a szövegből, tehát MEGVÁLTOZTATJA a hosszát — a
+ * jegyzett tartományok (melyik szakasz a régi alak, melyik az új) viszont a
+ * tisztítás ELŐTTI szövegre mutattak. Elég egyetlen kivett szóköz a bekezdés
+ * elején, és onnantól minden tartomány eggyel odébb hivatkozik: az áthúzás
+ * átcsúszik a régi alakról az újra.
+ *
+ * A térkép a régi indexet az újra képezi le, tehát a tartományok pontosan
+ * követik a szöveget.
+ */
+function tisztitasTerkeppel(szoveg: string): { szoveg: string; terkep: number[] } {
+  const zaro = /[.,;:!?%)\]}»”"]/;
+  const nyito = /[([{«„]/;
+  let ki = '';
+  const terkep: number[] = new Array(szoveg.length + 1).fill(0);
+  for (let i = 0; i < szoveg.length; i++) {
+    terkep[i] = ki.length;
+    const c = szoveg[i]!;
+    if (/\s/.test(c)) {
+      // A szóközök összevonása; és nem kerül szóköz záró írásjel elé, sem
+      // nyitó írásjel után — magyarul egyik sem helyes.
+      let j = i;
+      while (j < szoveg.length && /\s/.test(szoveg[j]!)) j++;
+      for (let k = i; k < j; k++) terkep[k] = ki.length;
+      const kovetkezo = szoveg[j];
+      const elozo = ki[ki.length - 1];
+      const elhagy =
+        ki.length === 0 ||
+        j >= szoveg.length ||
+        (kovetkezo !== undefined && zaro.test(kovetkezo)) ||
+        (elozo !== undefined && nyito.test(elozo));
+      if (!elhagy) ki += ' ';
+      i = j - 1;
+      continue;
+    }
+    ki += c;
+  }
+  terkep[szoveg.length] = ki.length;
+  return { szoveg: ki, terkep };
 }
 
 /**

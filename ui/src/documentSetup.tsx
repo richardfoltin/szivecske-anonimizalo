@@ -67,6 +67,10 @@ export interface DokumentumBeallitasok {
   keepKey: boolean;
   replaceAmounts: boolean;
   shiftDates: boolean;
+  /** KÉZI szorzó az összegekhez; hiányában az ügy kulcsából számoljuk. */
+  amountFactor?: number;
+  /** KÉZI eltolás napban a dátumokhoz; hiányában a kulcsból. */
+  dateShiftDays?: number;
   /**
    * A törvény szerint bent maradó neveket (eljáró bíró, ügyvéd, bíróság) is
    * lecseréljük-e.
@@ -390,7 +394,7 @@ const FAJTA_MIERT: Record<Fajta, string> = {
   org: 'Cégek, hivatalok, intézmények.',
   place: 'Települések, utcák, ingatlanok.',
   identifier: 'Ezek adatfajta-megjelölést kapnak, nem álnevet.',
-  amount: 'Fedőnév-módban közös szorzóval változnak, a többi módban „[összeg]” lesz belőlük.',
+  amount: 'Közös szorzóval változnak. Az arányuk egymáshoz megmarad.',
   date: 'Közös eltolás. Az eltolt iratból határidőt számolni nem szabad.',
   hivatalos: 'Az eljáró bíró, az ügyvéd és a bíróság neve. A Bszi. 166. § (2) szerint bent kell maradniuk.',
 };
@@ -425,6 +429,7 @@ function CsoportFejlec({
   be,
   kapcsolo,
   figyelem,
+  mertek,
 }: {
   fajta: Fajta;
   darab: number;
@@ -442,6 +447,12 @@ function CsoportFejlec({
   kapcsolo?: React.ReactNode;
   /** A leírósor HELYÉRE kerülő figyelmeztetés — a fejléc magassága nem változik tőle. */
   figyelem?: React.ReactNode;
+  /**
+   * A csoport SAJÁT mértéke: az összegek szorzója, a dátumok eltolása.
+   *
+   * Csak bekapcsolt csoportnál van értelme, ezért a hívó dönti el, adja-e.
+   */
+  mertek?: React.ReactNode;
 }) {
   return (
     <div className={`fghead ${FAJTA_SZIN[fajta]}${be ? '' : ' ki'}`}>
@@ -451,8 +462,59 @@ function CsoportFejlec({
         </div>
         <div className="s">{figyelem ?? FAJTA_MIERT[fajta]}</div>
       </div>
+      {mertek !== undefined && <div className="fgmertek">{mertek}</div>}
       {kapcsolo !== undefined && <div className="fgctl">{kapcsolo}</div>}
     </div>
+  );
+}
+
+/**
+ * A CSOPORT MÉRTÉKE: a szorzó és az eltolás, kézzel átírhatóan.
+ *
+ * MIÉRT KELL. Alapból mindkettő az ügy kulcsából származik — kiszámíthatatlan,
+ * de ügyön belül állandó. Van viszont, amikor az ügyvédnek KEREK érték kell,
+ * mert az iratot valakinek el kell magyaráznia: „minden összeg a
+ * háromnegyede", „minden dátum egy évvel korábbi". Ez a mező erről szól.
+ *
+ * AMI NEM VÁLTOZIK TŐLE: az összegek egymáshoz való aránya és a dátumok közti
+ * időköz. Minden érték UGYANAZZAL a mértékkel mozdul — a kézi megadás csak azt
+ * dönti el, mennyivel.
+ */
+function MertekMezo({
+  cimke,
+  ertek,
+  utotag,
+  helykitolto,
+  onValt,
+}: {
+  cimke: string;
+  ertek: number | undefined;
+  utotag: string;
+  helykitolto: string;
+  onValt: (uj: number | undefined) => void;
+}) {
+  return (
+    <label className="mertek">
+      <span className="mcimke">{cimke}</span>
+      <input
+        spellCheck={false}
+        type="text"
+        inputMode="decimal"
+        className="mmezo"
+        value={ertek === undefined ? '' : String(ertek)}
+        placeholder={helykitolto}
+        onChange={(e) => {
+          const t = e.target.value.trim().replace(',', '.');
+          if (t === '') {
+            onValt(undefined);
+            return;
+          }
+          const n = Number(t);
+          if (Number.isFinite(n)) onValt(n);
+        }}
+      />
+      <span className="mutotag">{utotag}</span>
+    </label>
   );
 }
 
@@ -1244,6 +1306,32 @@ function CsereLap({
                   fajta={fajta}
                   darab={sorok.length}
                   be={be}
+                  {...(be && fajta === 'amount'
+                    ? {
+                        mertek: (
+                          <MertekMezo
+                            cimke="szorzó"
+                            ertek={beallitasok.amountFactor}
+                            utotag="×"
+                            helykitolto="kulcsból"
+                            onValt={(uj) => onBeallitas({ amountFactor: uj })}
+                          />
+                        ),
+                      }
+                    : {})}
+                  {...(be && fajta === 'date'
+                    ? {
+                        mertek: (
+                          <MertekMezo
+                            cimke="eltolás"
+                            ertek={beallitasok.dateShiftDays}
+                            utotag="nap"
+                            helykitolto="kulcsból"
+                            onValt={(uj) => onBeallitas({ dateShiftDays: uj })}
+                          />
+                        ),
+                      }
+                    : {})}
                   kapcsolo={
                     <Kapcsolo
                       id={az(fajta)}
@@ -1634,15 +1722,19 @@ function TalaltSor({
             {tetel.bizonytalanDb}/{tetel.elofordulas} bizonytalan
           </span>
         )}
-        {/* A program döntött helyette: ez nem a felhasználó döntése volt,
-            tehát jelezni kell — de elég egy üres pötty, a részletes lista a
-            fejléc „döntöttünk helyetted” jelzése mögött áll. */}
+        {/*
+          A PÖTTY HELYETT ITT IS SZÁM.
+
+          „A program döntött helyetted" — de hányról? Egy üres kis kör ezt nem
+          mondta meg, pedig ez a különbség: egy eldöntött bizonytalanság
+          ránézésre ellenőrizhető, tizenöt már átnézendő munka. Ugyanaz a
+          borostyán, mint a bizonytalan jelvényen: mindkettő ugyanarról szól,
+          csak az egyikről már döntött valaki.
+        */}
         {tetel.programDontott === true && tetel.bizonytalanDb === 0 && (
-          <span
-            className="dot dontott"
-            role="img"
-            aria-label="bizonytalan volt — a program döntött"
-          />
+          <span className="pill dontott">
+            {tetel.elofordulas}/{tetel.elofordulas} · a program döntötte
+          </span>
         )}
         {tetel.kezi === true && <span className="pill kind">kézzel felvéve</span>}
         {atirt && be && (

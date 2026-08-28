@@ -407,10 +407,7 @@ export function SettingsDialog({
               <div className="bsor">
                 <div className="bszoveg">
                   <h4>Felület témája</h4>
-                  <p>
-                    Alapból azt követi, amit a Windowsban beállítottál. Az irat maga mindkét
-                    témában fehér papír marad — a bíróságra menő szöveget nem színezzük át.
-                  </p>
+                  <p>Alapból azt követi, amit a Windowsban beállítottál.</p>
                 </div>
                 <div className="seg sm" role="radiogroup" aria-label="Felület témája">
                   {(

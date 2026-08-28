@@ -873,6 +873,12 @@ const EV_HORGONY_NAP = 1;
 export interface DatumCsereOpciok {
   /** Az ügy titkos kulcsa; ugyanaz a kulcs ugyanazt az eltolást adja. */
   caseSecret: string;
+  /**
+   * KÉZI ELTOLÁS NAPBAN, ha a felhasználó megadta. Hiányában a kulcsból jön.
+   *
+   * Az időközök így is sértetlenek: minden dátum ugyanannyit mozdul.
+   */
+  eltolas?: number;
   /** A teljes szöveg — csak a figyelmeztetésekhez (naptári napok keresése). */
   szoveg?: string;
 }
@@ -963,7 +969,15 @@ export function tervezDatumCsere(
   matches: readonly DatumMatch[],
   opts: DatumCsereOpciok,
 ): DatumTerv {
-  const eltolas = datumEltolas(opts.caseSecret);
+  /*
+    AZ ELTOLÁS KÉZZEL IS MEGADHATÓ.
+
+    Alapból az ügyazonosító titokból származik. A kézi érték annak való, aki
+    kerek eltolást akar (pontosan egy év, pontosan száz nap) — az időközök
+    ettől ugyanúgy sértetlenek maradnak, hiszen minden dátum ugyanannyit
+    mozdul.
+  */
+  const eltolas = opts.eltolas ?? datumEltolas(opts.caseSecret);
   const cserek: Csere[] = [];
   const figyelmeztetesek: string[] = [];
   let evNelkuli = 0;

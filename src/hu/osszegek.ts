@@ -554,6 +554,14 @@ export type OsszegMod = 'aranyos' | 'cimke';
 export interface OsszegCsereOpciok {
   /** Az ügy titkos kulcsa; ugyanaz a kulcs ugyanazt a szorzót adja. */
   caseSecret: string;
+  /**
+   * KÉZI SZORZÓ, ha a felhasználó megadta. Hiányában a kulcsból számoljuk.
+   *
+   * Annak való, akinek KEREK szorzó kell (kétszer annyi, fele annyi), mert az
+   * iratot valakinek el kell magyaráznia. Az összegek egymáshoz való aránya
+   * így is sértetlen: minden összeg ugyanazzal szorzódik.
+   */
+  szorzo?: number;
   mod: OsszegMod;
   /**
    * Az ügy TÖBBI iratában szereplő összegek, ha van ilyen.
@@ -930,7 +938,16 @@ export function tervezOsszegCsere(
     return { cserek: rendez(cserek), szorzo: null, osszefuggesek: [], figyelmeztetesek };
   }
 
-  const szorzo = osszegSzorzo(opts.caseSecret);
+  /*
+    A SZORZÓ KÉZZEL IS MEGADHATÓ.
+
+    Alapból az ügyazonosító titokból számoljuk — kiszámíthatatlan, de ügyön
+    belül állandó. Van viszont, amikor az ügyvédnek KEREK szorzó kell (kétszer
+    annyi, fele annyi), mert az iratot valakinek el kell magyaráznia. A kézi
+    érték ilyenkor felülírja a számoltat; a tartomány ugyanaz marad, mert azon
+    kívül az összegek nagyságrendje árulkodóvá válna.
+  */
+  const szorzo = opts.szorzo ?? osszegSzorzo(opts.caseSecret);
 
   // 1. Értékenként EGY új érték: ugyanaz az összeg az irat minden pontján
   //    ugyanarra cserélődik, különben az olvasó két különböző tételt lát ott,

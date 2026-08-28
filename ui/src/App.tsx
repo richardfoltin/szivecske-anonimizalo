@@ -656,6 +656,15 @@ export default function App() {
    * aki a lehető legkevesebb bájtot akarja megváltoztatni a fájlban.
    */
   const [paragraphReflow, setParagraphReflow] = useState(true);
+  /**
+   * KÉZI SZORZÓ ÉS ELTOLÁS — ha a felhasználó megadta.
+   *
+   * `undefined`: a motor az ügy kulcsából számol, ami kiszámíthatatlan, de
+   * ügyön belül állandó. A kézi érték annak való, akinek KEREK mérték kell,
+   * mert az iratot valakinek el kell magyaráznia.
+   */
+  const [amountFactor, setAmountFactor] = useState<number | undefined>(undefined);
+  const [dateShiftDays, setDateShiftDays] = useState<number | undefined>(undefined);
   const [shiftDates, setShiftDates] = useState(false);
   /**
    * A CÍMKÉK NYELVE a szerep-, adatfajta- és számozott módban.
@@ -854,6 +863,8 @@ export default function App() {
           replaceAmounts,
           shiftDates,
           paragraphReflow,
+          ...(amountFactor !== undefined ? { amountFactor } : {}),
+          ...(dateShiftDays !== undefined ? { dateShiftDays } : {}),
           acceptReview: accept,
           /*
             A MEGTARTANDÓ LISTA ÜRES, ha a felhasználó ezeket is cserélteti.
@@ -896,6 +907,8 @@ export default function App() {
       replaceOfficials,
       shiftDates,
       paragraphReflow,
+      amountFactor,
+      dateShiftDays,
       identifiers,
       autoModeForDoc,
       detected,
@@ -2206,6 +2219,8 @@ export default function App() {
     replaceAmounts,
     shiftDates,
     replaceOfficials,
+    ...(amountFactor !== undefined ? { amountFactor } : {}),
+    ...(dateShiftDays !== undefined ? { dateShiftDays } : {}),
   };
 
   /**
@@ -3058,15 +3073,14 @@ export default function App() {
     */
     if (fel) {
       tetelek.push(
-        {
-          fajta: 'gomb',
-          bont: true,
-          cimke: `Nem ${FAJTA_CIMKE[fajta]} — vedd le róla az aláhúzást`,
-          sugo:
-            'A programot ezzel javítod: a szó kikerül a listából, és az irat EGYETLEN helyén ' +
-            'sem lesz többé megjelölve.',
-          onValaszt: () => felTorles(m.entityId),
-        },
+        /*
+          A „VEDD LE RÓLA AZ ALÁHÚZÁST" SOR INNEN KIKERÜLT.
+
+          Ugyanazt tette, amit a beállító lap sorának kapcsolója, csak más
+          szavakkal — és a menü első két sora így két hasonló, de nem azonos
+          műveletet kínált egymás alatt („ne cserélje" / „vedd le róla"),
+          amiről kattintás előtt nem derült ki, miben térnek el.
+        */
         { fajta: 'valaszto' },
         {
           fajta: 'almenu',
@@ -3169,6 +3183,14 @@ export default function App() {
     if (valtozas.autoThreshold !== undefined) setAutoThreshold(valtozas.autoThreshold);
     if (valtozas.keepKey !== undefined) setKeepKey(valtozas.keepKey);
     if (valtozas.replaceAmounts !== undefined) setReplaceAmounts(valtozas.replaceAmounts);
+    // A `hasOwnProperty` kell, nem az `!== undefined`: a mező KIÜRÍTÉSE is
+    // érvényes válasz („számold a kulcsból"), és azt `undefined` jelenti.
+    if (Object.prototype.hasOwnProperty.call(valtozas, 'amountFactor')) {
+      setAmountFactor(valtozas.amountFactor);
+    }
+    if (Object.prototype.hasOwnProperty.call(valtozas, 'dateShiftDays')) {
+      setDateShiftDays(valtozas.dateShiftDays);
+    }
     if (valtozas.shiftDates !== undefined) setShiftDates(valtozas.shiftDates);
     if (valtozas.replaceOfficials !== undefined) {
       setReplaceOfficials(valtozas.replaceOfficials);

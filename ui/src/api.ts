@@ -146,6 +146,10 @@ interface AnalyzeInput {
    * kérését.
    */
   paragraphReflow?: boolean;
+  /** KÉZI szorzó az összegekhez; hiányában a motor az ügy kulcsából számolja. */
+  amountFactor?: number;
+  /** KÉZI eltolás napban a dátumokhoz; hiányában a kulcsból. */
+  dateShiftDays?: number;
   /**
    * A CÍMKÉK NYELVE a szerep-, adatfajta- és számozott módban.
    *
