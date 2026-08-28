@@ -165,6 +165,27 @@ export interface AssignOptions {
    */
   caseSecret: string;
   /**
+   * A MÁR KIOSZTOTT ÁLNEVEK — ezeket nem osztjuk ki újra.
+   *
+   * MIÉRT KELL. A kiosztás sorrendfüggő: a felek a megjelenés sorrendjében
+   * húznak a névsor elejéről, közös készletből. Ettől EGYETLEN új fél
+   * felvétele — például a hivatalos szereplők cseréjének bekapcsolása —
+   * átrendezte az EGÉSZ névsort: a felperes, akit az ügyvéd már „Kovakövi
+   * Frédi"-ként ismert, hirtelen „Kőfej Benő" lett. Egy ki-be kapcsolás
+   * ilyenkor nem beállítás, hanem az irat átírása; aki közben a képernyőt
+   * nézte, joggal hiszi, hogy elromlott valami.
+   *
+   * Amit ez ad: az álnév EGYSZER dől el, és onnantól a félhez tapad. Új fél a
+   * MARADÉK készletből kap nevet, a régiek nem mozdulnak. Aki mégis más nevet
+   * akar, kézzel átírhatja (`manualReplacement`) — az a kimondott döntés, nem
+   * egy kapcsoló mellékhatása.
+   *
+   * MIKOR NEM SZABAD ÁTADNI: ha a NÉVKÉSZLET változott. A megtartott név a régi
+   * készletből való; új készlet mellett átvéve az irat két készlet nevét
+   * keverné, és a felhasználó választása némán csak az új felekre hatna.
+   */
+  keep?: ReadonlyMap<string, Assignment>;
+  /**
    * Ha igaz, a hasonló hosszúságú álnevet részesíti előnyben (elrendezés miatt).
    *
    * PRIORITÁSI MÓDBAN NEM ÉRVÉNYES, és ez tudatos: a hosszegyeztetés elrendezési
@@ -259,7 +280,32 @@ export function assignPseudonyms(
     (a, b) => rank(a) - rank(b) || (pri(a) ?? Number.MAX_SAFE_INTEGER) - (pri(b) ?? Number.MAX_SAFE_INTEGER),
   );
 
+  /*
+    ELSŐ KÖR: A MÁR KIOSZTOTT NEVEK LEFOGLALÁSA.
+
+    A megtartott felek a helyükön maradnak, a nevük pedig KIKERÜL a
+    készletből — enélkül egy új fél ugyanazt a nevet húzná, és két szereplő
+    viselné ugyanazt az álnevet, ami rosszabb minden átrendeződésnél.
+
+    A NÉV CSAK AKKOR TAPAD, HA A FÉL UGYANAZ MARADT. Az azonosító mellett az
+    eredeti nevet is nézzük: ha a felhasználó átírta a fél nevét (vagy a jobb
+    gombos menüben átértelmezte), az már más szereplő — nem örökölheti az
+    előző álnevét.
+  */
+  const megtartva = new Set<string>();
   for (const e of ordered) {
+    const regi = opts.keep?.get(e.id);
+    if (!regi || regi.original !== eredetiNeve(e)) continue;
+    // A fajta is számít: egy személyből lett szervezet nem viheti tovább a
+    // személynevét — a ragozása és a készlete is más.
+    if (regi.pseudo.kind !== e.kind) continue;
+    out.set(e.id, regi);
+    megtartva.add(e.id);
+    foglal(regi, usedSurnames, usedGiven, usedPlaces);
+  }
+
+  for (const e of ordered) {
+    if (megtartva.has(e.id)) continue;
     if (e.kind === 'person') {
       out.set(e.id, assignPerson(e, theme, opts, out, usedSurnames, usedGiven, pri(e)));
     } else if (e.kind === 'org') {
@@ -271,6 +317,42 @@ export function assignPseudonyms(
     }
   }
   return out;
+}
+
+/** A fél eredeti neve — a fajtánként más mezőnév miatt. */
+function eredetiNeve(e: AnonEntity): string {
+  if (e.kind === 'person') return `${e.surname} ${e.given}`.trim();
+  return e.name;
+}
+
+/**
+ * EGY MEGTARTOTT ÁLNÉV KIVÉTELE A KÉSZLETBŐL.
+ *
+ * Ugyanazokba a halmazokba ír, amikbe a kiosztó függvények — különben a
+ * megtartott név szabadnak látszana, és egy új fél ráhúzna. A szervezeteknél
+ * a készlet a cégnév ELSŐ SZAVÁVAL fogy (a cégforma és a maradék szó az
+ * eredetiből marad meg), ezért itt is azt foglaljuk le.
+ */
+function foglal(
+  a: Assignment,
+  usedSurnames: Set<string>,
+  usedGiven: Set<string>,
+  usedPlaces: Set<string>,
+): void {
+  const p = a.pseudo;
+  if (p.kind === 'person') {
+    usedSurnames.add(p.surname.toLowerCase());
+    usedGiven.add(p.given.toLowerCase());
+    return;
+  }
+  if (p.kind === 'org') {
+    const elsoSzo = stripCompanyForm(p.name).split(/\s+/)[0];
+    // A szervezetek és a vezetéknevek KÖZÖS készletből fogynak (`usedOrgs`
+    // ugyanaz a halmaz, mint az `usedSurnames`), ezért ide megy.
+    if (elsoSzo) usedSurnames.add(elsoSzo.toLowerCase());
+    return;
+  }
+  usedPlaces.add(p.name.toLowerCase());
 }
 
 function rank(e: AnonEntity): number {

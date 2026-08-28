@@ -205,6 +205,22 @@ export interface AnalyzeInput {
   /** Találatonkénti felhasználói döntések (találat-azonosító → döntés). */
   decisions?: Record<number, 'accept' | 'skip'>;
   /**
+   * A MÁR KIOSZTOTT ÁLNEVEK — az ÜGY egészére, nem erre az iratra.
+   *
+   * MIÉRT A HÍVÓ ADJA. Az álnév nem az iraté, hanem az ügyé: ugyanaz a valódi
+   * név az ügy minden iratában ugyanazt a fedőnevet viseli, és nem változhat
+   * meg attól, hogy a felhasználó átbillent egy kapcsolót. Ha a munkamenet
+   * NÉMÁN emlékezne a sajátjára, két irat két külön emlékezetet vezetne: az,
+   * amelyiket előbb elemeztük egyedül, ragaszkodna a maga korábbi
+   * kiosztásához, és a közös sorrend nem érne el hozzá — pontosan az a
+   * széttartás állna vissza, ami ellen a közös sorrend van.
+   *
+   * Ezért az ügy szintjén tartja számon a főfolyamat, és minden iratnak
+   * ugyanazt adja át. Üresen hagyva a kiosztás a szokott módon, a megjelenés
+   * sorrendjéből dől el.
+   */
+  keep?: ReadonlyMap<string, Assignment>;
+  /**
    * E fölött cserélünk automatikusan. Hiányában a motor beépített
    * alapértelmezése érvényes.
    */
@@ -313,6 +329,24 @@ export class DocumentSession {
   private pages: PageImage[] = [];
   private lastMatches: { row: MatchRow; match: Match; unit: number }[] = [];
   private lastAssignments = new Map<string, Assignment>();
+  /** A program saját kiosztása, a kézi felülírások NÉLKÜL — lásd `assignments`. */
+  private stickyAssignments = new Map<string, Assignment>();
+
+  /**
+   * AZ EBBEN AZ IRATBAN KIOSZTOTT ÁLNEVEK — a hívónak, az ügy nyilvántartásához.
+   *
+   * A főfolyamat ebből építi az ügy közös kiosztását, és a következő
+   * elemzésnél `AnalyzeInput.keep`-ként adja vissza — így az álnév egyszer
+   * dől el, és a ki-be kapcsolások nem írják át.
+   *
+   * A KÉZI FELÜLÍRÁSOK NINCSENEK BENNE, és ez szándékos: a kézzel beírt név a
+   * felhasználó ELEVEN döntése, nem a program kiosztása. Ha ide kerülne, a
+   * mező kiürítése némán hatástalan maradna — a megtartás visszatenné a
+   * törölt nevet. A kézi név minden körben a felek listájáról kerül rá újra.
+   */
+  get assignments(): ReadonlyMap<string, Assignment> {
+    return this.stickyAssignments;
+  }
   private lastEntities: AnonEntity[] = [];
   /** A legutóbbi elemzés felei — a kihagyottak is, mert az ellenőrző körnek kellenek. */
   private lastParties: PartyInput[] = [];
@@ -560,7 +594,36 @@ export class DocumentSession {
         kimenetek nem volnának együtt olvashatók.
       */
       appearanceOrder: input.appearanceOrder ?? appearanceOrder(nameHitsByUnit),
+      /*
+        A MÁR KIOSZTOTT ÁLNEVEK TOVÁBBÉLNEK — amit a hívó átad.
+
+        Enélkül a kiosztás sorrendfüggő maradna: egyetlen új fél felvétele (a
+        hivatalos szereplők bekapcsolása, egy kézzel felvett név, egy jobb
+        gombos átértelmezés) átrendezte az EGÉSZ névsort, és a felperes, akit
+        az ügyvéd már a fedőnevén ismert, más nevet kapott.
+
+        A LISTÁT A HÍVÓ TARTJA, nem mi: az álnév az ÜGYÉ, nem ezé az egy
+        iraté (lásd `AnalyzeInput.keep`). A készletváltás figyelése is az övé —
+        ő tudja, mikor váltott a felhasználó.
+      */
+      ...(input.keep ? { keep: input.keep } : {}),
     });
+    /*
+      A MEGTARTANDÓ KIOSZTÁS PILLANATKÉPE — A KÉZI FELÜLÍRÁS ELŐTT.
+
+      A kézi átírás (`applyManualReplacement`) HELYBEN módosítja a kiosztás
+      sorát. Ha az ügy nyilvántartásába a módosított sor kerülne, a kézzel
+      beírt név örökre rátapadna a félre: a felhasználó KIÜRÍTI a mezőt, a
+      program visszateszi a megtartott — vagyis épp a törölt — nevet, és semmi
+      nem árulja el, miért nem történt semmi. Ez a legdrágább fajta hiba
+      ebben a programban: nem hibaüzenet, hanem néma tehetetlenség.
+
+      Ezért a nyilvántartásba a PROGRAM saját kiosztása kerül, a kézi név
+      nélkül. A kézi átírás minden körben újra rákerül, amíg a felhasználó
+      kéri — és abban a pillanatban lekerül, amikor már nem.
+    */
+    this.stickyAssignments = new Map([...assignments].map(([id, a]) => [id, { ...a }]));
+
     // Kézi felülírás a felületről.
     for (const p of parties) {
       const a = assignments.get(p.id);

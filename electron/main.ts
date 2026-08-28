@@ -73,7 +73,7 @@ import type {
   PreviewPages,
   ThemeSummary,
 } from '../src/app/types.js';
-import type { Theme } from '../src/pseudonym.js';
+import type { Assignment, Theme } from '../src/pseudonym.js';
 import type {
   AppInfo,
   DetectProgress,
@@ -221,6 +221,30 @@ let homonyms = new Set<string>();
  * sorrendet nézi.
  */
 let sessions: DocumentSession[] = [];
+
+/**
+ * AZ ÜGY ÁLNÉV-KIOSZTÁSA — egyetlen nyilvántartás, minden iratra.
+ *
+ * MIÉRT ITT LAKIK. Az álnév nem az iraté, hanem az ügyé: ugyanaz a valódi név
+ * az ügy minden iratában ugyanazt a fedőnevet viseli. Iratonként tárolva két
+ * irat két külön emlékezetet vezetne, és az, amelyiket előbb elemeztük
+ * egyedül, ragaszkodna a saját korábbi kiosztásához.
+ *
+ * MIT OLD MEG. A kiosztás sorrendfüggő: a felek a megjelenés sorrendjében
+ * húznak a névsor elejéről, közös készletből. Emiatt EGYETLEN új fél
+ * felvétele — a hivatalos szereplők bekapcsolása, egy kézzel felvett név, egy
+ * jobb gombos átértelmezés — átrendezte az EGÉSZ névsort: a felperes, akit az
+ * ügyvéd már a fedőnevén ismert, más nevet kapott. Egy kapcsoló átbillentése
+ * így nem beállítás volt, hanem az irat átírása.
+ *
+ * MIKOR ÜRÜL KI: új ügynél (a felület új ügyazonosító titkot ad) és
+ * NÉVKÉSZLET-VÁLTÁSNÁL — a megtartott név a régi készletből való, átvéve az
+ * irat két készlet neveit keverné, és a felhasználó választása némán csak az
+ * új felekre hatna.
+ */
+let kozosKiosztas = new Map<string, Assignment>();
+/** Melyik készletből és melyik ügyből való a fenti kiosztás. */
+let kozosKiosztasKulcs: string | null = null;
 
 /**
  * Az első irat — a régi, egy iratra írt utak innen dolgoznak tovább.
@@ -2383,6 +2407,20 @@ function registerHandlers(): void {
    * megkapná az elsőnek szánt döntéseket, és néma cserehibát okozna.
    */
   function mindenIratotElemez(input: AnalyzeInput, theme: Theme): AnalysisResult {
+    /*
+      A NYILVÁNTARTÁS ÜRÍTÉSE KÉSZLET- VAGY ÜGYVÁLTÁSKOR.
+
+      A kulcs a két dolog, amitől a nevek MAGA a jelentésük szerint mások: az
+      ügyazonosító titok (más ügy → más leképezés) és a névkészlet (más
+      készlet → más nevek). Bármelyik változásakor a régi kiosztás nem
+      megtartandó érték, hanem félrevezetés.
+    */
+    const kulcs = `${input.caseSecret}|${theme.id}`;
+    if (kozosKiosztasKulcs !== kulcs) {
+      kozosKiosztas = new Map();
+      kozosKiosztasKulcs = kulcs;
+    }
+
     const szakaszok: DocSection[] = [];
     const matches: MatchRow[] = [];
     const autoAccepted: AutoDecisionRow[] = [];
@@ -2428,10 +2466,21 @@ function registerHandlers(): void {
           ...input,
           decisions: sajatDontesek,
           ...(kozosSorrend === null ? {} : { appearanceOrder: kozosSorrend }),
+          // Az ügy eddigi kiosztása. Ettől marad a felperes ugyanaz a
+          // „Kovakövi Frédi" akkor is, ha közben új fél került a listára.
+          keep: kozosKiosztas,
         },
         theme,
         homonyms,
       );
+      /*
+        AMIT EZ AZ IRAT KIOSZTOTT, AZ MOSTANTÓL AZ ÜGYÉ.
+
+        A gyűjtés a KÖVETKEZŐ irat elemzése ELŐTT történik, még ugyanabban a
+        körben: így a második irat már megkapja az elsőben eldőlt neveket, és
+        egy csak nála szereplő félre sem húzhatja rá egy másik irat nevét.
+      */
+      for (const [id, a] of sess.assignments) kozosKiosztas.set(id, a);
       if (i === 0) {
         elso = res;
         /*

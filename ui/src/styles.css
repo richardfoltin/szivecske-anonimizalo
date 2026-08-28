@@ -23,6 +23,16 @@
 
   --mint: #3d8a72;
   --mint-soft: #e6f3ee;
+  /*
+    A SZÖVEGKIJELÖLÉS SZÍNE — semleges világosszürke, nem a program rózsaszínje.
+
+    Az iraton MINDEN szín jelent valamit: a rózsaszín nevet, a zöld összeget, a
+    kék dátumot, a borostyán bizonytalanságot. A kijelölés viszont nem az irat
+    tulajdonsága, hanem a felhasználó keze nyoma — ha az is a névszínt viselné,
+    egy kijelölt mondat úgy nézne ki, mintha a program mindet névnek ítélte
+    volna. A szürke az egyetlen szín, ami itt nem állít semmit.
+  */
+  --kijeloles: rgba(120, 110, 125, 0.22);
   --amber: #a97318;
   --amber-soft: #fbf0da;
 
@@ -4318,7 +4328,7 @@ textarea:focus {
 */
 .textview ::selection,
 .textview::selection {
-  background: rgba(196, 87, 125, 0.26);
+  background: var(--kijeloles);
   color: inherit;
 }
 
@@ -4353,7 +4363,7 @@ textarea:focus {
   -webkit-text-fill-color: transparent;
 }
 .szovegreteg span::selection {
-  background: rgba(196, 87, 125, 0.3);
+  background: var(--kijeloles);
   -webkit-text-fill-color: transparent;
 }
 

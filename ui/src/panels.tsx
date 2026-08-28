@@ -275,15 +275,27 @@ function SzovegReteg({ spans, page }: { spans: TextSpan[]; page: number }) {
     const tarto = ref.current;
     if (!tarto) return;
     const igazit = (): void => {
-      const elemek = tarto.querySelectorAll<HTMLElement>('span[data-w]');
+      /*
+        A LAP SZÉLESSÉGE KÉPPONTBAN — enélkül a számítás mértékegységet keverne.
+
+        A motor a szakasz szélességét a lap ARÁNYÁBAN adja meg (0..1); a mért
+        szélesség viszont KÉPPONT. A kettőt közvetlenül elosztva a nagyítás
+        nagyságrendekkel mellémegy — a réteg tizedére zsugorodik, és a
+        kijelölésnek semmi köze nem lesz a képen látható szavakhoz. A réteg
+        `inset: 0` a lapon, tehát a saját szélessége maga a lapszélesség.
+      */
+      const lapSzelesseg = tarto.getBoundingClientRect().width;
+      if (lapSzelesseg <= 0) return;
+      const elemek = tarto.querySelectorAll<HTMLElement>('span[data-arany]');
       for (const el of elemek) {
-        const cel = Number(el.dataset.w);
-        if (!Number.isFinite(cel) || cel <= 0) continue;
+        const arany = Number(el.dataset.arany);
+        if (!Number.isFinite(arany) || arany <= 0) continue;
+        const celKeppont = arany * lapSzelesseg;
         // A mérés a saját, torzítatlan szélességen fut — különben minden
         // újramérés az ELŐZŐ nyújtást szorozná tovább.
         el.style.transform = 'none';
         const sajatSzelesseg = el.getBoundingClientRect().width;
-        if (sajatSzelesseg > 0) el.style.transform = `scaleX(${cel / sajatSzelesseg})`;
+        if (sajatSzelesseg > 0) el.style.transform = `scaleX(${celKeppont / sajatSzelesseg})`;
       }
     };
     igazit();
@@ -305,7 +317,9 @@ function SzovegReteg({ spans, page }: { spans: TextSpan[]; page: number }) {
       {sajat.map((s, i) => (
         <span
           key={i}
-          data-w={s.width * 100}
+          /* ARÁNY, nem százalék: a nyújtás számítása képponttal szoroz. A
+             mértékegység a névben áll, mert épp ezen csúszott el egyszer. */
+          data-arany={s.width}
           style={{
             left: `${s.left * 100}%`,
             top: `${s.top * 100}%`,
