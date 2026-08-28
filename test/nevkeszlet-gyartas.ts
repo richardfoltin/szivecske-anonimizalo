@@ -49,7 +49,7 @@ function modellGyoker(repo: string): string | null {
     join(process.env.APPDATA ?? join(homedir(), 'AppData/Roaming'), 'szivecske-anonymizer/modellek'),
   ];
   for (const gy of jeloltek) {
-    if (existsSync(join(gy, ...repo.split('/'), 'config.json'))) return gy;
+    if (existsSync(join(gy, ...repo.split('/'), 'config.json'))) return gy;  // eslint-disable-line
   }
   return null;
 }
@@ -70,9 +70,20 @@ if (!spec) {
   process.exit(0);
 }
 
-const gyoker = modellGyoker(spec.repo);
+/*
+  MÁSIK MODELL KIPRÓBÁLÁSA — összehasonlításhoz.
+
+  A gyártó modell megválasztása mérés kérdése (sebesség és minőség), és a
+  mérést ugyanezen az úton kell végezni, nem külön kis programmal. A
+  nyilvántartásba csak az kerülhet, ami itt megmérve megállt.
+
+      SZIVECSKE_MODELL=onnx-community/Qwen3-0.6B-ONNX
+      SZIVECSKE_MODELLTAR=…/valamelyik/mappa
+*/
+const repo = process.env.SZIVECSKE_MODELL ?? spec.repo;
+const gyoker = process.env.SZIVECSKE_MODELLTAR ?? modellGyoker(repo);
 if (!gyoker) {
-  console.log(`KIHAGYVA: a(z) „${spec.name}” nincs letöltve ezen a gépen.`);
+  console.log(`KIHAGYVA: a(z) „${repo}” nincs letöltve ezen a gépen.`);
   console.log('  A gyártás útja így nincs bizonyítva — a modellel együtt futtasd újra.');
   process.exit(0);
 }
@@ -97,7 +108,7 @@ const kliens = new ModelClient({
   },
   config: {
     modelId: spec.id,
-    repo: spec.repo,
+    repo,
     cacheDir: gyoker,
     labelMap: spec.labelMap,
     engine: spec.engine,
@@ -132,12 +143,23 @@ try {
   const t1 = Date.now();
   // Keret nélkül: pontosan úgy, ahogy a főfolyamat kéri. A teszt attól ér
   // valamit, hogy azt méri, amit a felhasználó kap.
-  const valasz = await kliens.generate(kerdes);
+  const gondolkodas = process.env.SZIVECSKE_GONDOLKODAS;
+  const valasz = await kliens.generate(
+    kerdes,
+    gondolkodas === undefined ? {} : { thinkBudget: Number(gondolkodas) },
+  );
   const mp = (Date.now() - t1) / 1000;
   console.log(`  gyártás:  ${mp.toFixed(1)} s`);
 
   const javaslatok = olvasdAJavaslatot(valasz, csoport);
   console.log(`  javaslat: ${javaslatok.length} darab`);
+  if (javaslatok.length === 0) {
+    // A BUKÁS MUTASSA MEG, MIT LÁTOTT. Egy „0 javaslat” sorból nem derül ki,
+    // hogy a modell hallgatott, prózát írt, vagy elrontotta a JSON-t — pedig
+    // a három egészen más teendő.
+    console.log(`  a válasz ${valasz.length} karakter, a vége:`);
+    console.log('  …' + valasz.slice(-400).split('\n').join('\n  '));
+  }
   console.log(`    ${javaslatok.slice(0, 8).map((j) => j.form).join(', ')}`);
 
   console.log('');
@@ -185,7 +207,7 @@ const masodik = new ModelClient({
   szalak: Math.max(2, cpus().length - 2),
   config: {
     modelId: spec.id,
-    repo: spec.repo,
+    repo,
     cacheDir: gyoker,
     labelMap: spec.labelMap,
     engine: spec.engine,

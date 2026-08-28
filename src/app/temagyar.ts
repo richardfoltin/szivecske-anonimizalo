@@ -434,7 +434,8 @@ export function epitsdAJavaslatKerest(temaSzoveg: string, csoport?: JavaslatCsop
  * @param alapCsoport ha az elemből hiányzik a "kind", ezt vesszük
  */
 export function olvasdAJavaslatot(valasz: string, alapCsoport?: JavaslatCsoport): NevJavaslat[] {
-  const tomb = kereskJsonTombot(vagdLeAGondolatmenetet(valasz));
+  const valaszResz = vagdLeAGondolatmenetet(valasz);
+  const tomb = kereskJsonTombot(valaszResz) ?? soronkentiObjektumok(valaszResz);
   if (tomb === null) return [];
 
   const out: NevJavaslat[] = [];
@@ -468,6 +469,38 @@ function vagdLeAGondolatmenetet(valasz: string): string {
   const nyito = valasz.lastIndexOf('<think>');
   if (nyito >= 0) return valasz.slice(nyito + '<think>'.length);
   return valasz;
+}
+
+/**
+ * SORONKÉNT ÁLLÓ OBJEKTUMOK — tömb nélkül.
+ *
+ * MÉRÉS HOZTA IDE: a kisebb modellek a kért tömb helyett gyakran csak
+ * felsorolják az elemeket, soronként egyet:
+ *
+ *     {"form": "Akhilleusz", "gender": "M"}
+ *     {"form": "Kasszandra", "gender": "F"}
+ *
+ * Ez a válasz hiánytalan és félreérthetetlen, csak épp nincs körülötte
+ * szögletes zárójel. Emiatt eldobni az egészet pazarlás: a tartalom megvan, a
+ * forma hiányzik. Egy 1,7 milliárd paraméteres modell 30 tételes válasza így
+ * ment veszendőbe, nulla javaslattal.
+ *
+ * Csak akkor fut le, ha érvényes tömböt NEM találtunk — a tömb marad az
+ * elsődleges alak, ezt csak mentőövnek szánjuk.
+ */
+function soronkentiObjektumok(szoveg: string): unknown[] | null {
+  const out: unknown[] = [];
+  for (const sor of szoveg.split(/\r?\n/)) {
+    const t = sor.trim().replace(/,$/, '');
+    if (!t.startsWith('{') || !t.endsWith('}')) continue;
+    try {
+      const ertek: unknown = JSON.parse(t);
+      if (ertek !== null && typeof ertek === 'object') out.push(ertek);
+    } catch {
+      // Nem érvényes sor: átugorjuk. Egy elrontott tétel ne vigye el a többit.
+    }
+  }
+  return out.length > 0 ? out : null;
 }
 
 /**

@@ -7,12 +7,15 @@
  * a kimenete néhány tucat javasolt név. Ezért van külön fájlban — hogy a
  * felismerő úton egyetlen sor se hivatkozzon rá, és fordítva.
  *
+ * HOL FUT: a videokártyán, mindig. A `load()` melletti mérés mutatja, miért —
+ * processzoron ugyanez a háló egy nagyságrenddel lassabb, és a funkció ott nem
+ * használható.
+ *
  * MIÉRT KÉT MENETBEN GENERÁLUNK (lásd `generate` alább): a nyilvántartásba vett
  * gyártó egy 》gondolkodó《 modell. A csevegő sablonja `<think>`-kel nyit, és a
  * modell magától addig gondolkodik, ameddig jónak látja — közben egy szót sem ír
- * a válaszból. Mérés ezen a gépen: 4,35 token másodpercenként. Ha egyetlen
- * generálásra bíznánk a keretet, a modell elgondolkodhatná az egészet, és a
- * felhasználó tíz perc után ÜRES eredményt kapna. Ezért a gondolkodásnak külön,
+ * a válaszból. Ha egyetlen generálásra bíznánk a keretet, elgondolkodhatná az
+ * egészet, és a felhasználó ÜRES eredményt kapna. Ezért a gondolkodásnak külön,
  * szűkebb kerete van, és ha kifut belőle, mi zárjuk le helyette a `</think>`
  * jellel. A válasz kerete ennél bőkezűbb lehet: a modell a lista végén magától
  * megáll, tehát a nagyobb keret nem kerül időbe.
@@ -86,10 +89,48 @@ export class TextGenerator {
     this.tf = tf;
 
     this.tokenizer = (await tf.AutoTokenizer.from_pretrained(this.cfg.repo)) as TokenizerLike;
-    this.model = (await tf.AutoModelForCausalLM.from_pretrained(this.cfg.repo, {
-      dtype: this.cfg.dtype ?? 'q4',
-      device: 'cpu',
-    })) as CausalModelLike;
+    /*
+      A GENERATÍV MODELL A VIDEOKÁRTYÁN FUT. PROCESZORON SOHA.
+
+      Végigmérve ezen a gépen, ugyanazzal a kérdéssel és ugyanazzal a letöltött
+      q4 súllyal:
+
+        processzor (2 szál)      0,86 token/s
+        processzor (18 szál)     1,4–4 token/s   ← ezt csináltuk eddig
+        DirectML                 4,8 token/s, de SZEMETET ÍR
+        WebGPU                   19,2 token/s, helyes kimenet
+
+      A DirectML nem hangolási kérdés: ugyanaz a súlyfájl processzoron értelmes
+      szöveget ad, DirectML-en értelmetlen tokenfolyamot — kontrollal igazolva,
+      a kisebb hálón is, q4f16-tal is. Az `onnxruntime-node` WebGPU futtatója
+      viszont helyesen számol, és nem kell hozzá se CUDA, se más telepítés.
+
+      MIÉRT MARAD q4 ÉS NEM q4f16: a q4f16 gyorsabb volna, de a `shader-f16`
+      képességet nem minden videokártya tudja (ezen a Pascal kártyán például
+      nem, és ott a q4f16 futás közben elszáll). A q4 mindkét fajtán megy, és
+      már le van töltve — egyetlen fájlkészlet, egy kevesebb hibalehetőség.
+    */
+    try {
+      this.model = (await tf.AutoModelForCausalLM.from_pretrained(this.cfg.repo, {
+        dtype: this.cfg.dtype ?? 'q4',
+        device: 'webgpu',
+      })) as CausalModelLike;
+    } catch (e) {
+      /*
+        HA NINCS VIDEOKÁRTYA, MEGÁLLUNK — nem esünk vissza processzorra.
+
+        A csendes visszaesés pontosan az a hibafajta, ami ellen ez a program
+        készült, csak itt nem az irat bánja, hanem a felhasználó ideje: ugyanez
+        a gyártás processzoron negyed óra helyett órákig tartana, és közben
+        semmi nem árulná el, miért. Inkább megmondjuk, mi hiányzik.
+      */
+      const reszlet = e instanceof Error ? e.message : String(e);
+      throw new Error(
+        'A névkészlet-gyártáshoz videokártya kell: ez a modell csak azon fut elfogadható ' +
+          'sebességgel. Ezen a gépen nem sikerült elindítani — a programmal szállított ' +
+          `névkészletek ettől függetlenül működnek. (A futtató üzenete: ${reszlet})`,
+      );
+    }
 
     this.zaroGondolat = this.zaroGondolatAzonosito(this.tokenizer);
 
@@ -158,7 +199,19 @@ export class TextGenerator {
       add_generation_prompt: true,
     }) as string;
 
-    const gondolat = await this.futtat(model, tok, streamer, eleje, gondolatKeret, true);
+    /*
+      NULLA KERET = NE GONDOLKODJON.
+
+      Nem trükk, hanem a sablon ismerete: a csevegő sablon `<think>`-kel nyit, és
+      a modell addig gondolkodik, amíg maga le nem zárja. Ha a nyitás UTÁN
+      rögtön odaírjuk a zárást, a következő szó már a válasz első szava.
+
+      MIÉRT ÉR EZ ENNYIT: a gondolkodás itt nem a névsor minőségén dolgozik,
+      hanem azon, hogy mit jelent az „utónév” — angolul. A gondolkodásra szánt
+      keret az idő felét vitte el. Egy névsorhoz nem kell levezetés.
+    */
+    const gondolat =
+      gondolatKeret > 0 ? await this.futtat(model, tok, streamer, eleje, gondolatKeret, true) : '';
 
     // 2. MENET: a válasz. Ha a modell nem fejezte be a gondolkodást, MI zárjuk
     // le — így a keret nem elveszett idő, hanem egy rövidebb gondolatmenet.

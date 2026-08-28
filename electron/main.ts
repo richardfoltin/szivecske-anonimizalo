@@ -28,7 +28,6 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
   indul. Kimérve: a köteg első sora és ez az import ütközött.
 */
 import { createRequire as igenylotKeszit } from 'node:module';
-import { cpus } from 'node:os';
 import { basename, dirname, extname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -1470,16 +1469,6 @@ async function nevkeszletetGyart(
 
   const kliens = new ModelClient({
     workerPath: join(HERE, 'ai-worker.cjs'),
-    /*
-      A GYÁRTÁS KAPJA A GÉP JAVÁT — a felismeréssel ellentétben.
-
-      A felismerés a háttérben fut, miközben a felhasználó az iratot nézi: ott a
-      két szál tudatos önmérséklet. Itt viszont a felhasználó egy párbeszédet
-      néz, és semmi mást nem tud csinálni, amíg a készlet el nem készül —
-      visszafogni a számolást annyi volna, mint feleslegesen várakoztatni.
-      Két magot meghagyunk, hogy a felület és a rendszer ne akadjon meg.
-    */
-    szalak: Math.max(2, cpus().length - 2),
     onGenProgress: ({ kesz, keret }) => {
       if (!csoportHatar) return;
       jelez({
