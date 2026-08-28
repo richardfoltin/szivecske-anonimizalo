@@ -877,13 +877,34 @@ export class DocumentSession {
       const a = assignments.get(p.id);
       const entity = byId.get(p.id);
       const stat = perEntity.get(p.id) ?? { total: 0, pending: 0 };
+      /*
+        A CÍM AZ ÁLNÉV ELŐTT IS OTT ÁLL — „dr. Bach Tivadar → dr. Palás Gránit".
+
+        A cím (dr., ifj., id., özv., néhai, prof.) nem része a névnek: a motor
+        LEVÁLASZTJA, mielőtt a nevet szétszedné vezeték- és keresztnévre, és a
+        kimeneti iratban helyesen vissza is teszi a csereszöveg elé. A
+        SZEREPLAPON viszont mindkét oldalról hiányzott, és ettől a lista mást
+        mutatott, mint ami a fájlba kerül: „Bach Tivadar → Palás Gránit",
+        miközben az iratban „dr. Palás Gránit" áll.
+
+        Ez nem szőrszálhasogatás. Az orvos, az ügyvéd és a professzor címe az
+        irat értelmezéséhez tartozik; aki a szereplapon cím nélkül látja az
+        álnevet, joggal hiszi, hogy a csere elvette a doktori címet is.
+      */
+      const cim = TITLE_PREFIX.exec(p.fullName.trim())?.[0]?.trim() ?? '';
+      const cimmel = (nev: string): string =>
+        cim === '' || nev === '' || nev.startsWith(cim) ? nev : `${cim} ${nev}`;
       return {
         entityId: p.id,
-        original: a?.original ?? p.fullName,
+        original: cimmel(a?.original ?? p.fullName),
         // Amit a KIMENETI IRAT ténylegesen tartalmaz. Az `Assignment.display`
         // mindig a témás álnév — szerep-, adatfajta- és számozott módban
         // olyan párokat mutatott, amik az iratban sehol nem szerepeltek.
-        replacement: p.skipped ? '(nem cseréljük)' : entity ? displayFor(entity, ctx) : '',
+        replacement: p.skipped
+          ? '(nem cseréljük)'
+          : entity
+            ? cimmel(displayFor(entity, ctx))
+            : '',
         kind: p.kind,
         role: p.role,
         gender: p.gender,

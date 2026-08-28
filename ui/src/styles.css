@@ -24,6 +24,16 @@
   --mint: #3d8a72;
   --mint-soft: #e6f3ee;
   /*
+    A KÉK — ugyanaz, amivel a dátumot jelöljük az iraton.
+
+    Nem új szín: a program palettáján eddig is ott volt, csak nem volt neve,
+    mert kizárólag a kiemelés áttetsző változatában szerepelt. A jelvényeknek
+    tömör árnyalat kell (fehér betűvel), ezért kapott saját nevet — két külön
+    kékből előbb-utóbb két különböző kék lenne.
+  */
+  --kek: #2e6aa8;
+  --kek-soft: #e8eff8;
+  /*
     A SZÖVEGKIJELÖLÉS SZÍNE — semleges világosszürke, nem a program rózsaszínje.
 
     Az iraton MINDEN szín jelent valamit: a rózsaszín nevet, a zöld összeget, a
@@ -1482,8 +1492,12 @@ textarea:focus {
 .themecard.tiltva .t .pipa {
   color: var(--rose-tint);
 }
+/* Letiltott kártya: a jelvény is elhalványul, különben a szín azt ígérné,
+   hogy választható. A keret is, nem csak a háttér — a tömör zöld kerete
+   máskülönben ott maradna egy szürke folt körül. */
 .themecard.tiltva .kartyajel.keszlet {
   background: var(--surface-2);
+  border-color: var(--line);
   color: var(--muted);
 }
 .langchip:disabled {
@@ -1675,18 +1689,32 @@ textarea:focus {
   text-transform: uppercase;
   white-space: nowrap;
 }
-/* A hangsúlyszín SÖTÉT változata, nem az alap: fehér betű a `--rose`-on 4,2:1,
-   ami ekkora betűméretnél kevés — a `--rose-deep` 5,9:1-et ad. A jelvény
-   pontosan attól ér valamit, hogy ránézésre elolvasható. */
+/*
+  A KÉT JELVÉNY KÉT KÜLÖN SZÍNT KAP — mert két külön dolgot jelent.
+
+  A CÍMKE-kártyák („[felperes]", „[adószám]") azt teszik a név helyére, hogy MI
+  volt ott; a NÉVKÉSZLET-kártyák fedőnevet adnak neki. A kettő nem fokozat,
+  hanem két irány, és a felhasználó a hat kártya közül ránézésre akarja tudni,
+  melyikből melyik.
+
+  Eddig a címke rózsaszín volt, a névkészlet fehér — a rózsaszín viszont a
+  programban a NÉV jelölésének a színe, tehát épp a rossz oldalon állt; a fehér
+  jelvény pedig alig jelvény. A kék és a zöld a program saját palettájából
+  való (a dátumé és az összegé az iraton), és egyik sem foglalt a nevekre.
+
+  MINDKETTŐ TÖMÖR, FEHÉR BETŰVEL. A kontraszt a `--kek`-en 5,4:1, a
+  `--mint`-en 4,8:1 — a jelvény pontosan attól ér valamit, hogy ekkora
+  betűmérettel is elolvasható.
+*/
 .kartyajel.mod {
-  background: var(--rose-deep);
-  border: 1px solid var(--rose-deep);
+  background: var(--kek);
+  border: 1px solid var(--kek);
   color: #fff;
 }
 .kartyajel.keszlet {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  color: var(--ink-soft);
+  background: var(--mint);
+  border: 1px solid var(--mint);
+  color: #fff;
 }
 /* SAJÁT KÉSZLET: nyelvi modell javasolta, nem ember nézte át. Nem hiba, de a
    kártya legfontosabb ténye — ezért kiemelt, de nem riasztó szín. */
@@ -4404,9 +4432,16 @@ textarea:focus {
   color: var(--rose-deep);
   font-weight: 600;
 }
-.tordeleskapcs::before {
-  content: '¶';
-  font-size: 13px;
+/*
+  CSAK A JEL. A gomb felirat nélkül áll, mert a sáv jobb széle szűk: a
+  jelmagyarázat mellett egy „Bekezdésenként" felirat a nézetváltót szorította
+  volna. A ¶ a bekezdés évszázados jele; hogy BE van-e kapcsolva, azt a szín
+  mondja el, a teljes mondat pedig a buboréksúgóban áll.
+*/
+.tordeleskapcs {
+  padding: 4px 8px;
+}
+.tordeleskapcs .jel {
+  font-size: 14px;
   line-height: 1;
-  opacity: 0.75;
 }

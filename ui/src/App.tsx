@@ -3206,16 +3206,15 @@ export default function App() {
           megszakítja, ugyanígy ott áll egy irattal, amiben döntöttek helyette —
           akkor sem szabad, hogy ez a tény eltűnjön a képernyőről.
         */}
-        {doc && autoDecidedCount > 0 && (
-          <button
-            className="btn ghost sm jelzes"
-            onClick={() => setDialog('autoReport')}
-            title="A program ember helyett fogadta el ezeket a bizonytalan találatokat. Kattints: melyek ezek, és hol cserélhetett köznevet."
-          >
-            <FejlecIkon nev="dontottunk" />
-            <span className="btnszo">{autoDecidedCount}× döntöttünk helyetted</span>
-          </button>
-        )}
+        {/*
+          A „N× DÖNTÖTTÜNK HELYETTED" GOMB INNEN KIKERÜLT.
+
+          Ablakot nyitott ugyanarra a listára, ami MA már kibontva ott áll az
+          „Ellenőrzés és mentés" fülön — az a lap gyakorlatilag ebből áll. Egy
+          fejlécgomb, ami egy máshol amúgy is látható listát nyit ki
+          párbeszédben, nem figyelmeztetés többé, csak egy második út
+          ugyanoda.
+        */}
 
         {/* A blokkoló állapot LÁTSZIK is, nemcsak tilt: a letiltott mentés
             gomb magában csak annyit üzen, hogy „valamiért nem lehet". */}
@@ -3488,6 +3487,11 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
                      sejtené, hogy rá lehet kattintani. */
                   className={`btn sm tordeleskapcs${paragraphReflow ? ' be' : ''}`}
                   aria-pressed={paragraphReflow}
+                  aria-label={
+                    paragraphReflow
+                      ? 'Bekezdésenkénti tördelés bekapcsolva'
+                      : 'Bekezdésenkénti tördelés kikapcsolva — soronkénti csere'
+                  }
                   onClick={() => {
                     setParagraphReflow(!paragraphReflow);
                     setHasWork(true);
@@ -3499,7 +3503,17 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
                       : 'Soronkénti csere: a program a legkevesebbet változtatja a fájlon, de a csere helyén a sorkizárás elvész. Kattints: bekezdésenkénti tördelés.'
                   }
                 >
-                  {paragraphReflow ? 'Bekezdésenként' : 'Soronként'}
+                  {/*
+                    CSAK JEL, FELIRAT NÉLKÜL. A sáv jobb széle szűk: a
+                    jelmagyarázat mellett egy „Bekezdésenként" felirat a
+                    nézetváltót szorította volna. A ¶ a bekezdés évszázados
+                    jele, az állapotát pedig a szín mondja el (bekapcsolva
+                    hangsúlyos) — a teljes mondat a buboréksúgóban áll, és a
+                    képernyőolvasó is azt kapja meg (`aria-label`).
+                  */}
+                  <span className="jel" aria-hidden="true">
+                    ¶
+                  </span>
                 </button>
               )}
               {/* Elemzés nélkül nincs mire váltani: az előnézet az elemzésből
