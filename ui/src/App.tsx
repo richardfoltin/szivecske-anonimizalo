@@ -25,7 +25,14 @@ import {
   type ReplacementMode,
   type ThemeSummaryUi,
 } from './api';
-import { DocumentView, FAJTA_CIMKE, KIMENET_CIMKE, OsszegzoLap, PreviewView } from './panels';
+import {
+  DocumentView,
+  FAJTA_CIMKE,
+  KIMENET_CIMKE,
+  OsszegzoLap,
+  OsszevetesView,
+  PreviewView,
+} from './panels';
 import { KontextMenu, type MenuAllas, type MenuTetel } from './kontextmenu';
 import { ROLES } from './dialogs';
 import {
@@ -139,7 +146,18 @@ type Dialog =
 */
 
 /** Melyik szöveget nézi a felhasználó: az eredetit vagy a kimenetet. */
-type View = 'source' | 'preview';
+/**
+ * MELYIK NÉZET ÁLL A BAL PANELEN.
+ *
+ *  'source'    — az eredeti irat, a megtalált nevekkel kiemelve,
+ *  'valtozas'  — a régi áthúzva, mellette az új; erre a kérdésre válaszol:
+ *                „mi változik?",
+ *  'preview'   — az álnevesített irat, ahogy a fájlba kerül.
+ *
+ * A SORREND A KÉRDÉSEK SORRENDJE: mi van most → mi változik → mi lesz. Ezért
+ * áll az összevetés a másik kettő KÖZÖTT a váltón is.
+ */
+type View = 'source' | 'valtozas' | 'preview';
 
 /**
  * A FŐ KÉPERNYŐ ÁLLOMÁSAI — megnyitás után.
@@ -3529,6 +3547,21 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
                   >
                     Eredeti
                   </button>
+                  {/*
+                    A HARMADIK ÁLLÁS A KETTŐ KÖZÖTT — mert a kérdése is köztük van.
+
+                    Az eredeti azt mutatja, mi van most; az előnézet azt, mi
+                    lesz. A kettő közti ELTÉRÉST eddig fejben kellett
+                    összerakni, a két fül közt oda-vissza kapcsolgatva. Itt a
+                    régi áthúzva áll, közvetlenül mellette az új.
+                  */}
+                  <button
+                    className={`segbtn${view === 'valtozas' ? ' active' : ''}`}
+                    onClick={() => setView('valtozas')}
+                    title="A lecserélt szöveg áthúzva, mellette az álnév — mi változik az iratban"
+                  >
+                    Változás
+                  </button>
                   <button
                     className={`segbtn${view === 'preview' ? ' active' : ''}`}
                     onClick={() => setView('preview')}
@@ -3559,7 +3592,16 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
                   tördelését nem — a mentett fájl az eredeti tördelést megtartja.
                 </div>
               )}
-            {analysis && view === 'preview' ? (
+            {analysis && view === 'valtozas' ? (
+              <OsszevetesView
+                analysis={analysis}
+                {...(aktivSzakasz ? { szakasz: aktivSzakasz } : {})}
+                hivatalosIdk={hivatalosIdk}
+                dontesek={decisions}
+                selected={selected}
+                onSelect={setSelected}
+              />
+            ) : analysis && view === 'preview' ? (
               <PreviewView
                 analysis={analysis}
                 text={preview}
@@ -3626,6 +3668,30 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
             onCsoport={setupCsoport}
             onUjraVizsgalat={ujraVizsgalat}
             onKeziFelvitel={keziFelvitel}
+            {...(api.reassignNames
+              ? {
+                  onUjraOsztas: () => {
+                    /*
+                      A NYILVÁNTARTÁS ELDOBÁSA, AZTÁN ÚJRASZÁMOLÁS.
+
+                      A sorrend kötött: ha előbb kérnénk elemzést, az még a
+                      régi kiosztást kapná meg, és a gomb látszólag nem
+                      csinálna semmit.
+
+                      A DÖNTÉSEK ELVESZNEK, mint minden olyan lépésnél, ami a
+                      féllistát átrendezi: a találat azonosítója az iratbeli
+                      sorrendjéből származik, tehát a megőrzött döntések más
+                      szavakra vonatkoznának.
+                    */
+                    void api.reassignNames!().then(() => {
+                      setDecisions({});
+                      setSelected(null);
+                      setHasWork(true);
+                      ujraKert();
+                    });
+                  },
+                }
+              : {})}
             onUjKeszlet={() => setDialog('sajatKeszlet')}
             onKeszletTorles={(id) => void removeCustomTheme(id)}
             ful={setupFul}
@@ -4096,10 +4162,17 @@ function BetoltoLepes({
           />
         </div>
       )}
-      {/* A részlet CSAK a futó szakasz alatt jelenik meg, és a helye akkor is
-          megmarad, ha épp nincs mit kiírni — enélkül a képernyő ugrálna
-          minden szakaszváltásnál. */}
-      {allapot === 'fut' && <div className="blreszlet">{reszlet ?? ''}</div>}
+      {/*
+        A RÉSZLET HELYE MINDIG MEGVAN — akkor is, ha nincs mit kiírni.
+
+        Korábban csak a FUTÓ szakasz alatt jelent meg az eleme. Amikor a
+        megnyitás elkészült és a keresés indult, a sor átugrott az egyik
+        szakasz alól a másik alá: a képernyő magassága nem változott ugyan, de
+        a szakaszváltás pillanatában igen — a középre igazított tartalom pedig
+        ilyenkor elmozdult, és vele a jel is. Üresen kirajzolva a hely fenn van
+        tartva, és semmi nem mozdul.
+      */}
+      <div className="blreszlet">{allapot === 'fut' ? (reszlet ?? '') : ''}</div>
     </div>
   );
 }
@@ -4225,20 +4298,32 @@ function VizsgalatKepernyo({
             />
           </div>
 
-          {/* A FELOLDATLAN VÁLTOZÁSKÖVETÉS ITT IS LÁTSZIK: a vizsgálat lefut
-              tőle, a MENTÉS viszont nem — és ez az a képernyő, ahova a válasz
-              nélkül bezárt kérdés után érkezünk. */}
-          {valtozaskovetes > 0 && (
-            <button className="ds-link" onClick={onValtozaskovetes}>
-              {valtozaskovetes} feloldatlan módosítás — amíg ez fennáll, nem mentünk
-            </button>
-          )}
+          {/*
+            A LAP ALJA MINDIG UGYANAKKORA — akkor is, ha épp üres.
 
-          {kep === 'fut' && leallithato && (
-            <button className="btn ghost sm" onClick={onLeallit}>
-              Leállítás
-            </button>
-          )}
+            A „Leállítás" gomb csak a vizsgálat alatt jelenik meg, a
+            változáskövetés jelzése pedig csak néha. Mindkettő NÖVELTE a lap
+            magasságát, a tartalom viszont függőlegesen középre van igazítva:
+            a megjelenésük pillanatában az egész blokk feljebb csúszott, és
+            vele a jel is — a betöltés közepén, amikor a felhasználó épp azt
+            nézi, hogy halad-e valami. A hely ezért fenn van tartva.
+          */}
+          <div className="bactions">
+            {/* A FELOLDATLAN VÁLTOZÁSKÖVETÉS ITT IS LÁTSZIK: a vizsgálat lefut
+                tőle, a MENTÉS viszont nem — és ez az a képernyő, ahova a válasz
+                nélkül bezárt kérdés után érkezünk. */}
+            {valtozaskovetes > 0 && (
+              <button className="ds-link" onClick={onValtozaskovetes}>
+                {valtozaskovetes} feloldatlan módosítás — amíg ez fennáll, nem mentünk
+              </button>
+            )}
+
+            {kep === 'fut' && leallithato && (
+              <button className="btn ghost sm" onClick={onLeallit}>
+                Leállítás
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );

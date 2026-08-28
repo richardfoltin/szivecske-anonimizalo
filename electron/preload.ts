@@ -314,6 +314,8 @@ const api = {
   previewText: (path?: string) => ipcRenderer.invoke('doc:previewText', path),
   /** Az álnevesített irat LAPKÉPEI (PDF); útvonal nélkül az első betöltött iraté. */
   previewPages: (path?: string) => ipcRenderer.invoke('doc:previewPages', path),
+  /** Az ügy álnév-kiosztásának eldobása — a következő elemzés újraosztja. */
+  reassignNames: () => ipcRenderer.invoke('doc:reassignNames'),
   suggestOutputPath: (mode: string) => ipcRenderer.invoke('doc:suggestOutputPath', mode),
   chooseSaveTarget: (suggested: string) => ipcRenderer.invoke('doc:chooseSaveTarget', suggested),
   exportDocument: (opts: unknown) => ipcRenderer.invoke('doc:export', opts),

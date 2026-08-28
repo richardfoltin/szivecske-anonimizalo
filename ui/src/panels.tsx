@@ -490,6 +490,120 @@ function TextView({
   );
 }
 
+/* ─────────────────────── összevetés: régi és új ─────────────────────── */
+
+/**
+ * A RÉGI ÉS AZ ÚJ EGYMÁS MELLETT — áthúzva és kiemelve.
+ *
+ * A harmadik nézet arra a kérdésre válaszol, amire a másik kettő külön-külön
+ * nem tud: „MI VÁLTOZOTT?" Az eredeti nézeten a valódi nevek állnak, az
+ * előnézeten az álnevek — a kettő közti eltérést a felhasználónak fejben
+ * kellett összevetnie, két fül között oda-vissza kapcsolgatva.
+ *
+ * Itt mindkettő ott áll: a lecserélt szöveg ÁTHÚZVA, a fajtája színével, és
+ * közvetlenül utána az álnév, ugyanabban a kiemelésben, amit az előnézeten is
+ * visel. Így a párosítás nem emlékezet kérdése.
+ *
+ * MIÉRT SZÖVEG, LAPKÉP HELYETT. PDF-en az előnézet a kész oldalt rajzolja ki,
+ * itt viszont nem az a kérdés, hogy MILYEN LESZ az irat, hanem hogy MI
+ * VÁLTOZIK BENNE. Ehhez a két szövegnek egymás mellett kell állnia; egy
+ * lapképre ezt nem lehet ráfesteni úgy, hogy olvasható maradjon.
+ */
+export function OsszevetesView({
+  analysis,
+  szakasz,
+  hivatalosIdk = new Set<string>(),
+  dontesek,
+  selected,
+  onSelect,
+}: {
+  analysis: AnalysisResult;
+  szakasz?: DocSection;
+  hivatalosIdk?: ReadonlySet<string>;
+  dontesek?: Record<number, 'accept' | 'skip'>;
+  selected: number | null;
+  onSelect: (id: number | null) => void;
+}) {
+  const szoveg = szakasz?.previewText ?? analysis.previewText;
+  const tolIg: [number, number] | null = szakasz
+    ? [szakasz.matchIdTol, szakasz.matchIdIg]
+    : null;
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => gorgessOda(ref.current, selected), [selected]);
+
+  /*
+    UGYANAZ A DARABOLÁS, mint a jelölt eredeti nézeté (`TextView`): pozíció
+    szerint, az átfedéseket eldobva. Két külön darabolás ugyanarra a szövegre
+    előbb-utóbb két különböző helyre tenné ugyanazt a nevet.
+  */
+  const darabok = useMemo(() => {
+    const jelolt = analysis.matches
+      .filter((m) => tolIg === null || (m.id >= tolIg[0] && m.id <= tolIg[1]))
+      .filter(
+        (m): m is MatchRow & { previewStart: number; previewEnd: number } =>
+          typeof m.previewStart === 'number' &&
+          typeof m.previewEnd === 'number' &&
+          m.previewEnd > m.previewStart &&
+          m.previewEnd <= szoveg.length,
+      )
+      .sort((a, b) => a.previewStart - b.previewStart);
+
+    const out: { kulcs: string; szoveg: string; m?: MatchRow }[] = [];
+    let poz = 0;
+    for (const m of jelolt) {
+      if (m.previewStart < poz) continue;
+      if (m.previewStart > poz) out.push({ kulcs: `t${poz}`, szoveg: szoveg.slice(poz, m.previewStart) });
+      out.push({ kulcs: `m${m.id}`, szoveg: szoveg.slice(m.previewStart, m.previewEnd), m });
+      poz = m.previewEnd;
+    }
+    if (poz < szoveg.length) out.push({ kulcs: `t${poz}`, szoveg: szoveg.slice(poz) });
+    return out;
+  }, [szoveg, analysis.matches, tolIg]);
+
+  return (
+    <div className="viewport osszevetes" ref={ref}>
+      <div className="textview">
+        {darabok.map((d) => {
+          if (d.m === undefined) return <span key={d.kulcs}>{d.szoveg}</span>;
+          const m = frissSor(d.m, dontesek);
+          const fajta = matchKind(m, hivatalosIdk);
+          const kimenet = matchOutcome(m);
+          /*
+            AMI NEM CSERÉLŐDIK, AZT NEM HÚZZUK ÁT. Az áthúzás azt állítja, hogy
+            ez a szöveg eltűnik az iratból; egy bent maradó néven ez hazugság
+            volna. Ott a jelölés ugyanaz marad, ami az eredeti nézeten.
+          */
+          if (kimenet !== 'csere' || m.replacement === null) {
+            return (
+              <mark
+                key={d.kulcs}
+                data-hl={m.id}
+                className={`${kimenet} k-${fajta}${selected === m.id ? ' selected' : ''}`}
+                title={`${m.surface} — nem cserélődik\n${m.reason}`}
+                onClick={() => onSelect(selected === m.id ? null : m.id)}
+              >
+                {d.szoveg}
+              </mark>
+            );
+          }
+          return (
+            <span
+              key={d.kulcs}
+              data-hl={m.id}
+              className={`valtozas${selected === m.id ? ' selected' : ''}`}
+              title={`${m.surface} → ${m.replacement}\n${m.reason}`}
+              onClick={() => onSelect(selected === m.id ? null : m.id)}
+            >
+              <del className={`k-${fajta}`}>{d.szoveg}</del>
+              <mark className={`csere k-${fajta}`}>{m.replacement}</mark>
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ─────────────────────────── előnézet ─────────────────────────── */
 
 /**

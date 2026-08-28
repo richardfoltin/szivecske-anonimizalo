@@ -716,6 +716,17 @@ interface SzivecskeApi {
    * ami eddig volt.
    */
   previewPages?(path?: string): Promise<PreviewPages>;
+  /**
+   * A NEVEK ÚJRA KIOSZTÁSA — az ügy eddigi álnév-nyilvántartásának eldobása.
+   *
+   * Utána a következő elemzés a nulláról osztja ki a neveket. Kézi kérésre
+   * fut, sosem magától: az álnév normális esetben tapad a félhez, és épp az
+   * a jó, hogy egy kapcsoló átbillentésétől nem változik meg.
+   *
+   * Opcionális, mert egy RÉGEBBI híd nem ismeri; a felület ilyenkor a gombot
+   * meg sem mutatja — egy gomb, ami semmit nem tesz, rosszabb a hiányánál.
+   */
+  reassignNames?(): Promise<void>;
   suggestOutputPath(mode: string): Promise<string>;
   chooseSaveTarget(suggested: string): Promise<string | null>;
   exportDocument(opts: ExportOptions): Promise<ExportResult>;

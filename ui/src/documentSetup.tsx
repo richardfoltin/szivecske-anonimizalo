@@ -246,6 +246,8 @@ export interface DocumentSetupProps {
   /** Mindent, ami az iratban találat: egyetlen kattintással cserére. */
   onUjraVizsgalat: () => void;
   onKeziFelvitel: () => void;
+  /** A nevek újra kiosztása; hiányában a gomb meg sem jelenik. */
+  onUjraOsztas?: () => void;
   /**
    * Új névkészlet gyártása — a „Mire cseréljük?” fül hozzáadó kártyájáról.
    *
@@ -587,6 +589,7 @@ export function DocumentSetup({
   onCsoport,
   onUjraVizsgalat,
   onKeziFelvitel,
+  onUjraOsztas,
   onUjKeszlet,
   onKeszletTorles,
   ful,
@@ -722,6 +725,7 @@ export function DocumentSetup({
               onCsoport={onCsoport}
               onUjraVizsgalat={onUjraVizsgalat}
               onKeziFelvitel={onKeziFelvitel}
+              {...(onUjraOsztas ? { onUjraOsztas } : {})}
             />
           )}
         </div>
@@ -987,6 +991,7 @@ function CsereLap({
   onCsoport,
   onUjraVizsgalat,
   onKeziFelvitel,
+  onUjraOsztas,
 }: {
   az: (nev: string) => string;
   beallitasok: DokumentumBeallitasok;
@@ -1006,6 +1011,8 @@ function CsereLap({
   onCsoport: (fajta: Fajta, be: boolean) => void;
   onUjraVizsgalat: () => void;
   onKeziFelvitel: () => void;
+  /** A nevek újra kiosztása; hiányában a gomb meg sem jelenik. */
+  onUjraOsztas?: () => void;
 }) {
   const szazalek = Math.round(beallitasok.autoThreshold * 100);
   /* Előfordulást számol, nem sort: a „találat" szó a lap tetején és a
@@ -1030,6 +1037,28 @@ function CsereLap({
       <button className="btn sm ghost" onClick={onKeziFelvitel}>
         Nevet veszek fel kézzel
       </button>
+      {/*
+        NEVEK ÚJRA KIOSZTÁSA — kézi kérésre, mert magától kárt okozna.
+
+        Az álnév egyszer dől el, és attól kezdve tapad a félhez: egy kapcsoló
+        átbillentése nem írhatja át az egész névsort. Van viszont egy eset,
+        amikor épp ez az útban van — ha a program tévedésből vett fel egy szót
+        félként, az elvitte a névsor elejéről a legjellemzőbb nevet, és a
+        felhasználó utólag kitörli. A név ilyenkor foglalt marad egy nem
+        létező szereplőn.
+
+        Ezt csak az újraszámolás oldja fel, és csakis kérésre: automatikusan
+        futtatva pontosan azt tenné, ami ellen a tapadás szól.
+      */}
+      {onUjraOsztas && (
+        <button
+          className="btn sm ghost"
+          onClick={onUjraOsztas}
+          title="A program a nulláról osztja ki az álneveket. Akkor hasznos, ha kitöröltél egy tévesen felismert nevet, és szeretnéd, hogy a felszabadult álnév a többiekhez kerüljön. A kézzel átírt neveket nem érinti."
+        >
+          Nevek újra kiosztása
+        </button>
+      )}
     </div>
   );
 
@@ -1086,6 +1115,7 @@ function CsereLap({
             {szazalek}%
           </span>
           <input
+            spellCheck={false}
             id={az('thr')}
             type="range"
             min={50}
@@ -1549,6 +1579,7 @@ function TalaltSor({
         </span>
       ) : (
         <input
+          spellCheck={false}
           type="text"
           className="frepl"
           value={be || tetel.bizonytalanDb > 0 ? ertek : tetel.eredeti}

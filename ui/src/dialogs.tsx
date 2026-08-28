@@ -302,6 +302,7 @@ export function PartiesDialog({
                 <tr key={r.id}>
                   <td>
                     <input
+                      spellCheck={false}
                       type="text"
                       value={r.fullName}
                       ref={i === rows.length - 1 ? lastRef : undefined}
@@ -1422,6 +1423,7 @@ export function SajatKeszletDialog({
               <div className="field">
                 <label htmlFor="sajat-tema">Milyen témájú neveket szeretnél?</label>
                 <input
+                  spellCheck={false}
                   id="sajat-tema"
                   type="text"
                   value={tema}
@@ -1782,6 +1784,7 @@ export function UpdateDialog({
             {cimLatszik ? (
               <>
                 <input
+                  spellCheck={false}
                   type="text"
                   value={cim}
                   placeholder="https://…"
@@ -2437,6 +2440,7 @@ export function ExportDialog({
             <div className="field">
               <label htmlFor="pass">Jelszó a kulcsfájlhoz</label>
               <input
+                spellCheck={false}
                 id="pass"
                 type="password"
                 value={pass}
@@ -2567,36 +2571,36 @@ export function ExitDialog({
     <Overlay onClose={() => onValaszt('cancel')}>
       <div className="dialog narrow" onMouseDown={(e) => e.stopPropagation()}>
         <div className="dialog-head">
-          <h2>Van el nem mentett munka</h2>
+          <h2>Mented a munkát kilépés előtt?</h2>
           <p>
-            A megnyitott irat, a felvitt nevek és az egyenkénti döntések elvesznek, ha most bezárod a
-            programot.
+            A megnyitott irat, a felvitt nevek és az egyenkénti döntések elvesznek, ha mentés nélkül
+            lépsz ki. A mentés nem írja felül az eredeti iratot: az álnevesített változat új fájlba
+            kerül, és a program megkérdezi, hova.
           </p>
         </div>
-        <div className="dialog-body">
-          <div className="note">
-            A mentés <b>nem írja felül az eredeti iratot</b>: az álnevesített változat új fájlba
-            kerül, és a program megkérdezi, hova.
-          </div>
-        </div>
-{/*
-          A HÁROM GOMB A PROGRAM SAJÁT SORRENDJÉBEN ÁLL: balra a visszalépés,
-          jobbra az, amit ajánlunk. Ez a lábléc ugyanaz, mint a többi
-          párbeszédé — a bezárás kérdése nem kivétel.
+        {/*
+          A SZOKÁSOS HÁROMGOMBOS ALAK: Mégse · Ne mentse · Mentés.
 
-          A FELIRATOK RÖVIDEK. „Mégsem lépek ki" állt itt: egy mondat egy
-          gombon. A gombfelirat nem mondat, hanem a művelet neve — a mondat a
-          fejlécben van, ahol el is olvassák.
+          Korábban „Kilépés mentés nélkül" állt a középső gombon — egy mondat
+          egy gombon, ráadásul a kérdéstől függetlenül megfogalmazva. A
+          gombfelirat a KÉRDÉSRE válaszol, amit a fejléc feltett: „Mented a
+          munkát?" → „Mentés" vagy „Ne mentse". Ez az alak minden ismerős
+          programban ugyanez, tehát nem kell elolvasni ahhoz, hogy jól nyomja
+          meg az ember.
+
+          A törzs kiürült: amit tudni kell, az a kérdés alatt áll, egy
+          bekezdésben. Egy külön keretes megjegyzés ugyanarról csak
+          megállította volna a szemet a gombok előtt.
         */}
         <div className="dialog-foot">
           <button className="btn ghost" onClick={() => onValaszt('cancel')}>
             Mégse
           </button>
           <button className="btn" onClick={() => onValaszt('discard')}>
-            Kilépés mentés nélkül
+            Ne mentse
           </button>
           <button className="btn primary" onClick={() => onValaszt('save')}>
-            Mentés másként…
+            Mentés…
           </button>
         </div>
       </div>
@@ -2968,6 +2972,7 @@ export function KeyFileDialog({
               <div className="field">
                 <label htmlFor="keypass">Jelszó</label>
                 <input
+                  spellCheck={false}
                   id="keypass"
                   type="password"
                   autoFocus={Boolean(path)}

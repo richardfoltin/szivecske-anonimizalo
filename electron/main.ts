@@ -2362,6 +2362,27 @@ function registerHandlers(): void {
     return lastAnalysis;
   });
 
+  /**
+   * A NEVEK ÚJRA KIOSZTÁSA — kézi kérésre, sosem magától.
+   *
+   * Az álnév normális esetben TAPAD a félhez: egyszer eldől, és egy ki-be
+   * kapcsolástól többé nem változik (lásd `kozosKiosztas`). Ez a helyes
+   * alapállás — de van, amikor épp az útban van.
+   *
+   * A tipikus eset: a program tévedésből felvett egy szót félként, az elvitte
+   * a névsor elejéről a legjellemzőbb nevet, és a felhasználó utólag kitörli.
+   * A név ilyenkor foglalt marad egy nem létező szereplőn, a többiek pedig a
+   * lista hátulján maradnak. Ezt egyedül a kiosztás újraszámolása oldja fel.
+   *
+   * Ezért van ez KÜLÖN GOMB. Magától futtatva pontosan azt a kárt okozná,
+   * ami ellen a tapadás szól: az irat, amit a felhasználó az imént átnézett,
+   * más nevekkel állna a képernyőn.
+   */
+  handle('doc:reassignNames', () => {
+    kozosKiosztas = new Map();
+    kozosKiosztasKulcs = null;
+  });
+
   /** Az álnevesített szöveg — annak az iratnak, amelyiket a felület mutatja. */
   handle('doc:previewText', (_e, path?: string) => {
     const s = path === undefined ? elsoSession() : sessions.find((x) => x.info.path === path);

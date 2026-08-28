@@ -1563,6 +1563,13 @@ export function installDevMock(): void {
       if (datumTolas) t = t.replace('2025. március 14.', '2025. június 2.');
       return wait(t, 0);
     },
+    /*
+      A NEVEK ÚJRA KIOSZTÁSA. Az álkimenet rögzített kiosztást ad, tehát a
+      HATÁSA itt nem látszik — a gombnak viszont léteznie kell, különben a
+      felület böngészőben meg sem mutatja, és a fejlesztés közben senki nem
+      találkozik vele.
+    */
+    reassignNames: () => wait(undefined, 0),
     suggestOutputPath: () => wait(EXPORT.outputPath, 0),
     chooseSaveTarget: () => wait(EXPORT.outputPath),
     exportDocument: () =>

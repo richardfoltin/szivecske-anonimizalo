@@ -136,31 +136,70 @@ export function KontextMenu({ allas, onClose }: { allas: MenuAllas; onClose: () 
 }
 
 /**
- * AZ ALMENÜ ARRA AZ OLDALRA NYÍLIK, AMELYIKEN VAN HELY.
+ * AZ ALMENÜ A KÉPERNYŐHÖZ VAN KÖTVE, NEM A SZÜLŐ MENÜHÖZ.
  *
- * Jobbra nyílik, mert a menü rendszerint a bal oldali dokumentumpanelen áll —
- * de nem mindig: keskeny ablakon a panel a képernyő jobb feléig ér, és ott a
- * szerepek tizennégy elemű listája egyszerűen levágódna a képernyő szélén.
- * Éppen az a sor tűnne el, amiért a felhasználó a menüt kinyitotta.
+ * EZ VOLT AZ A HIBA, AMITŐL AZ „INKÁBB EZ LEGYEN…" NEM NYÍLT KI. A főmenü
+ * görgethető (hogy a tizennégy eljárási szerep elférjen benne), egy görgethető
+ * doboz pedig LEVÁGJA a belőle kilógó gyermeket — márpedig egy oldalt nyíló
+ * almenü definíció szerint kilóg. A menü tehát kinyílt, csak épp a levágott
+ * sávban, láthatatlanul: a felhasználó egy nyilat látott, ami nem csinál semmit.
+ *
+ * A megoldás az, hogy az almenü a KÉPERNYŐHÖZ igazodik (`position: fixed`), a
+ * helyét pedig a szülő sor méréséből kapja. Így semmilyen görgetés nem
+ * vághatja el.
+ *
+ * A HELYE HÁROM SZABÁLYBÓL ÁLL:
+ *   – alapban a szülő sor jobb szélénél nyílik, a sor tetejéhez igazítva;
+ *   – ha jobbra nem fér el, átfordul a sor bal oldalára;
+ *   – ha alul kilógna, feljebb csúszik, hogy az utolsó sora is elérhető legyen.
  *
  * A mérés a kirajzolás UTÁN, de a festés ELŐTT történik (`useLayoutEffect`),
  * tehát az almenü nem ugrik át a szem előtt.
  */
-function Almenu({ tetelek, onClose }: { tetelek: MenuTetel[]; onClose: () => void }) {
+function Almenu({
+  tetelek,
+  horgony,
+  onClose,
+}: {
+  tetelek: MenuTetel[];
+  /** A szülő sor eleme — ehhez képest nyílik az almenü. */
+  horgony: HTMLElement | null;
+  onClose: () => void;
+}) {
   const ref = useRef<HTMLDivElement | null>(null);
-  const [balra, setBalra] = useState(false);
+  const [hely, setHely] = useState<{ left: number; top: number } | null>(null);
 
   useLayoutEffect(() => {
     const el = ref.current;
-    if (!el) return;
-    // A mérés a JOBBRA nyíló állapoton fut (ez az alapállás), és csak akkor
-    // fordítunk, ha tényleg kilóg — különben minden almenü átbillenne.
-    const r = el.getBoundingClientRect();
-    setBalra(r.right > window.innerWidth - 8);
-  }, [tetelek]);
+    if (!el || !horgony) return;
+    const sor = horgony.getBoundingClientRect();
+    const m = el.getBoundingClientRect();
+    const margo = 8;
+
+    // Jobbra, ha elfér; különben balra a sor mellé.
+    const jobbra = sor.right - 2;
+    const left =
+      jobbra + m.width + margo > window.innerWidth
+        ? Math.max(margo, sor.left - m.width + 2)
+        : jobbra;
+
+    // Felül a sor tetejéhez igazítva; ha alul kilógna, feljebb csúszik.
+    const top = Math.max(
+      margo,
+      Math.min(sor.top - 5, window.innerHeight - m.height - margo),
+    );
+    setHely({ left, top });
+  }, [tetelek, horgony]);
 
   return (
-    <div className={`kmenu al${balra ? ' balra' : ''}`} ref={ref} role="menu">
+    <div
+      className="kmenu al"
+      ref={ref}
+      role="menu"
+      /* Amíg nincs kimérve a helye, láthatatlan: különben egy pillanatra a
+         bal felső sarokban villanna fel. */
+      style={hely === null ? { opacity: 0, left: 0, top: 0 } : hely}
+    >
       <MenuSorok tetelek={tetelek} onClose={onClose} />
     </div>
   );
@@ -168,6 +207,8 @@ function Almenu({ tetelek, onClose }: { tetelek: MenuTetel[]; onClose: () => voi
 
 function MenuSorok({ tetelek, onClose }: { tetelek: MenuTetel[]; onClose: () => void }) {
   const [nyitva, setNyitva] = useState<number | null>(null);
+  /** Soronként a gomb eleme — az almenü ebből számolja ki, hova nyíljon. */
+  const horgonyok = useRef<(HTMLElement | null)[]>([]);
 
   return (
     <>
@@ -194,6 +235,11 @@ function MenuSorok({ tetelek, onClose }: { tetelek: MenuTetel[]; onClose: () => 
                 aria-haspopup="true"
                 aria-expanded={nyitva === i}
                 title={t.sugo ?? ''}
+                /* A sor eleme a horgony: az almenü a képernyőhöz igazodik, és
+                   ebből számolja ki, hova nyíljon. */
+                ref={(el) => {
+                  horgonyok.current[i] = el;
+                }}
                 onClick={() => setNyitva(nyitva === i ? null : i)}
                 onFocus={() => setNyitva(i)}
               >
@@ -203,7 +249,11 @@ function MenuSorok({ tetelek, onClose }: { tetelek: MenuTetel[]; onClose: () => 
                 </span>
               </button>
               {nyitva === i && (
-                <Almenu tetelek={t.tetelek} onClose={onClose} />
+                <Almenu
+                  tetelek={t.tetelek}
+                  horgony={horgonyok.current[i] ?? null}
+                  onClose={onClose}
+                />
               )}
             </div>
           );
