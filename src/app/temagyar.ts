@@ -267,6 +267,23 @@ export interface TemaBemenet {
  * ------------------------------------------------------------------ */
 
 /**
+ * A PÉLDA CSAK AZ ALAKOT MUTATJA — ezt ki kell mondani.
+ *
+ * MÉRÉS DÖNTÖTTE EL, nem óvatosság: amíg a példákban görög nevek álltak
+ * („Olümposz”, „Delphoi”, „Aigisz”), a „görög mitológia” témára a modell
+ * válaszának ELSŐ HÁROM eleme pontosan ez a három név volt. A tizenkettőből
+ * három tétel elpazarolva, ráadásul úgy, hogy a felhasználó a saját példánkat
+ * kapja vissza saját ötlet gyanánt.
+ *
+ * Ezért a példák MÁS TÉMÁBÓL valók (fűszernövények), és külön mondat is szól
+ * róla. A kettő együtt kell: a más téma önmagában is elrontható egy
+ * fűszernövény-témájú kéréssel, a mondat önmagában pedig gyenge.
+ */
+const PELDA_FIGYELMEZTETES =
+  'A példák CSAK az alakot mutatják, más témából valók — a bennük szereplő ' +
+  'neveket NE vedd át a válaszodba.';
+
+/**
  * MILYEN ALAKBAN KÉRJÜK A VÁLASZT — csoportonként külön.
  *
  * MIÉRT NEM MINDENHOL UGYANAZ AZ OBJEKTUM: mert a válasz hossza IDŐ. Mérve,
@@ -285,30 +302,36 @@ export interface TemaBemenet {
 const VALASZ_ALAK: Record<JavaslatCsoport, string[]> = {
   given: [
     'Válaszolj CSAK egy JSON tömbbel, más szöveg nélkül. Egy elem így néz ki:',
-    '  {"form": "Akhilleusz", "gender": "M"}',
+    '  {"form": "Zsálya", "gender": "F"}',
     'A "gender" kötelező: "M" férfi, "F" női utónév.',
+    PELDA_FIGYELMEZTETES,
   ],
   surname: [
     'Válaszolj CSAK egy JSON tömbbel, más szöveg nélkül. A tömb elemei sima szövegek:',
-    '  ["Olümposzi", "Thébai", "Küklopszi"]',
+    '  ["Zsályás", "Kakukkfüvi", "Borsikás"]',
     'Vezetéknevet kérek: a témából képzett, magyaros alakot (-i, -s képző, összetétel).',
+    PELDA_FIGYELMEZTETES,
   ],
   org: [
     'Válaszolj CSAK egy JSON tömbbel, más szöveg nélkül. A tömb elemei sima szövegek:',
-    '  ["Olümposz", "Delphoi", "Aigisz"]',
+    '  ["Zsálya", "Kakukkfű", "Borsika"]',
     'Cégnév-előtagot kérek: a témából vett egyszavas nevet, amiből cégnév lehet.',
+    PELDA_FIGYELMEZTETES,
   ],
   place: [
     'Válaszolj CSAK egy JSON tömbbel, más szöveg nélkül. A tömb elemei sima szövegek:',
-    '  ["Thébafalva", "Olümposzhalom", "Delphoivár"]',
+    '  ["Zsályafalva", "Kakukkfűhalom", "Borsikavár"]',
     'Kitalált településnevet kérek: a téma szava + magyar utótag (-falva, -halom, -vár).',
+    PELDA_FIGYELMEZTETES,
   ],
 };
+
 
 /** Ha egyszerre kérjük mind a négy csoportot, a fajtát az elemnek kell vinnie. */
 const TELJES_VALASZ_ALAK: string[] = [
   'Válaszolj CSAK egy JSON tömbbel, más szöveg nélkül. Egy elem így néz ki:',
-  '  {"form": "Akhilleusz", "kind": "given", "gender": "M"}',
+  '  {"form": "Zsálya", "kind": "given", "gender": "F"}',
+  PELDA_FIGYELMEZTETES,
   '',
   'A "kind" lehetséges értékei:',
   '  "given"   utónév — ilyenkor a "gender" kötelező: "M" férfi, "F" női',
