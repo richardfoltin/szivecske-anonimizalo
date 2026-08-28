@@ -11,6 +11,7 @@ import {
   // A motor szótára az azonosítófajtákhoz — a jobb gombos menü ebből épül.
   AZONOSITO_NEV,
   type AnalysisResult,
+  type AutoDecisionRow,
   type CastRow,
   type MatchKind,
   type MatchOutcome,
@@ -1484,6 +1485,7 @@ export default function App() {
     setPreviewPages(null);
     setValtozasPages(null);
     setPreviewError(null);
+    setKorabbiAutoLista([]);
     setView('source');
     setNyitandoNev(null);
     setReplaceOfficials(false);
@@ -2198,9 +2200,31 @@ export default function App() {
       }).length
     : 0;
 
-  /** Hány bizonytalan találatot fogadott el a program ember helyett. */
-  const autoAccepted = analysis?.autoAccepted ?? [];
+  /**
+   * AMIT A PROGRAM ELDÖNTÖTT — AKKOR IS, HA UTÁNA ÁTVETTED.
+   *
+   * A „Nézzük át együtt" átkapcsol az átnézős útra, és onnantól a program NEM
+   * dönt semmiről: a következő elemzés üres listát ad, tehát a jelentés a
+   * szeme előtt tűnt el annak, aki épp átnézni akarta. Márpedig pont ilyenkor
+   * kell: az a lista mondja meg, MIT kell átnézni.
+   *
+   * Ezért a legutolsó nem üres listát megjegyezzük. Nem másik igazság: ez
+   * TÖRTÉNT, és attól nem lesz meg nem történt, hogy a felhasználó azóta
+   * átvette a döntést. Új iratnál és új ügynél ürül, a többi resettel együtt.
+   */
+  const [korabbiAutoLista, setKorabbiAutoLista] = useState<AutoDecisionRow[]>([]);
+  useEffect(() => {
+    const most = analysis?.autoAccepted ?? [];
+    if (most.length > 0) setKorabbiAutoLista(most);
+  }, [analysis]);
+
+  const autoAccepted =
+    analysis?.autoAccepted && analysis.autoAccepted.length > 0
+      ? analysis.autoAccepted
+      : korabbiAutoLista;
   const autoDecidedCount = autoAccepted.length;
+  /** Most is a program dönt-e, vagy már a felhasználó vette át. */
+  const programDont = (analysis?.autoAccepted?.length ?? 0) > 0;
 
   /* ──────────────── a megnyitás utáni beállító lap kiszolgálása ──────────────── */
 
@@ -4092,11 +4116,18 @@ export default function App() {
                     autoDecidedCount > 0 ? (
                       <AutoDecisionReport
                         rows={autoAccepted}
-                        /* „Nézzük át együtt" = ÁTVÁLTÁS AZ ÁTNÉZŐS ÚTRA
-                           (`switchToReview`), nem fülváltás: a program
-                           döntéseit csak úgy lehet felülbírálni, ha az irat
-                           újra kérdezős módban fut le. */
-                        onReview={switchToReview}
+                        /*
+                          „Nézzük át együtt" = ÁTVÁLTÁS AZ ÁTNÉZŐS ÚTRA
+                          (`switchToReview`), nem fülváltás: a program
+                          döntéseit csak úgy lehet felülbírálni, ha az irat
+                          újra kérdezős módban fut le.
+
+                          ÁTVÉTEL UTÁN VISZONT NINCS MIRE VÁLTANI: a lista
+                          ilyenkor emlék, nem ajánlat. A gomb elmarad, a
+                          jelentés marad — mert épp az mondja meg, mit kell
+                          átnézni.
+                        */
+                        {...(programDont ? { onReview: switchToReview } : {})}
                         saved={false}
                       />
                     ) : null
@@ -4169,9 +4200,9 @@ export default function App() {
               felhasználóra vár munka, holott a döntés már megtörtént, csak nem
               ő hozta. */}
           <span>
-            {autoDecidedCount > 0 ? (
+            {programDont ? (
               <>
-                <b>{autoDecidedCount}</b> találatról a program döntött
+                <b>{analysis.autoAccepted?.length ?? 0}</b> találatról a program döntött
               </>
             ) : (
               <>
@@ -4365,7 +4396,7 @@ export default function App() {
           defaultKeepKey={keepKey}
           busy={busy !== null}
           result={exportResult}
-          autoDecided={autoDecidedCount}
+          autoDecided={analysis?.autoAccepted?.length ?? 0}
           // Csak akkor van visszaút, ha van miről visszatérni: átnézős úton a
           // gomb egy már megtett lépést kínálna újra.
           onReview={autoModeForDoc ? switchToReview : undefined}
