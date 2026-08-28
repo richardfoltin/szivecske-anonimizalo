@@ -166,7 +166,16 @@ export interface TalaltTetel {
  * iraton megjelölt előfordulás a listán is ott áll, és fordítva.
  */
 export interface LepesAllas {
-  entityId: string;
+  /**
+   * A SOR azonosítója, amelyiken a lépegetés áll — nem az entitásé.
+   *
+   * A kettő a nevek esetében ugyanaz, az összegeknél és a dátumoknál viszont
+   * NEM: ott minden érték külön sor (`#osszeg|3 550 000 Ft`), az entitás
+   * viszont mindegyiküké közös (`#osszeg`). Amíg ez a mező az entitást
+   * hordozta, az összeg- és dátumsorokon a „Végignézem" gomb némán nem
+   * csinált semmit: a sor sosem ismerte fel, hogy rajta áll a lépegetés.
+   */
+  sorId: string;
   /** Hányadik előfordulásnál járunk (0-tól). */
   index: number;
   osszes: number;
@@ -1623,7 +1632,7 @@ function TalaltSor({
   const ertek = sajat === '' ? tetel.csere : sajat;
   /* Ezen a soron áll-e éppen a lépegetés. Az állást a hívó a dokumentum
      kijelöléséből származtatja, tehát az iratra kattintás is ide hozza. */
-  const aktiv = lepes !== null && lepes.entityId === tetel.id;
+  const aktiv = lepes !== null && lepes.sorId === tetel.id;
 
   return (
     /*

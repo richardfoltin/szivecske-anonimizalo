@@ -351,6 +351,17 @@ function hlAlatta(e: React.MouseEvent): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+/**
+ * MELYIK SZEREPLŐRE ESETT A JOBB KATTINTÁS — a szöveges előnézeten.
+ *
+ * Ott a jelölést szövegkeresés rakja ki, nem a találatok pozíciói, tehát
+ * előfordulás-azonosító nincs. A szereplő viszont egyértelmű.
+ */
+export function szereploAlatta(e: React.MouseEvent): string | null {
+  const el = (e.target as HTMLElement | null)?.closest?.('[data-entity]');
+  return el ? ((el as HTMLElement).dataset.entity ?? null) : null;
+}
+
 function frissSor(m: MatchRow, dontesek: Record<number, 'accept' | 'skip'> | undefined): MatchRow {
   const d = dontesek?.[m.id];
   return d === undefined ? m : { ...m, decision: d };
@@ -514,6 +525,7 @@ export function OsszevetesView({
   dontesek,
   selected,
   onSelect,
+  onContext,
 }: {
   analysis: AnalysisResult;
   szakasz?: DocSection;
@@ -521,6 +533,8 @@ export function OsszevetesView({
   dontesek?: Record<number, 'accept' | 'skip'>;
   selected: number | null;
   onSelect: (id: number | null) => void;
+  /** Jobb kattintás a javító menühöz — ugyanaz, mint az eredeti nézeten. */
+  onContext?: (e: React.MouseEvent, matchId: number | null) => void;
 }) {
   const szoveg = szakasz?.previewText ?? analysis.previewText;
   const bekezdesek = szakasz?.paragraphs ?? analysis.paragraphs ?? [];
@@ -586,7 +600,11 @@ export function OsszevetesView({
   }, [szoveg, analysis.matches, tolIg, bekezdesek]);
 
   return (
-    <div className="viewport osszevetes" ref={ref}>
+    <div
+      className="viewport osszevetes"
+      ref={ref}
+      {...(onContext ? { onContextMenu: (e: React.MouseEvent) => onContext(e, hlAlatta(e)) } : {})}
+    >
       <div className="textview szedett">
         {szedes.map((b) => (
           <p key={b.kulcs} className={b.kozepre ? 'kozepre' : undefined}>
@@ -648,6 +666,7 @@ export function PreviewView({
   lapok,
   error,
   hivatalosIdk = new Set<string>(),
+  onContext,
 }: {
   analysis: AnalysisResult;
   /** null: még töltjük a motortól — vagy a lapképes út vitte el. */
@@ -668,6 +687,16 @@ export function PreviewView({
   error: string | null;
   /** A Bszi. szerinti szereplők — tőlük kapja az előnézet az ibolya jelölést. */
   hivatalosIdk?: ReadonlySet<string>;
+  /**
+   * JOBB KATTINTÁS AZ ELŐNÉZETEN IS.
+   *
+   * A javítás igénye nem az eredeti nézethez kötődik: aki az előnézeten látja
+   * meg, hogy egy szót tévedésből cseréltünk le, ott akar hozzányúlni — nem
+   * visszakapcsolni az eredetire, megkeresni ugyanazt a szót, és ott
+   * kattintani. A kijelölés viszont csak a szöveges előnézeten megy: a lapkép
+   * az álnevesített iraté, azon nincs szövegréteg.
+   */
+  onContext?: (e: React.MouseEvent, matchId: number | null) => void;
 }) {
   const matchById = useMemo(
     () => new Map(analysis.matches.map((m) => [m.id, m])),
@@ -692,12 +721,15 @@ export function PreviewView({
       ékezetes betűkön csendben elromlik.
     */
     const fajtaSzerint = new Map<string, string>();
+    /** Csereszöveg → SZEREPLŐ azonosítója, a jobb gombos menühöz. */
+    const kihezTartozik = new Map<string, string>();
     for (const c of analysis.cast) {
       if (c.skipped || !c.replacement) continue;
       fajtaSzerint.set(
         escapeHtml(c.replacement),
         hivatalosIdk.has(c.entityId) ? 'k-hivatalos' : 'k-nev',
       );
+      kihezTartozik.set(escapeHtml(c.replacement), c.entityId);
     }
     // Az összeg és a dátum cseréi a találatokból jönnek: ők nem szereplők,
     // a `cast` nem ismeri őket.
@@ -711,10 +743,21 @@ export function PreviewView({
     const re = new RegExp(needles.map(escapeRe).join('|'), 'g');
     // A `csere` osztállyal a jelölés UGYANAZOKAT a stílusszabályokat kapja,
     // mint az eredeti nézet markjai — egy színrend, két nézet.
-    return escaped.replace(
-      re,
-      (t) => `<mark class="csere ${fajtaSzerint.get(t) ?? 'k-nev'}">${t}</mark>`,
-    );
+    /*
+      A JELÖLÉS A SZEREPLŐRE MUTAT, NEM AZ ELŐFORDULÁSRA.
+
+      Ezen a nézeten a jelölést szövegkeresés rakja ki (a kész álnevek
+      alakjait keressük a kimenetben), nem a találatok pozíciói — azok az
+      EREDETI szövegre vonatkoznak. Egy előfordulás-azonosítót tehát nem
+      tudnánk hitelesen hozzárendelni, és a jobb gombos menü „ezt az egy
+      helyet" ígérete hazugság volna. A szereplő viszont egyértelmű: a menü
+      így az egész félről kérdez, és pontosan azt is mondja.
+    */
+    return escaped.replace(re, (t) => {
+      const ki = kihezTartozik.get(t);
+      const azon = ki === undefined ? '' : ` data-entity="${escapeHtml(ki)}"`;
+      return `<mark class="csere ${fajtaSzerint.get(t) ?? 'k-nev'}"${azon}>${t}</mark>`;
+    });
   }, [text, analysis.cast, analysis.matches, hivatalosIdk]);
 
   if (error !== null) {
@@ -742,7 +785,10 @@ export function PreviewView({
       oldalanként.set(h.page, [...(oldalanként.get(h.page) ?? []), h]);
     }
     return (
-      <div className="viewport preview">
+      <div
+        className="viewport preview"
+        {...(onContext ? { onContextMenu: (e: React.MouseEvent) => onContext(e, hlAlatta(e)) } : {})}
+      >
         <div className="pagewrap">
           {lapok.pages.map((p) => (
             <div className="page" key={p.index}>
@@ -752,6 +798,7 @@ export function PreviewView({
                 return (
                   <div
                     key={h.matchId}
+                    data-hl={h.matchId}
                     className={`hl csere k-${m ? matchKind(m, hivatalosIdk) : 'nev'}`}
                     style={{
                       left: `${h.left * 100}%`,
@@ -771,7 +818,10 @@ export function PreviewView({
   }
 
   return (
-    <div className="viewport preview">
+    <div
+      className="viewport preview"
+      {...(onContext ? { onContextMenu: (e: React.MouseEvent) => onContext(e, hlAlatta(e)) } : {})}
+    >
       {text === null ? (
         <div className="textview">
           <span className="spinner" /> Az álnevesített irat előállítása…

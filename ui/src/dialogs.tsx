@@ -991,9 +991,20 @@ export function FelismeroSav({
       <div className="allapot">
         {halad ? (
           <>
-            <div className="progress sm">
-              <div className="bar" style={{ width: `${szazalek}%` }} />
-              <span className="ptext">{szazalek}%</span>
+            {/*
+              A SZÁM A CSÍK MELLETT ÁLL, nem rajta.
+
+              A csíkra írt százalék a haladó élen félig a kitöltésen, félig a
+              háttéren ült — mindkét oldalon más kontraszttal —, és a
+              „multiply" keverés a sáv borostyán alapján piszkosra vitte.
+              Mellette állva mindig ugyanolyan olvasható, a csík pedig
+              maradhat az, ami: egy csík.
+            */}
+            <div className="letoltes">
+              <div className="progress sav">
+                <div className="bar" style={{ width: `${szazalek}%` }} />
+              </div>
+              <span className="szazalek">{szazalek}%</span>
             </div>
             <button className="btn sm ghost" onClick={() => void api.cancelDownload()}>
               Megszakítás

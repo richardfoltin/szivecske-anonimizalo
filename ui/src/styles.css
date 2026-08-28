@@ -4955,3 +4955,45 @@ textarea:focus {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+
+/*
+  A LETÖLTÉS CSÍKJA A MODELLSÁVBAN.
+
+  Az általános `.progress` egy önálló, 26 képpontos doboz 11 képpont alsó
+  margóval — az egy külön sorban álló folyamatjelzőnek való. Ebben a sávban
+  viszont a nyelvváltó és a „Megszakítás" gomb MELLETT áll: az örökölt margó
+  feljebb tolta a sor közepénél, a magassága pedig kilógott a gombok közül.
+
+  Itt tehát vékony, a sorral együtt középre igazított csík a helyes, mellette
+  a százalékkal — a szám nem a csíkon ül, tehát mindig ugyanolyan olvasható.
+*/
+.modellsav .letoltes {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1 1 auto;
+  min-width: 90px;
+  max-width: 260px;
+}
+.modellsav .progress.sav {
+  flex: 1 1 auto;
+  height: 6px;
+  min-width: 60px;
+  margin: 0;
+  border-radius: 99px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.modellsav .progress.sav .bar {
+  background: var(--rose);
+  border-radius: 99px;
+}
+.modellsav .szazalek {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  min-width: 34px;
+  text-align: right;
+}

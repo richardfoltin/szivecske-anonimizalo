@@ -36,6 +36,7 @@ import {
   OsszegzoLap,
   OsszevetesView,
   PreviewView,
+  szereploAlatta,
 } from './panels';
 import { KontextMenu, type MenuAllas, type MenuTetel } from './kontextmenu';
 import { ROLES } from './dialogs';
@@ -2733,7 +2734,7 @@ export default function App() {
     if (!m) return null;
     const lista = analysis.matches.filter((x) => sorAzonosito(x) === sorAzonosito(m));
     return {
-      entityId: m.entityId,
+      sorId: sorAzonosito(m),
       index: lista.findIndex((x) => x.id === selected),
       osszes: lista.length,
       cserelodik: kimenetMost(m) === 'csere',
@@ -3168,13 +3169,47 @@ export default function App() {
   const iratContext = (e: React.MouseEvent, matchId: number | null): void => {
     if (!analysis) return;
     const m = matchId === null ? undefined : analysis.matches.find((x) => x.id === matchId);
+    /*
+      A SZÖVEGES ELŐNÉZETEN SZEREPLŐRE KATTINTUNK, nem előfordulásra: ott a
+      jelölést szövegkeresés rakja ki, tehát nincs hiteles előfordulás-
+      azonosító. A menü ilyenkor az egész félről kérdez — és ki is mondja.
+    */
+    const szereploId = m ? null : szereploAlatta(e);
+    const szereplo = szereploId
+      ? (analysis.cast.find((c) => c.entityId === szereploId) ?? null)
+      : null;
     e.preventDefault();
     setMenu({
       x: e.clientX,
       y: e.clientY,
-      tetelek: m ? talalatMenu(m) : kijelolesMenu(e.clientX, e.clientY),
+      tetelek: m
+        ? talalatMenu(m)
+        : szereplo
+          ? szereploMenu(szereplo)
+          : kijelolesMenu(e.clientX, e.clientY),
     });
   };
+
+  /** A szöveges előnézeten: az EGÉSZ félről szóló menü. */
+  const szereploMenu = (c: CastRow): MenuTetel[] => [
+    {
+      fajta: 'cim',
+      szoveg: rovidit(c.replacement),
+      also: `Az eredetiben: ${c.original} — ${c.occurrences} helyen`,
+    },
+    { fajta: 'valaszto' },
+    {
+      fajta: 'gomb',
+      cimke: 'Ne cserélje sehol',
+      onValaszt: () => dontesekre(c.entityId, () => 'skip'),
+    },
+    {
+      fajta: 'gomb',
+      bont: true,
+      cimke: 'Vedd ki a listából',
+      onValaszt: () => felTorles(c.entityId),
+    },
+  ];
 
   const setupBeallitas = (valtozas: Partial<DokumentumBeallitasok>): void => {
     if (valtozas.mode !== undefined) setMode(valtozas.mode);
@@ -3929,6 +3964,7 @@ export default function App() {
                 lapok={valtozasPages}
                 error={null}
                 hivatalosIdk={hivatalosIdk}
+                onContext={iratContext}
               />
             ) : analysis && view === 'valtozas' ? (
               <OsszevetesView
@@ -3938,6 +3974,7 @@ export default function App() {
                 dontesek={decisions}
                 selected={selected}
                 onSelect={setSelected}
+                onContext={iratContext}
               />
             ) : analysis && view === 'preview' ? (
               <PreviewView
@@ -3946,6 +3983,7 @@ export default function App() {
                 lapok={previewPages}
                 error={previewError}
                 hivatalosIdk={hivatalosIdk}
+                onContext={iratContext}
               />
             ) : analysis ? (
               /*
