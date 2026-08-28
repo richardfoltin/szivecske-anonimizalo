@@ -695,28 +695,33 @@ function escapeRe(s: string): string {
 */
 
 /**
- * A BEÁLLÍTÓ LAP HARMADIK FÜLE: mi történt, és mehet-e a fájlba.
+ * A BEÁLLÍTÓ LAP HARMADIK FÜLE: MIRŐL DÖNTÖTT A PROGRAM HELYETTED.
  *
- * Nem döntésfelület — a döntések az előző két fülön születnek. Itt az áll,
- * amit a mentés előtt tudni kell: hány találat cserélődik (fajtánként, a
- * bal oldali kiemelés színeivel), hány marad bent, döntött-e a program
- * ember helyett, és van-e akadálya a mentésnek.
+ * A SZÁMOK INNEN KIKERÜLTEK, és ez nem kurtítás. Ugyanaz az öt szám állt itt,
+ * ami az irat fölötti jelmagyarázatban („név · 78, összeg · 9, dátum · 13,
+ * nincs csere · 1") és a lap alján az állapotsorban („100 lecserélve … 101
+ * találat”) — HARMADSZOR. Egy szám három helyen nem háromszor olyan
+ * meggyőző, hanem azt a kérdést szüli, hogy melyik az igazi; a mentés előtti
+ * utolsó képernyőn pedig épp az veszett el mögötte, amit CSAK itt lehet
+ * megtudni: hol döntött a program ember helyett.
  *
- * KORÁBBAN KÜLÖN KÉPERNYŐ volt (a „munkalap" jobb panele), és egy fejléc-ikon
- * vitt oda-vissza. A mentés gombja a lap közös láblécébe került, a többi fül
- * továbblépő gombjának helyére — így a folyamat mindhárom állomásán ugyanott
- * van a következő lépés.
+ * AMI ITT MARAD, AZ MIND TEENDŐ vagy figyelmeztetés — nem összefoglaló:
+ *   – amiről a program döntött helyetted (a lap fő tartalma),
+ *   – ami még eldöntetlen, és ezért NEM cserélődik,
+ *   – az elemzés figyelmeztetései (összecsukva),
+ *   – ami a mentést blokkolja.
+ *
+ * A mentés gombja a lap közös láblécében áll, a többi fül továbblépő
+ * gombjának helyén — így a folyamat mindhárom állomásán ugyanott van a
+ * következő lépés.
  */
 export function OsszegzoLap({
   analysis,
-  fajtak,
   autoJelentes,
   mentesAkadaly,
   onVissza,
 }: {
   analysis: AnalysisResult;
-  /** A jelmagyarázat sorai (fajta + darab) — UGYANABBÓL a számításból, mint a bal oldali sáv. */
-  fajtak: { kulcs: string; osztaly: string; cimke: string; db: number }[];
   /**
    * AMIRŐL A PROGRAM DÖNTÖTT HELYETTED — kész lista, nem szám és nem gomb.
    *
@@ -736,8 +741,6 @@ export function OsszegzoLap({
   /** Vissza a „Mit cserélünk?" fülre — ott lehet dönteni a bizonytalanokról. */
   onVissza: () => void;
 }) {
-  const csere = analysis.outcomes?.csere ?? analysis.counts.auto;
-  const nincs = analysis.outcomes?.nincs ?? analysis.counts.reject;
   const bizonytalan = analysis.outcomes?.bizonytalan ?? analysis.counts.review;
   /*
     UGYANAZ A MONDAT EGYSZER. A dátumterv iratrészenként keletkezik, és a
@@ -747,38 +750,37 @@ export function OsszegzoLap({
   */
   const figyelmeztetesek = useMemo(() => [...new Set(analysis.warnings)], [analysis.warnings]);
 
+  /*
+    NINCS ÁTNÉZNIVALÓ — ezt is ki kell mondani.
+
+    Ha a program nem döntött ember helyett, nincs eldöntetlen találat, nincs
+    figyelmeztetés és nincs mentési akadály, akkor ez a fül ÜRESEN állna. Egy
+    üres lap a folyamat utolsó állomásán azt a kérdést veti fel, hogy
+    betöltődött-e egyáltalán — pedig épp a jó hírt jelenti.
+  */
+  const nincsAtneznivalo =
+    autoJelentes === null && bizonytalan === 0 && figyelmeztetesek.length === 0 && mentesAkadaly === null;
+
   return (
     <>
-      <div className="ds-szakasz">
-        <h3>Mi lesz az irattal?</h3>
-        <p>
-          A csere lefutott. Nézd meg a bal oldali <b>Előnézet</b> nézeten, aztán mentsd új fájlba —
-          az eredeti irat érintetlen marad.
-        </p>
-      </div>
-
       <div className="osszegzo">
-        <div className="resultrow fo">
-          <span>Lecserélve</span>
-          <span className="v">{csere}</span>
-        </div>
-        {/* A fajtánkénti bontás UGYANAZOKKAL a színekkel, mint a bal oldali
-            kiemelés és a beállító lap fejlécei — a pötty köti össze a számot
-            azzal, amit a szem az iraton lát. */}
-        {fajtak
-          .filter((f) => !['bizonytalan', 'nincs'].includes(f.kulcs))
-          .map((f) => (
-            <div key={f.kulcs} className="resultrow al">
-              <span>
-                <span className={`dot ${f.osztaly.replace('csere ', '')}`} aria-hidden="true" /> {f.cimke}
-              </span>
-              <span className="v">{f.db}</span>
-            </div>
-          ))}
-        <div className="resultrow fo">
-          <span>Nincs csere — az eredeti marad</span>
-          <span className="v">{nincs}</span>
-        </div>
+        {/*
+          A JELENTÉSNEK SAJÁT FEJLÉCE VAN („Amiről a program döntött
+          helyetted", a darabszámmal), ezért NEM teszünk fölé lapcímet: két
+          egymás alatti cím ugyanarról a listáról csak szélesíti a fejet.
+        */}
+        {autoJelentes}
+
+        {nincsAtneznivalo && (
+          <div className="ds-szakasz" style={{ padding: 0 }}>
+            <h3>Nincs átnéznivaló</h3>
+            <p>
+              Minden döntést te hoztál, és nincs akadálya a mentésnek. Nézd meg a bal oldali{' '}
+              <b>Előnézet</b> nézeten, mi kerül a fájlba, aztán mentsd — az eredeti irat érintetlen
+              marad.
+            </p>
+          </div>
+        )}
 
         {/*
           BIZONYTALAN TALÁLAT A MENTÉS ELŐTT: ezt nem elég egy számmal
@@ -799,9 +801,6 @@ export function OsszegzoLap({
             </div>
           </div>
         )}
-
-        {/* A jelentés MAGA, nem egy gomb hozzá. */}
-        {autoJelentes}
 
         {/*
           A FIGYELMEZTETÉSEK ÖSSZECSUKVA — nem eltüntetve.

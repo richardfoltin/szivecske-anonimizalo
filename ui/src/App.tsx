@@ -3573,7 +3573,6 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
               analysis ? (
                 <OsszegzoLap
                   analysis={analysis}
-                  fajtak={jelmagyarazat}
                   /*
                     A JELENTÉS MAGA MEGY ÁT, NEM EGY GOMB HOZZÁ.
 
