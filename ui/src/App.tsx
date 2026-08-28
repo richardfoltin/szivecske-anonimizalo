@@ -453,7 +453,17 @@ export default function App() {
    * Korábban „alapértelmezés" volt a Beállításokból; ma a beállító lap egyik
    * kapcsolója. A mentés ablaka ezt az értéket kapja induló állásnak.
    */
-  const [keepKey, setKeepKey] = useState(true);
+  /*
+    A KULCSFÁJL ALAPBÓL NEM KÉSZÜL — a szigorúbb állapot az alapértelmezés.
+
+    Amíg a kulcs létezik, a kimenet a GDPR szerint továbbra is személyes adat:
+    az irat álnevesített, nem anonimizált. Aki vissza akarja nézni, ki kicsoda
+    volt, az egy kapcsolóval kéri — és akkor tudatosan vállalja is.
+
+    (A beállításokban felülírható, `Settings.keepKey`; ez csak a kiindulás,
+    amíg a mentett beállítás be nem töltődik.)
+  */
+  const [keepKey, setKeepKey] = useState(false);
   const [autoDetect, setAutoDetect] = useState(true);
   const [decisions, setDecisions] = useState<Record<number, 'accept' | 'skip'>>({});
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
@@ -884,7 +894,21 @@ export default function App() {
       setAutoModeForDoc(auto);
       setDetectError(null);
       setHaladas(null);
-      setFazis('vizsgalat');
+      /*
+        A VIZSGÁLAT NEM RÁNTJA EL A LAPOT, HA MÁR VAN MIT MUTATNI.
+
+        Eddig minden vizsgálat teljes képernyős betöltőlapra váltott — az
+        „Vizsgálat újra" gombra tehát eltűnt az egész felület, majd
+        visszajött. Egy villanás, aminek semmi haszna: az iratsáv, a
+        jelmagyarázat, a jobb oldali beállítások mind ugyanazok maradnak, csak
+        a TALÁLATOK számolódnak újra. Ami újratöltődik, az egyedül a
+        dokumentum tartalma — a betöltésnek is ott a helye.
+
+        Csak akkor vesszük át az egész képernyőt, ha tényleg nincs mit
+        mutatni: az első irat megnyitásakor. Ott a betöltőlap nem villanás,
+        hanem az egyetlen tartalom.
+      */
+      if (!(fazis === 'beallitas' && docs.length > 0)) setFazis('vizsgalat');
 
       if (!autoDetect) {
         // Kikapcsolt felismerés: nincs mit megvárni. A beállító lap kinyílik, a
@@ -1004,7 +1028,7 @@ export default function App() {
       setVizsgalatKep('var');
       setFazis('beallitas');
     },
-    [autoDetect, autoModeForDoc, mode, runAnalysis, themeId],
+    [autoDetect, autoModeForDoc, mode, runAnalysis, themeId, fazis, docs.length],
   );
 
   /**
@@ -1078,7 +1102,15 @@ export default function App() {
       setVizsgalat('kihagyva');
       setVizsgalatKep('nyit');
       setHaladas(null);
-      setFazis('vizsgalat');
+      /*
+        AZ ÜGYHÖZ ADOTT IRAT NEM RÁNTJA EL A LAPOT.
+
+        Ilyenkor van mit mutatni: az iratsáv, a jelmagyarázat és a jobb oldali
+        beállítások a helyükön maradnak, a betöltés pedig a dokumentum helyén
+        jelenik meg. Az ELSŐ irat megnyitásakor viszont nincs mit megőrizni —
+        ott a betöltőlap nem villanás, hanem az egyetlen tartalom.
+      */
+      if (!(hozzaad && voltIrat)) setFazis('vizsgalat');
       try {
         const lista = await api.openDocument(path, hozzaad);
         setDocs(lista);
@@ -1426,7 +1458,9 @@ export default function App() {
         return;
       }
       if (!target) return;
-      setBusy('Mentés és ellenőrzés…');
+      // A gomb „Mentés", a fátyol felirata is az: az ellenőrző kör a mentés
+      // része, nem külön művelet, amiről a felhasználónak tudnia kellene.
+      setBusy('Mentés…');
       try {
         const res = await api.exportDocument({
           mode,
@@ -3592,6 +3626,32 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
                   tördelését nem — a mentett fájl az eredeti tördelést megtartja.
                 </div>
               )}
+            {/*
+              A BETÖLTÉS A DOKUMENTUM HELYÉN — nem az egész képernyőn.
+
+              A vizsgálat alatt a lap többi része a helyén marad: az iratsáv, a
+              jelmagyarázat, a jobb oldali beállítások. Ami tényleg
+              újraszámolódik, az a találatok listája és az iraton lévő
+              kiemelés — tehát a várakozás jele is oda való, ahol a változás
+              lesz.
+
+              A RÉGI TARTALMAT NEM DOBJUK EL. A `viewport` alatta marad, a
+              betöltés csak ráfekszik: aki eddig egy bekezdést olvasott, az a
+              vizsgálat után ugyanott találja magát, nem egy üres lapon.
+            */}
+            {vizsgalatKep !== 'var' && doc && (
+              <div className="iratbetoltes" role="status">
+                <div className="ibdoboz">
+                  <img className="pulzus" src={markUrl} alt="" />
+                  <div className="ibcim">
+                    {vizsgalatKep === 'nyit' ? 'Az irat megnyitása' : 'A nevek megkeresése'}
+                  </div>
+                  <div className="csik hatarozatlan">
+                    <div className="bar" />
+                  </div>
+                </div>
+              </div>
+            )}
             {analysis && view === 'valtozas' ? (
               <OsszevetesView
                 analysis={analysis}

@@ -525,6 +525,7 @@ export function OsszevetesView({
   onSelect: (id: number | null) => void;
 }) {
   const szoveg = szakasz?.previewText ?? analysis.previewText;
+  const hatarok = szakasz?.paragraphBreaks ?? analysis.paragraphBreaks ?? [];
   const tolIg: [number, number] | null = szakasz
     ? [szakasz.matchIdTol, szakasz.matchIdIg]
     : null;
@@ -550,15 +551,38 @@ export function OsszevetesView({
 
     const out: { kulcs: string; szoveg: string; m?: MatchRow }[] = [];
     let poz = 0;
+    /*
+      A BEKEZDÉSHATÁR SORTÖRÉSSÉ VÁLIK — a szöveg megváltoztatása nélkül.
+
+      A PDF-ből kiolvasott szövegben nincs sortörés (a sorokat szóközzel
+      fűzzük össze, hogy a sortörésen átnyúló nevet is megtaláljuk), tehát a
+      képernyőn egyetlen végtelen bekezdés állna. A motor megmondja, hol
+      kezdődik új bekezdés; itt csak KIRAJZOLJUK a törést.
+
+      Magához a szöveghez nem nyúlunk, és a pozíciókat sem toljuk el: a
+      találatok helye (`previewStart`) erre a szövegre hivatkozik. A törés
+      külön elemként ül a két darab között.
+    */
+    const hatarHalmaz = new Set(hatarok.filter((h) => h > 0 && h < szoveg.length));
+    const tolddSzoveget = (tol: number, ig: number, kulcs: string): void => {
+      let k = tol;
+      for (const h of [...hatarHalmaz].filter((h) => h > tol && h < ig).sort((a, b) => a - b)) {
+        out.push({ kulcs: `${kulcs}-${k}`, szoveg: szoveg.slice(k, h) });
+        out.push({ kulcs: `br${h}`, szoveg: '\n\n' });
+        k = h;
+      }
+      out.push({ kulcs: `${kulcs}-${k}`, szoveg: szoveg.slice(k, ig) });
+    };
+
     for (const m of jelolt) {
       if (m.previewStart < poz) continue;
-      if (m.previewStart > poz) out.push({ kulcs: `t${poz}`, szoveg: szoveg.slice(poz, m.previewStart) });
+      if (m.previewStart > poz) tolddSzoveget(poz, m.previewStart, `t${poz}`);
       out.push({ kulcs: `m${m.id}`, szoveg: szoveg.slice(m.previewStart, m.previewEnd), m });
       poz = m.previewEnd;
     }
-    if (poz < szoveg.length) out.push({ kulcs: `t${poz}`, szoveg: szoveg.slice(poz) });
+    if (poz < szoveg.length) tolddSzoveget(poz, szoveg.length, `t${poz}`);
     return out;
-  }, [szoveg, analysis.matches, tolIg]);
+  }, [szoveg, analysis.matches, tolIg, hatarok]);
 
   return (
     <div className="viewport osszevetes" ref={ref}>

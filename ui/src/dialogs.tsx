@@ -2401,25 +2401,26 @@ export function ExportDialog({
           )}
 
           {/*
-            Kérdezés nélküli úton ez az ELSŐ képernyő, amit a felhasználó lát a
-            megnyitás után. Ha itt nem mondanánk ki, hogy a program döntött
-            helyette, a mentés úgy nézne ki, mintha ő ment volna végig a
-            találatokon — a tételes lista a mentés után jön, de a tényt itt kell
-            kimondani, mert innen még van visszaút.
+            A TÉNY EGY MONDATBAN, KERETES DOBOZ ÉS GOMB NÉLKÜL.
+
+            Korábban egy zöld figyelmeztető doboz állt itt, benne egy „Inkább
+            nézzük át együtt" gombbal. Kettő baj volt vele. Az egyik, hogy arról
+            beszélt, mi lesz a MENTÉS UTÁN — ez a képernyő viszont a mentésről
+            szól, és a felhasználó itt már döntött. A másik, hogy egy visszaút-
+            gomb a mentés gombja MELLETT két egyenrangú útnak mutatja azt, ami
+            nem az: a lista mostantól az „Ellenőrzés és mentés" fülön kibontva
+            áll, ott lehet átnézni, itt már menteni jöttünk.
+
+            A tény viszont marad, mert azt tudni kell: kérdezés nélküli úton ez
+            az első képernyő a megnyitás után, és enélkül a mentés úgy nézne ki,
+            mintha a felhasználó ment volna végig a találatokon.
           */}
           {autoDecided > 0 && (
-            <div className="note good">
-              <b>{autoDecided} bizonytalan találatról</b> a program döntött helyetted, és mindet
-              lecserélte. Mentés után tételesen megmutatjuk, melyekről — köztük azokat is, ahol
-              köznevet cserélhetett le.
-              {onReview && (
-                <div className="pathacts">
-                  <button className="btn sm" onClick={onReview}>
-                    Inkább nézzük át együtt
-                  </button>
-                </div>
-              )}
-            </div>
+            <p className="hint" style={{ margin: 0 }}>
+              Ebben az iratban <b>{autoDecided} bizonytalan találatról</b> a program döntött
+              helyetted. A tételes listát az <b>Ellenőrzés és mentés</b> fül mutatja, és a mentés
+              utáni jelentés is tartalmazza.
+            </p>
           )}
 
           <KapcsoloSor
@@ -2473,7 +2474,15 @@ export function ExportDialog({
               void onExport(keepKey, pass).finally(() => setWorking(false));
             }}
           >
-            {busy || working ? 'Mentés…' : 'Mentés és ellenőrzés'}
+            {/*
+              „MENTÉS" — nem „Mentés és ellenőrzés".
+
+              Az ellenőrző kör nem külön művelet, amit a felhasználó kér: a
+              mentés RÉSZE, mindig lefut, és nem is lehet kihagyni. A gomb a
+              műveletet nevezi meg, nem a belső lépéseit — ahogy egyetlen
+              program sem ír „Mentés és lemezre írás"-t.
+            */}
+            {busy || working ? 'Mentés…' : 'Mentés'}
           </button>
         </div>
       </div>

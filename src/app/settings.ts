@@ -62,7 +62,15 @@ export interface Settings {
 export const DEFAULT_SETTINGS: Settings = {
   themeId: 'kokorszak',
   mode: 'theme',
-  keepKey: true,
+  /*
+    A KULCSFÁJL ALAPBÓL NEM KÉSZÜL.
+
+    Amíg a kulcs létezik, a kimenet a GDPR szerint TOVÁBBRA IS személyes adat:
+    az irat álnevesített, nem anonimizált. Alapértelmezésnek tehát a szigorúbb
+    állapot való — aki vissza akarja majd nézni, ki kicsoda volt, az egy
+    kapcsolóval kéri, és akkor tudatosan vállalja a következményét is.
+  */
+  keepKey: false,
   autoDetect: true,
   useModel: true,
   // A magyar modell az alapértelmezés: magyar iraton mérve ez a legpontosabb,

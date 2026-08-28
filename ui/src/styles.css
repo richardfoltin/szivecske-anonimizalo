@@ -1708,19 +1708,21 @@ textarea:focus {
   jelvény pedig alig jelvény. A kék és a zöld a program saját palettájából
   való (a dátumé és az összegé az iraton), és egyik sem foglalt a nevekre.
 
-  MINDKETTŐ TÖMÖR, FEHÉR BETŰVEL. A kontraszt a `--kek`-en 5,4:1, a
-  `--mint`-en 4,8:1 — a jelvény pontosan attól ér valamit, hogy ekkora
-  betűmérettel is elolvasható.
+  HALVÁNY HÁTTÉR, SZÍNES BETŰ. A tömör, fehér betűs jelvény hangosabb volt a
+  kártya nevénél — pedig a jelvény csak besorol, nem ő a kártya lényege. A
+  halvány alap ugyanaz a fajta szín, mint a kijelölés háttere: jelen van, de
+  nem kiabál. A betű a tömör árnyalat, tehát a kontraszt megmarad (a
+  `--kek` a `--kek-soft`-on 6,1:1, a `--mint` a `--mint-soft`-on 5,2:1).
 */
 .kartyajel.mod {
-  background: var(--kek);
-  border: 1px solid var(--kek);
-  color: #fff;
+  background: var(--kek-soft);
+  border: 1px solid var(--kek-soft);
+  color: var(--kek);
 }
 .kartyajel.keszlet {
-  background: var(--mint);
-  border: 1px solid var(--mint);
-  color: #fff;
+  background: var(--mint-soft);
+  border: 1px solid var(--mint-soft);
+  color: var(--mint);
 }
 /* SAJÁT KÉSZLET: nyelvi modell javasolta, nem ember nézte át. Nem hiba, de a
    kártya legfontosabb ténye — ezért kiemelt, de nem riasztó szín. */
@@ -4464,12 +4466,29 @@ textarea:focus {
   volna. A ¶ a bekezdés évszázados jele; hogy BE van-e kapcsolva, azt a szín
   mondja el, a teljes mondat pedig a buboréksúgóban áll.
 */
+/*
+  IKONGOMB: négyzet, a jellel a KÖZEPÉN.
+
+  A `.btn` alapból szöveges gomb — vízszintes belső margóval, `gap`-pel a
+  (nem létező) ikon és a (nem létező) felirat közé, balra igazított
+  tartalommal. Egyetlen jellel ez egy hosszúkás, félrecsúszott folt lett. Egy
+  ikongombnak azonos a két oldala, és a jel pontosan a közepén ül.
+*/
 .tordeleskapcs {
-  padding: 4px 8px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  gap: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .tordeleskapcs .jel {
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1;
+  /* A ¶ alapvonal alá lógó szárral készül: optikailag lejjebb ül, mint
+     amennyire a doboz közepe van. Ez a fél képpont hozza vissza középre. */
+  transform: translateY(-0.5px);
 }
 
 /* ───────────────────── összevetés: régi és új ───────────────────── */
@@ -4534,7 +4553,71 @@ textarea:focus {
   margin-top: 2px;
 }
 /* A részlet sora akkor is helyet foglal, ha nincs mit kiírni — enélkül a
-   szakaszváltás pillanatában szintén elmozdulna minden. */
+   szakaszváltás pillanatában szintén elmozdulna minden. A pontos magasságát
+   lentebb rögzítjük, mert a hosszú szakasznév két sorba törne. */
+
+/*
+  BETÖLTÉS A DOKUMENTUM HELYÉN — a lap többi része a helyén marad.
+
+  A vizsgálat alatt eddig az EGÉSZ képernyő betöltőlapra váltott, majd
+  visszajött: egy villanás, aminek semmi haszna, hiszen az iratsáv, a
+  jelmagyarázat és a jobb oldali beállítások változatlanok. Ami tényleg
+  újraszámolódik, az az iraton lévő kiemelés — a várakozás jele is oda való.
+
+  A RÉGI TARTALOM ALATTA MARAD, csak elhalványítva: aki eddig egy bekezdést
+  olvasott, az a vizsgálat után ugyanott találja magát. Ezért fátyol ez, nem
+  csere.
+*/
+.iratbetoltes {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  background: rgba(253, 250, 251, 0.82);
+  backdrop-filter: blur(1.5px);
+}
+.ibdoboz {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: min(260px, 70%);
+  padding: 22px 26px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.ibdoboz .pulzus {
+  width: 34px;
+  height: 34px;
+  animation: pulzus 1.9s ease-in-out infinite;
+}
+.ibdoboz .ibcim {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+.ibdoboz .csik {
+  width: 100%;
+}
+/* A dokumentumpanel a fátyol helyzeti alapja. */
+.setupdoc {
+  position: relative;
+}
+
+/*
+  A BETÖLTŐLAP SORAI NEM TÖRHETNEK KÉT SORBA.
+
+  A szakasz neve („a modell betöltése", „az irat átolvasása") hosszabb is
+  lehet, mint a doboz szélessége — két sorba törve megnövelné a lapot, és a
+  középre igazított tartalom elmozdulna. Épp az, ami ellen a fenntartott hely
+  van. Egy levágott szakasznév kevesebbet mond, de nem mozgat.
+*/
 .blreszlet {
-  min-height: 1.35em;
+  height: 1.35em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }

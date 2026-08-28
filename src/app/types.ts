@@ -505,6 +505,22 @@ export interface DocSection {
   textSpans?: TextSpan[];
   /** A dokumentum szövege — a szöveges előnézethez (DOCX, TXT). */
   previewText: string;
+  /**
+   * BEKEZDÉSHATÁROK a `previewText`-ben — karakterindexek, ahol új bekezdés kezdődik.
+   *
+   * MIÉRT KELL. A PDF-ből kiolvasott szövegben NINCS sortörés: a lapot
+   * soronként rajzolják, mi pedig szóközzel fűzzük össze őket, hogy a
+   * sortörésen átnyúló nevet meg tudjuk találni (`buildPageText`). A szöveg
+   * emiatt egyetlen, végtelen bekezdésként áll a képernyőn — olvashatatlanul.
+   *
+   * A motor ismeri a bekezdéseket (ugyanaz a csoportosítás, amivel a kimenetet
+   * újratördeli), tehát meg tudja mondani, hol kezdődik új. A felület ebből
+   * rakja vissza a tagolást — a szöveghez magához nem nyúlva, mert a találatok
+   * pozíciói arra hivatkoznak.
+   *
+   * Üres lista DOCX-en és TXT-n: ott a szövegben eleve ott a sortörés.
+   */
+  paragraphBreaks?: number[];
   matchIdTol: number;
   matchIdIg: number;
 }
@@ -538,6 +554,8 @@ export interface AnalysisResult {
   pages: PageImage[];
   /** A kijelölhető szövegréteg az ELSŐ irathoz — a `docs` első elemének mása. */
   textSpans?: TextSpan[];
+  /** Bekezdéshatárok az ELSŐ irat szövegében — a `docs` első elemének mása. */
+  paragraphBreaks?: number[];
   /**
    * MINDEN betöltött irat, betöltési sorrendben. Egy iratnál egyelemű.
    *

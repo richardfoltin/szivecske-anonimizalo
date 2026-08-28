@@ -919,6 +919,7 @@ export class DocumentSession {
       doc: this.info,
       pages: this.pages,
       textSpans: this.textSpans(),
+      paragraphBreaks: this.paragraphBreaks(),
       cast,
       matches,
       highlights,
@@ -1012,6 +1013,43 @@ export class DocumentSession {
           text: seg.text,
         });
       }
+    }
+    return out;
+  }
+
+  /**
+   * BEKEZDÉSHATÁROK a felületnek megadott szövegben — csak PDF-en.
+   *
+   * A PDF-ből kiolvasott szövegben nincs sortörés: a lapot soronként
+   * rajzolják, mi pedig szóközzel fűzzük össze a sorokat, hogy a sortörésen
+   * átnyúló nevet is megtaláljuk. A képernyőn ettől egyetlen, végtelen
+   * bekezdés áll — olvashatatlanul.
+   *
+   * A bekezdéseket UGYANAZZAL a csoportosítással ismerjük fel, amivel a
+   * kimenetet újratördeljük (`bekezdesekre`). Két külön szabályrendszer a
+   * képernyőre és a fájlra előbb-utóbb máshova tenné a bekezdéshatárt, és a
+   * felhasználó a képernyőn más tagolást látna, mint amit ment.
+   *
+   * A SZÖVEGHEZ MAGÁHOZ NEM NYÚLUNK: a találatok pozíciói (`previewStart`)
+   * erre a szövegre hivatkoznak. Csak azt mondjuk meg, hol kezdődik új
+   * bekezdés; a tördelést a felület rajzolja meg belőle.
+   */
+  private paragraphBreaks(): number[] {
+    const out: number[] = [];
+    let eltolas = 0;
+    for (const unit of this.units) {
+      const pdf = unit.pdf;
+      if (pdf) {
+        // Szakasz → kezdőpozíció az oldalszintű szövegben.
+        const kezdet = new Map(pdf.pageText.spans.map((sp) => [sp.segment, sp.start]));
+        for (const b of bekezdesekre(pdf.pageText.spans.map((sp) => sp.segment))) {
+          const elso = b.sorok[0];
+          const hol = elso ? kezdet.get(elso) : undefined;
+          if (hol !== undefined) out.push(eltolas + hol);
+        }
+      }
+      // Az egységek `\n\n`-nel fűződnek össze (`anonymizedText`, `fullText`).
+      eltolas += unit.text.length + 2;
     }
     return out;
   }
