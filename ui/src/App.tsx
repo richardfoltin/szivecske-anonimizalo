@@ -11,6 +11,7 @@ import {
   // A motor szótára az azonosítófajtákhoz — a jobb gombos menü ebből épül.
   AZONOSITO_NEV,
   type AnalysisResult,
+  type CastRow,
   type MatchKind,
   type MatchOutcome,
   type MatchRow,
@@ -306,6 +307,7 @@ type IkonNev =
   | 'iratbeallitas'
   | 'ujugy'
   | 'nyomtatas'
+  | 'tordeles'
   | 'programbeallitas'
   | 'dontottunk'
   | 'figyelem';
@@ -321,6 +323,12 @@ const IKON_UTVONALAK: Record<IkonNev, string[]> = {
     'M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2',
     'M10 14a2 2 0 1 0 4 0a2 2 0 1 0 -4 0',
     'M14 4l0 4l-6 0l0 -4',
+  ],
+  // tabler: text-wrap — a szöveg a következő sorba csordul: ez a bekezdésenkénti tördelés
+  tordeles: [
+    'M4 6l16 0',
+    'M4 12l13 0a3 3 0 0 1 0 6h-4l2 -2m0 4l-2 -2',
+    'M4 18l3 0',
   ],
   // tabler: printer
   nyomtatas: [
@@ -1953,7 +1961,7 @@ export default function App() {
     void Promise.resolve(
       // A keret a VALÓDI témát kapja: a natív ablakgombok különben fehér sávon
       // ülnének egy sötét felület tetején.
-      api.ablakkeretetIgazit?.({ halvanyitva: dialog !== null, tema }),
+      api.ablakkeretetIgazit?.({ halvanyitva: dialog !== null, tema, valasztas: temaValasztas }),
     ).catch(() => {
       // Az elutasítást elnyeljük: a keret színe díszítés, a munka nem áll meg tőle.
     });
@@ -1967,7 +1975,7 @@ export default function App() {
       egy párbeszédet — akkor „magától" átváltottak, ami a hibát még
       rejtélyesebbé tette.
     */
-  }, [dialog, tema]);
+  }, [dialog, tema, temaValasztas]);
 
   useEffect(() => {
     // A mentett értékeket induláskor kell betölteni. Enélkül a felhasználó
@@ -2845,6 +2853,54 @@ export default function App() {
   };
 
   /**
+   * EGY SZÖVEG HOZZÁKÖTÉSE EGY MÁR MEGLÉVŐ SZEREPLŐHÖZ.
+   *
+   * Ez a menü fő művelete, és nem véletlenül: az iratban ugyanaz az ember
+   * tucatnyi alakban szerepel („Kovács János", „Kovácsné", „K. J.",
+   * „a felperes"), és amit a program nem ismert fel, arról a felhasználó nem
+   * azt akarja megmondani, hogy MILYEN SZEREPBEN áll — hanem hogy KI AZ.
+   *
+   * A megoldás egy második, „kézi" alak felvétele UGYANAZZAL a fedőnévvel: a
+   * fél saját álneve kézi csereszövegként kerül rá, tehát a kimenetben
+   * ugyanaz áll majd, mint az eredeti alakjainál. Így a két előfordulás
+   * összeér, és a kulcsfájlban is egy szereplőként látszik.
+   */
+  const szereplohozKot = (szoveg: string, cel: CastRow): void => {
+    const forras = felhezTartozo(cel.entityId);
+    const uj: PartyInput = {
+      id: `k${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+      kind: forras?.kind ?? 'person',
+      fullName: szoveg,
+      gender: forras?.gender ?? 'N',
+      role: forras?.role ?? cel.role,
+      // A CÉL ÁLNEVE, kézi csereszövegként: ettől lesz a kimenetben ugyanaz.
+      manualReplacement: cel.replacement,
+    };
+    felekFrissit([...parties, uj], identifiers);
+  };
+
+  /** Egy MEGLÉVŐ találat átirányítása másik szereplőre. */
+  const talalatAtiranyit = (m: MatchRow, cel: CastRow): void => {
+    if (m.entityId === cel.entityId) return;
+    szereplohozKot(m.surface, cel);
+  };
+
+  /**
+   * A VÁLASZTHATÓ SZEREPLŐK — akiket a program már ismer, az álnevükkel.
+   *
+   * A menü ebből épül: nem eljárási szerepeket kínál („felperes", „tanú"),
+   * hanem azt, hogy a kijelölt szöveg KIT jelent. A szerep a szereplőé, nem
+   * ezé az egy előfordulásé.
+   */
+  const valaszthatoSzereplok = useMemo(
+    () =>
+      (analysis?.cast ?? [])
+        .filter((c) => c.kind !== 'identifier' && !c.skipped && c.replacement)
+        .filter((c) => c.replacement !== '(nem cseréljük)'),
+    [analysis],
+  );
+
+  /**
    * A „MINEK ÉRTELMEZZE" ÁGAK — ugyanaz a szerkezet felvételnél és
    * átértelmezésnél.
    *
@@ -2894,6 +2950,37 @@ export default function App() {
       })),
     },
   ];
+
+  /**
+   * A KIJELÖLT SZÖVEG — DE CSAK AKKOR, HA A KATTINTÁS RAJTA VAN.
+   *
+   * EZ VOLT AZ A HIBA, AMITŐL A MENÜ MÁS SZÖVEGET MUTATOTT, mint ami a
+   * kurzor alatt állt. A kijelölés ugyanis MEGMARAD azután is, hogy a
+   * felhasználó másfelé kattint: aki kijelölt valamit, majd az irat egy másik
+   * pontján nyitott jobb gombos menüt, a RÉGI kijelölésről kapott menüt — és
+   * ha rábólint, egy olyan szót vesz fel félként, amire rá sem nézett.
+   *
+   * A kattintás helyét ezért összevetjük a kijelölés téglalapjaival. Ami nem
+   * a kurzor alatt van, az nem a kérdés tárgya.
+   */
+  const kijelolesAPont = (x: number, y: number): string => {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) return '';
+    const tures = 2;
+    for (let i = 0; i < sel.rangeCount; i++) {
+      for (const r of sel.getRangeAt(i).getClientRects()) {
+        if (
+          x >= r.left - tures &&
+          x <= r.right + tures &&
+          y >= r.top - tures &&
+          y <= r.bottom + tures
+        ) {
+          return sel.toString();
+        }
+      }
+    }
+    return '';
+  };
 
   /** Rövidítve, hogy a menü fejléce ne nőjön az irat szélességére. */
   const rovidit = (t: string, max = 42): string =>
@@ -2945,8 +3032,18 @@ export default function App() {
         { fajta: 'valaszto' },
         {
           fajta: 'almenu',
-          cimke: 'Inkább ez legyen…',
-          sugo: 'Ugyanaz a szöveg, más fajta — a csereszöveg is ehhez igazodik.',
+          cimke: 'Ugyanaz, mint…',
+          tetelek: valaszthatoSzereplok
+            .filter((c) => c.entityId !== m.entityId)
+            .map((c) => ({
+              fajta: 'gomb' as const,
+              cimke: `${c.original} → ${c.replacement}`,
+              onValaszt: () => talalatAtiranyit(m, c),
+            })),
+        },
+        {
+          fajta: 'almenu',
+          cimke: 'Más fajta…',
           tetelek: fajtaAgak((kind, role, ik) => felAtertelmez(m.entityId, kind, role, ik)),
         },
       );
@@ -2955,14 +3052,14 @@ export default function App() {
   };
 
   /** Kijelölésre: vegyük fel új félként, a választott fajtával. */
-  const kijelolesMenu = (): MenuTetel[] => {
+  const kijelolesMenu = (x: number, y: number): MenuTetel[] => {
     /*
       A SORTÖRÉS SZÓKÖZZÉ VÁLIK. A PDF-ben a sortörés fizikai: egy két sorba
       tört cégnév kijelölve sortöréssel érkezne, a motor pedig pontosan azt a
       karakterláncot keresné — és sosem találná meg. Az iratbeli szöveg
       ugyanezen a normalizáláson megy át (`buildPageText`).
     */
-    const szoveg = (window.getSelection()?.toString() ?? '').replace(/\s+/g, ' ').trim();
+    const szoveg = kijelolesAPont(x, y).replace(/\s+/g, ' ').trim();
     if (szoveg.length === 0) {
       return [
         {
@@ -2978,9 +3075,32 @@ export default function App() {
       {
         fajta: 'cim',
         szoveg: rovidit(szoveg),
-        also: 'Minek értelmezze a program? Minden előfordulása megjelölődik.',
+        also: 'Kire vonatkozik? Minden előfordulása megjelölődik.',
       },
       { fajta: 'valaszto' },
+      /*
+        ELÖL A MEGLÉVŐ SZEREPLŐK — ez a gyakori eset.
+
+        Amit a program nem ismert fel, az többnyire egy MÁR ISMERT szereplő
+        másik alakja („Kovácsné", „a felperes úr", egy elgépelt név). Ilyenkor
+        a kérdés nem az, hogy milyen fajta, hanem hogy KI AZ — és a válasz a
+        listán ott áll, a fedőnevével együtt.
+      */
+      ...(valaszthatoSzereplok.length > 0
+        ? ([
+            {
+              fajta: 'almenu',
+              cimke: 'Ugyanaz, mint…',
+              tetelek: valaszthatoSzereplok.map((c) => ({
+                fajta: 'gomb' as const,
+                cimke: `${c.original} → ${c.replacement}`,
+                onValaszt: () => szereplohozKot(szoveg, c),
+              })),
+            },
+            { fajta: 'valaszto' },
+          ] as MenuTetel[])
+        : []),
+      { fajta: 'cim', szoveg: 'Vagy új szereplő:', also: '' },
       ...fajtaAgak((kind, role, ik) => kijelolesFelvesz(szoveg, kind, role, ik)),
     ];
   };
@@ -2997,7 +3117,11 @@ export default function App() {
     if (!analysis) return;
     const m = matchId === null ? undefined : analysis.matches.find((x) => x.id === matchId);
     e.preventDefault();
-    setMenu({ x: e.clientX, y: e.clientY, tetelek: m ? talalatMenu(m) : kijelolesMenu() });
+    setMenu({
+      x: e.clientX,
+      y: e.clientY,
+      tetelek: m ? talalatMenu(m) : kijelolesMenu(e.clientX, e.clientY),
+    });
   };
 
   const setupBeallitas = (valtozas: Partial<DokumentumBeallitasok>): void => {
@@ -3278,7 +3402,6 @@ export default function App() {
             <button
               className="btn ghost icon"
               onClick={() => handleMenu('open')}
-              title="Másik irat megnyitása (Ctrl+O)"
               aria-label="Másik irat megnyitása"
             >
               <FejlecIkon nev="megnyitas" />
@@ -3299,10 +3422,6 @@ export default function App() {
               className="btn ghost icon"
               disabled={mentesAkadaly !== null}
               onClick={() => handleMenu('save')}
-              title={
-                mentesAkadaly ??
-                'Mentés másként: az álnevesített irat új fájlba kerül, az eredeti érintetlen marad (Ctrl+S)'
-              }
               aria-label="Mentés másként"
             >
               <FejlecIkon nev="mentes" />
@@ -3323,11 +3442,6 @@ export default function App() {
               className="btn ghost icon"
               disabled={!analysis || fazis !== 'beallitas'}
               onClick={() => handleMenu('print')}
-              title={
-                !analysis || fazis !== 'beallitas'
-                  ? 'Nyomtatni akkor lehet, ha a vizsgálat végigfutott — a papírra az álnevesített előnézet kerül.'
-                  : 'Nyomtatás: az álnevesített előnézet megy papírra, sosem az eredeti (Ctrl+P)'
-              }
               aria-label="Nyomtatás"
             >
               <FejlecIkon nev="nyomtatas" />
@@ -3378,7 +3492,6 @@ export default function App() {
           <button
             className="btn ghost sm jelzes gond"
             onClick={() => setDialog('revisions')}
-            title="A feloldatlan változáskövetés miatt nem menthető. Kattints: itt lehet feloldani."
           >
             <FejlecIkon nev="figyelem" />
             <span className="btnszo">{revisionsDb} feloldatlan módosítás</span>
@@ -3398,7 +3511,6 @@ export default function App() {
           <button
             className="btn ghost sm"
             style={MODEL_CHIP[detected.model.state].loud ? { color: 'var(--amber)' } : undefined}
-            title={MODEL_CHIP[detected.model.state].title}
             onClick={() => openSettings('models')}
           >
             {MODEL_CHIP[detected.model.state].t}
@@ -3422,7 +3534,6 @@ export default function App() {
         <button
           className="btn ghost sm"
           onClick={() => openSettings('models')}
-          title="A program beállításai és a nyelvi modellek"
           aria-label="A program beállításai és a nyelvi modellek"
         >
           <FejlecIkon nev="programbeallitas" />
@@ -3533,10 +3644,6 @@ export default function App() {
                 <div
                   key={d.path}
                   className={`iratful${i === aktivDoc ? ' active' : ''}`}
-                  title={`${d.path}
-${d.format.toUpperCase()} · ${d.pageCount} ${
-                    d.format === 'docx' ? 'dokumentumrész' : 'oldal'
-                  }`}
                 >
                   <button className="ful-nev" onClick={() => iratValt(i)}>
                     {d.fileName}
@@ -3546,7 +3653,6 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
                   {docs.length > 1 && (
                     <button
                       className="ful-x"
-                      title={`„${d.fileName}" kivétele az ügyből — a fájlhoz nem nyúlunk`}
                       aria-label={`${d.fileName} kivétele az ügyből`}
                       onClick={() => void iratBezar(d.path)}
                     >
@@ -3560,7 +3666,6 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
                   teljes mondat a buboréksúgóban áll. */}
               <button
                 className="iratplusz"
-                title="Ugyanehhez az ügyhöz még egy irat — közös álnév-kiosztással"
                 aria-label="Irat hozzáadása az ügyhöz"
                 onClick={() => void iratHozzaad()}
               >
@@ -3601,7 +3706,7 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
                   */}
                   <span className="jelek">
                     {jelmagyarazat.map((j) => (
-                      <span key={j.kulcs} className={`jel ${j.osztaly}`} title={j.sugo}>
+                      <span key={j.kulcs} className={`jel ${j.osztaly}`}>
                         {j.cimke} · {j.db}
                       </span>
                     ))}
@@ -3653,23 +3758,19 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
                     setHasWork(true);
                     ujraKert();
                   }}
-                  title={
-                    paragraphReflow
-                      ? 'A bekezdések újratördelve: a sorkizárás megmarad, és a hosszabb álnév a következő sorba csordul. Kattints: soronkénti csere.'
-                      : 'Soronkénti csere: a program a legkevesebbet változtatja a fájlon, de a csere helyén a sorkizárás elvész. Kattints: bekezdésenkénti tördelés.'
-                  }
                 >
                   {/*
-                    CSAK JEL, FELIRAT NÉLKÜL. A sáv jobb széle szűk: a
-                    jelmagyarázat mellett egy „Bekezdésenként" felirat a
-                    nézetváltót szorította volna. A ¶ a bekezdés évszázados
-                    jele, az állapotát pedig a szín mondja el (bekapcsolva
-                    hangsúlyos) — a teljes mondat a buboréksúgóban áll, és a
-                    képernyőolvasó is azt kapja meg (`aria-label`).
+                    VALÓDI IKON, nem betűjel. A ¶ egy BETŰ: a saját
+                    alapvonalához igazodik, alálógó szárral, tehát egy
+                    négyzetes gombban sosem ül pontosan középen — hiába
+                    középre igazítottuk a dobozát. Egy rajzolt ikon a
+                    négyzetéhez igazodik, és a program többi ikonjával is
+                    egy család (`FejlecIkon`).
+
+                    Az ikon a szöveg sorba csordulását mutatja — pontosan azt,
+                    amit a kapcsoló csinál.
                   */}
-                  <span className="jel" aria-hidden="true">
-                    ¶
-                  </span>
+                  <FejlecIkon nev="tordeles" />
                 </button>
               )}
               {/* Elemzés nélkül nincs mire váltani: az előnézet az elemzésből
@@ -3681,7 +3782,6 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
                   <button
                     className={`segbtn${view === 'source' ? ' active' : ''}`}
                     onClick={() => setView('source')}
-                    title="Az eredeti irat, a megtalált nevekkel kiemelve"
                   >
                     Eredeti
                   </button>
@@ -3696,14 +3796,12 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
                   <button
                     className={`segbtn${view === 'valtozas' ? ' active' : ''}`}
                     onClick={() => setView('valtozas')}
-                    title="A lecserélt szöveg áthúzva, mellette az álnév — mi változik az iratban"
                   >
                     Változás
                   </button>
                   <button
                     className={`segbtn${view === 'preview' ? ' active' : ''}`}
                     onClick={() => setView('preview')}
-                    title="Az álnevesített irat — pontosan ez kerül a mentett fájlba"
                   >
                     Előnézet
                   </button>
@@ -3991,7 +4089,7 @@ ${d.format.toUpperCase()} · ${d.pageCount} ${
             a füleken látszik, melyiken állunk, a buboréksúgó pedig kiírja a
             nevét is.
           */}
-          <span title={docs.length > 1 ? doc.fileName : doc.path}>
+          <span>
             {doc.format.toUpperCase()} · {doc.pageCount}{' '}
             {doc.format === 'docx' ? 'dokumentumrész' : 'oldal'}
           </span>
@@ -4713,13 +4811,6 @@ function Welcome({
         {modellHiany?.hianyzik && (
           <div
             className="modellhiany"
-            title={
-              'A program modell nélkül csak a szerkezeti jelekre tud támaszkodni („Felperes:”, ' +
-              '„anyja neve:”, cégforma). Ami a folyó szövegben, szabadon említve szerepel — egy ' +
-              'tanú neve egy mondat közepén —, azt nem találja meg. Az irat így is feldolgozható, ' +
-              'de a találatlistát tételesen át kell nézni. Egyszeri letöltés; utána a program ' +
-              `végleg hálózat nélkül dolgozik. A modell neve: ${modellHiany.nev}.`
-            }
           >
             <span>A nyelvi modell nincs letöltve — addig a felismerés hiányos.</span>
             <button className="btn primary sm" onClick={onOpenModels}>

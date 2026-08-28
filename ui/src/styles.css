@@ -4656,12 +4656,12 @@ textarea:focus {
   align-items: center;
   justify-content: center;
 }
-.btn.tordeleskapcs .jel {
-  font-size: 15px;
-  line-height: 1;
-  /* A ¶ alapvonal alá lógó szárral készül: optikailag lejjebb ül, mint
-     amennyire a doboz közepe van. Ez a fél képpont hozza vissza középre. */
-  transform: translateY(-0.5px);
+/* Az ikon a gomb négyzetéhez igazodik — nem betű, tehát nincs alapvonala,
+   amihez képest elcsúszhatna. */
+.btn.tordeleskapcs .btnikon {
+  width: 17px;
+  height: 17px;
+  display: block;
 }
 
 /* ───────────────────── összevetés: régi és új ───────────────────── */
@@ -4843,4 +4843,60 @@ textarea:focus {
   font-weight: 600;
   letter-spacing: 0.06em;
   margin: 1.4em 0 1.1em;
+}
+
+/*
+  BEÁLLÍTÁSSOROK — balra a kérdés, jobbra a válasz.
+
+  Egy beállítás két részből áll: mit állítok, és mire. Egymás alá téve a szem
+  kétszer fut végig ugyanazon a soron, és sok beállítás mellett a lap végtelen
+  szöveggé válik. Két oszlopban ránézésre látszik, MI van bekapcsolva; a
+  magyarázatot csak az olvassa el, akit érdekel.
+
+  A sorok közti vonal nem dísz: az mondja meg, hol ér véget az egyik beállítás
+  és hol kezdődik a másik — enélkül a magyarázatok egymásba folynának.
+*/
+.bsorok {
+  display: flex;
+  flex-direction: column;
+}
+.bsor {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.bsor:last-child {
+  border-bottom: 0;
+}
+.bszoveg {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.bszoveg h4 {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.bszoveg p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.bsor > .seg {
+  flex: 0 0 auto;
+}
+/* Keskeny ablakon egymás alá, de a vezérlő továbbra is a saját sorában áll. */
+@media (max-width: 620px) {
+  .bsor {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
 }

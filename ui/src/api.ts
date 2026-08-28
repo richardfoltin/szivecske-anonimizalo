@@ -584,6 +584,14 @@ export interface AblakkeretAllapot {
   /** Van-e ÉPPEN nyitva modális párbeszéd — vagyis fátyol alatt van-e a lap. */
   halvanyitva: boolean;
   tema: FeluletTema;
+  /**
+   * A felhasználó VÁLASZTÁSA, nem a végeredmény.
+   *
+   * A főfolyamat ebből állítja a Chromium saját témáját (`themeSource`) — az
+   * dönti el, milyen színből számolja a natív ablakgombok rámutatás-fátylát.
+   * Az „auto" azért nem hagyható el: attól követi a rendszer későbbi váltását.
+   */
+  valasztas?: 'auto' | 'vilagos' | 'sotet';
 }
 
 interface SzivecskeApi {

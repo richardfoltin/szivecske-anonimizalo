@@ -350,7 +350,7 @@ export function PartiesDialog({
                     </select>
                   </td>
                   <td>
-                    <button className="btn ghost sm" title="Sor törlése" onClick={() => remove(r.id)}>
+                    <button className="btn ghost sm" onClick={() => remove(r.id)}>
                       ✕
                     </button>
                   </td>
@@ -628,7 +628,6 @@ function KeszletKartya({
       /* Letiltva kimarad a Tab-sorrendből: a billentyűzetes felhasználó ne
          álljon meg egy olyan kártyán, amit nem tud megnyomni. */
       tabIndex={ki ? -1 : 0}
-      title={mutatott.description}
       {...(ki ? {} : { onClick: onValaszt })}
       onKeyDown={(e) => {
         // Csak a kártya SAJÁT billentyűje választ: a nyelvkapcsoló és a törlés
@@ -688,7 +687,6 @@ function KeszletKartya({
           <button
             className="torol"
             aria-label={`A(z) ${mutatott.name} készlet törlése`}
-            title="A készlet törlése"
             disabled={ki}
             onClick={(e) => {
               e.stopPropagation();
@@ -983,7 +981,6 @@ export function FelismeroSav({
             className={`segbtn${m.id === most.id ? ' active' : ''}`}
             aria-pressed={m.id === most.id}
             disabled={halad !== null || fut}
-            title={`${m.name} — ${fmtMeret(m.totalBytes)}`}
             onClick={() => void valaszt(m.id)}
           >
             {m.languages.includes('hu') && m.languages.length <= 2 ? 'magyar irat' : 'más nyelvű irat'}
@@ -1579,11 +1576,6 @@ export function SajatKeszletDialog({
               <button
                 className="btn primary"
                 disabled={!jelentes?.hasznalhato || mentes}
-                title={
-                  jelentes?.hasznalhato
-                    ? undefined
-                    : 'Kevés név ment át az ellenőrzésen: ebből a program számozott álneveket gyártana, és az az iratban látszana.'
-                }
                 onClick={() => void ment()}
               >
                 {mentes ? 'Mentés…' : 'Átnéztem, elmentem'}

@@ -392,42 +392,47 @@ export function SettingsDialog({
             látszik, de a helye pontos — és ez az a fül, ahova a következő
             hasonló, „az egész programra szóló" kapcsoló kerül majd.
           */}
+          {/*
+            A BEÁLLÍTÁSSOR: BALRA A KÉRDÉS, JOBBRA A VÁLASZ.
+
+            Egy beállítás két részből áll — mit állítok, és mire. Egymás alá
+            téve (cím, magyarázat, majd alatta a vezérlő) a szem kétszer
+            fut végig ugyanazon a soron, és sok beállítás mellett a lap
+            végtelen szöveggé válik. Egy sorban, két oszlopban viszont
+            ránézésre látszik, MI van bekapcsolva — a magyarázatot csak az
+            olvassa el, akit érdekel.
+          */}
           {tab === 'altalanos' && (
-            <>
-              <div className="ds-szakasz" style={{ padding: 0 }}>
-                <h3>A felület színvilága</h3>
-                <p>
-                  Alapból azt követi, amit a Windowsban beállítottál. Ha ettől el akarsz térni —
-                  például mert a rendszered sötét, de az iratot világos felületen olvasod
-                  szívesebben —, itt rögzítheted.
-                </p>
+            <div className="bsorok">
+              <div className="bsor">
+                <div className="bszoveg">
+                  <h4>Felület témája</h4>
+                  <p>
+                    Alapból azt követi, amit a Windowsban beállítottál. Az irat maga mindkét
+                    témában fehér papír marad — a bíróságra menő szöveget nem színezzük át.
+                  </p>
+                </div>
+                <div className="seg sm" role="radiogroup" aria-label="Felület témája">
+                  {(
+                    [
+                      ['auto', 'Rendszer'],
+                      ['vilagos', 'Világos'],
+                      ['sotet', 'Sötét'],
+                    ] as const
+                  ).map(([ertek, cimke]) => (
+                    <button
+                      key={ertek}
+                      role="radio"
+                      aria-checked={(settings?.uiTheme ?? 'auto') === ertek}
+                      className={`segbtn${(settings?.uiTheme ?? 'auto') === ertek ? ' active' : ''}`}
+                      onClick={() => void patch({ uiTheme: ertek })}
+                    >
+                      {cimke}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="seg" role="radiogroup" aria-label="A felület színvilága">
-                {(
-                  [
-                    ['auto', 'Rendszer szerint'],
-                    ['vilagos', 'Világos'],
-                    ['sotet', 'Sötét'],
-                  ] as const
-                ).map(([ertek, cimke]) => (
-                  <button
-                    key={ertek}
-                    role="radio"
-                    aria-checked={(settings?.uiTheme ?? 'auto') === ertek}
-                    className={`segbtn${(settings?.uiTheme ?? 'auto') === ertek ? ' active' : ''}`}
-                    onClick={() => void patch({ uiTheme: ertek })}
-                  >
-                    {cimke}
-                  </button>
-                ))}
-              </div>
-              {/* AZ IRAT MAGA NEM SÖTÉTEDIK EL, és ezt ki kell mondani: aki
-                  sötét témát választ, joggal várná, hogy a lap is az legyen. */}
-              <p className="hint" style={{ marginTop: 4 }}>
-                Az irat maga mindkét témában fehér papír marad: a bíróságra menő szöveget nem
-                színezzük át, és így az előnézet is azt mutatja, ami a fájlba kerül.
-              </p>
-            </>
+            </div>
           )}
 
           {tab === 'models' && (

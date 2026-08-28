@@ -179,7 +179,6 @@ export function DocumentView({
                     width: `${h.width * 100}%`,
                     height: `${h.height * 100}%`,
                   }}
-                  title={m ? kiemelesSugo(m, onToggle !== undefined) : ''}
                   /* Billentyűzetről is: a szöveges nézet markjai eddig is
                      kapcsolhatók voltak Enterrel, a lapképes kiemelés nem —
                      ugyanaz a művelet a formátumtól függően hol járt, hol nem. */
@@ -468,7 +467,6 @@ function TextView({
                 d.m,
                 hivatalosIdk,
               )}${selected === d.m.id ? ' selected' : ''}`}
-              title={kiemelesSugo(frissSor(d.m, dontesek), onToggle !== undefined)}
               role="button"
               tabIndex={0}
               onClick={() =>
@@ -608,7 +606,6 @@ export function OsszevetesView({
                 key={d.kulcs}
                 data-hl={m.id}
                 className={`${kimenet} k-${fajta}${selected === m.id ? ' selected' : ''}`}
-                title={`${m.surface} — nem cserélődik\n${m.reason}`}
                 onClick={() => onSelect(selected === m.id ? null : m.id)}
               >
                 {d.szoveg}
@@ -620,7 +617,6 @@ export function OsszevetesView({
               key={d.kulcs}
               data-hl={m.id}
               className={`valtozas${selected === m.id ? ' selected' : ''}`}
-              title={`${m.surface} → ${m.replacement}\n${m.reason}`}
               onClick={() => onSelect(selected === m.id ? null : m.id)}
             >
               <del className={`k-${fajta}`}>{d.szoveg}</del>
@@ -763,7 +759,6 @@ export function PreviewView({
                       width: `${h.width * 100}%`,
                       height: `${h.height * 100}%`,
                     }}
-                    title={m ? elonezetSugo(m) : ''}
                   />
                 );
               })}

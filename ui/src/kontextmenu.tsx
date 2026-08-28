@@ -234,7 +234,6 @@ function MenuSorok({ tetelek, onClose }: { tetelek: MenuTetel[]; onClose: () => 
                 role="menuitem"
                 aria-haspopup="true"
                 aria-expanded={nyitva === i}
-                title={t.sugo ?? ''}
                 /* A sor eleme a horgony: az almenü a képernyőhöz igazodik, és
                    ebből számolja ki, hova nyíljon. */
                 ref={(el) => {
@@ -263,7 +262,6 @@ function MenuSorok({ tetelek, onClose }: { tetelek: MenuTetel[]; onClose: () => 
             key={i}
             className={`kmenu-sor${t.bont ? ' bont' : ''}`}
             role="menuitem"
-            title={t.sugo ?? ''}
             onPointerEnter={() => setNyitva(null)}
             onFocus={() => setNyitva(null)}
             onClick={() => {

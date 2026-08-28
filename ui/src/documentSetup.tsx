@@ -444,7 +444,7 @@ function CsoportFejlec({
   figyelem?: React.ReactNode;
 }) {
   return (
-    <div className={`fghead ${FAJTA_SZIN[fajta]}${be ? '' : ' ki'}`} title={FAJTA_SUGO[fajta]}>
+    <div className={`fghead ${FAJTA_SZIN[fajta]}${be ? '' : ' ki'}`}>
       <div className="fgszoveg">
         <div className="t">
           {FAJTA_CIM[fajta]} <span className="count">{darab}</span>
@@ -779,7 +779,6 @@ export function DocumentSetup({
               <button
                 className="btn primary"
                 disabled={mentesAkadaly !== null}
-                title={mentesAkadaly ?? 'Mentés új fájlba (Ctrl+S)'}
                 onClick={onMentes}
               >
                 Mentés másként…
@@ -919,7 +918,6 @@ function ModKartya({
       */
       aria-label={MODE_LABEL[mod]}
       tabIndex={0}
-      title={MODE_LEIRAS[mod]}
       onClick={onValaszt}
       onKeyDown={(e) => {
         // Csak a kártya SAJÁT billentyűje választ: a nyelvkapcsoló valódi gomb,
@@ -1054,7 +1052,6 @@ function CsereLap({
         <button
           className="btn sm ghost"
           onClick={onUjraOsztas}
-          title="A program a nulláról osztja ki az álneveket. Akkor hasznos, ha kitöröltél egy tévesen felismert nevet, és szeretnéd, hogy a felszabadult álnév a többiekhez kerüljön. A kézzel átírt neveket nem érinti."
         >
           Nevek újra kiosztása
         </button>
@@ -1433,13 +1430,13 @@ function HivatalosSzakasz({
               döntés az egész szakaszra szól).
             */
             <div className="findrow off" key={`${b.name}|${b.why}`}>
-              <span className="orig" title={b.name}>
+              <span className="orig">
                 {b.name}
               </span>
               <span className="farrow" aria-hidden="true">
                 →
               </span>
-              <span className="frepl static" title="A törvény szerint bent marad.">
+              <span className="frepl static">
                 {b.name}
               </span>
               <div className="fctl" />
@@ -1458,7 +1455,7 @@ function HivatalosSzakasz({
                 ez a név ezen a listán van. A teljes indoklás a buboréksúgóban.
               */}
               <div className="fmeta">
-                <span className="pill kind" title={b.why}>
+                <span className="pill kind">
                   {szerepBol(b.why)}
                 </span>
               </div>
@@ -1553,7 +1550,7 @@ function TalaltSor({
       is mind egy vonalban állnak.
     */
     <div className={`findrow${!be && !nincsBenne ? ' off' : ''}${aktiv ? ' aktiv' : ''}`}>
-      <span className="orig" title={tetel.eredeti}>
+      <span className="orig">
         {tetel.eredeti}
       </span>
       <span className="farrow" aria-hidden="true">
@@ -1569,11 +1566,6 @@ function TalaltSor({
       {tetel.fajta === 'amount' || tetel.fajta === 'date' ? (
         <span
           className="frepl static"
-          title={
-            tetel.elofordulas > 1
-              ? 'Példa az első előfordulásra — a többivel ugyanez történik.'
-              : undefined
-          }
         >
           {be ? ertek : tetel.eredeti}
         </span>
@@ -1638,7 +1630,6 @@ function TalaltSor({
         {tetel.bizonytalanDb > 0 && (
           <span
             className="pill bizonytalan"
-            title={`${tetel.bizonytalanDb} előfordulásról nem biztos a program, hogy név — ezekről még senki nem döntött. A „Végignézem” gombbal egyesével eldöntheted.`}
           >
             {tetel.bizonytalanDb}/{tetel.elofordulas} bizonytalan
           </span>
@@ -1651,12 +1642,11 @@ function TalaltSor({
             className="dot dontott"
             role="img"
             aria-label="bizonytalan volt — a program döntött"
-            title="Bizonytalan találat volt, és a program döntött helyetted: lecserélte. A részletek a fejléc „döntöttünk helyetted” jelzése mögött állnak."
           />
         )}
         {tetel.kezi === true && <span className="pill kind">kézzel felvéve</span>}
         {atirt && be && (
-          <span className="occ atirva" title={`Kézzel átírva — a program magától ezt adná: ${tetel.csere}`}>
+          <span className="occ atirva">
             átírva{' '}
             <button className="ds-link" onClick={() => onCsereSzoveg(tetel.id, '')}>
               vissza
@@ -1678,7 +1668,6 @@ function TalaltSor({
                 className="lepbtn"
                 disabled={lepes.index === 0}
                 aria-label="Előző előfordulás"
-                title="Előző előfordulás — az irat odagörög"
                 onClick={() => onLepesMozog(tetel.id, -1)}
               >
                 ‹
@@ -1690,7 +1679,6 @@ function TalaltSor({
                 className="lepbtn"
                 disabled={lepes.index >= lepes.osszes - 1}
                 aria-label="Következő előfordulás"
-                title="Következő előfordulás — az irat odagörög"
                 onClick={() => onLepesMozog(tetel.id, 1)}
               >
                 ›
@@ -1698,7 +1686,6 @@ function TalaltSor({
               <button
                 className={`lepbtn szo${lepes.cserelodik ? ' on' : ''}`}
                 aria-pressed={lepes.cserelodik}
-                title="Ez az előfordulás cserélődjön — és ugrás a következőre"
                 onClick={() => onLepesDontes(tetel.id, 'accept')}
               >
                 Cserél
@@ -1706,7 +1693,6 @@ function TalaltSor({
               <button
                 className={`lepbtn szo ki${lepes.cserelodik ? '' : ' on'}`}
                 aria-pressed={!lepes.cserelodik}
-                title="Ez az előfordulás maradjon az eredeti — és ugrás a következőre. Ugyanaz, mint az iraton a kiemelésre kattintani."
                 onClick={() => onLepesDontes(tetel.id, 'skip')}
               >
                 Kihagy
@@ -1726,11 +1712,6 @@ function TalaltSor({
             */
             <button
               className={`btn ghost sm lepnyit${tetel.bizonytalanDb > 0 ? ' varakozik' : ''}`}
-              title={
-                tetel.bizonytalanDb > 0
-                  ? `${tetel.bizonytalanDb} előfordulásról még senki nem döntött — menj végig rajtuk egyesével`
-                  : 'Előfordulásról előfordulásra az iratban, egyenkénti döntéssel'
-              }
               onClick={() => onLepesKezd(tetel.id)}
             >
               Végignézem

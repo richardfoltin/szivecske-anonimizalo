@@ -2026,12 +2026,40 @@ function registerHandlers(): void {
     nativeTheme.shouldUseDarkColors ? 'sotet' : 'vilagos',
   );
 
-  handle('ui:ablakkeret', (e, allapot: { halvanyitva: boolean; tema: FeluletTema }) => {
-    const win = BrowserWindow.fromWebContents(e.sender);
-    if (!win) return;
-    const tema: FeluletTema = allapot?.tema === 'sotet' ? 'sotet' : 'vilagos';
-    keretetIgazit(win, tema, allapot?.halvanyitva === true);
-  });
+  handle(
+    'ui:ablakkeret',
+    (
+      e,
+      allapot: {
+        halvanyitva: boolean;
+        tema: FeluletTema;
+        /** A felhasználó VÁLASZTÁSA, nem a végeredmény: 'auto' esetén a rendszer dönt. */
+        valasztas?: 'auto' | 'vilagos' | 'sotet';
+      },
+    ) => {
+      /*
+        A CHROMIUM SAJÁT TÉMÁJA IS ÁTÁLL — ezen múlt az ablakgombok hovere.
+
+        A natív gombokat a Chromium festi, és a rámutatás fátylát a SAJÁT
+        téma-színéből számolja: az alapszín 10%-a. Ha a Windows sötét, ez az
+        alapszín VILÁGOS — a mi fehér gombsávunkon egy világos fátyol pedig
+        láthatatlan. Pontosan ezt láttad: sötét témában működött a hover,
+        világosban nem.
+
+        A `themeSource` átállításával a Chromium a mi témánkat követi, tehát a
+        fátyol is a helyes irányba megy. Az „auto" szándékosan `system`
+        marad: különben a rendszer későbbi váltását sem mi, sem ő nem venné
+        észre.
+      */
+      const valasztas = allapot?.valasztas;
+      nativeTheme.themeSource =
+        valasztas === 'vilagos' ? 'light' : valasztas === 'sotet' ? 'dark' : 'system';
+      const win = BrowserWindow.fromWebContents(e.sender);
+      if (!win) return;
+      const tema: FeluletTema = allapot?.tema === 'sotet' ? 'sotet' : 'vilagos';
+      keretetIgazit(win, tema, allapot?.halvanyitva === true);
+    },
+  );
 
   handle('app:print', async () => {
     const win = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0];
