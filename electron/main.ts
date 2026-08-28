@@ -12,6 +12,7 @@ import {
   Menu,
   dialog,
   ipcMain,
+  nativeTheme,
   shell,
   type IpcMainInvokeEvent,
   type MenuItemConstructorOptions,
@@ -1214,6 +1215,21 @@ else bootstrap();
 function bootstrap(): void {
   app.setAppUserModelId(APP_ID);
 
+  /*
+    A RENDSZER TÉMÁJÁNAK VÁLTÁSA MENET KÖZBEN.
+
+    A Windows sötét módja átbillenthető futó program mellett is (naplemente,
+    kézi váltás). Enélkül a program a régi palettán maradna, amíg a
+    felhasználó újra nem indítja — és pont az volna a benyomás, hogy nem
+    követi a rendszert.
+  */
+  nativeTheme.on('updated', () => {
+    const tema: FeluletTema = nativeTheme.shouldUseDarkColors ? 'sotet' : 'vilagos';
+    for (const win of BrowserWindow.getAllWindows()) {
+      win.webContents.send('ui:temaValtozott', tema);
+    }
+  });
+
   app.on('second-instance', () => {
     const win = BrowserWindow.getAllWindows()[0];
     if (!win) return;
@@ -1990,6 +2006,18 @@ function registerHandlers(): void {
    * annyi lesz, hogy a sáv nem halványul — nem pedig egy vakító csík a sötét
    * fejléc szélén.
    */
+  /**
+   * A RENDSZER TÉMÁJA — sötét módban van-e a Windows.
+   *
+   * A felület ebből dönti el, melyik palettát rajzolja. Nincs hozzá saját
+   * kapcsoló, és szándékosan: egy irodai programtól azt várja az ember, hogy
+   * úgy nézzen ki, mint a többi ablak a képernyőn — nem azt, hogy külön
+   * beállítsa benne.
+   */
+  handle('ui:rendszerTema', (): FeluletTema =>
+    nativeTheme.shouldUseDarkColors ? 'sotet' : 'vilagos',
+  );
+
   handle('ui:ablakkeret', (e, allapot: { halvanyitva: boolean; tema: FeluletTema }) => {
     const win = BrowserWindow.fromWebContents(e.sender);
     if (!win) return;

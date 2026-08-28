@@ -797,8 +797,10 @@ export class DocumentSession {
         perEntity.set(m.entityId, stat);
 
         if (unit.pdf) {
-          const rect = highlightFor(unit.pdf, m);
-          if (rect) highlights.push({ matchId: id, page: unit.page, ...rect });
+          // Soronként egy téglalap: a találat átnyúlhat a sortörésen.
+          for (const rect of highlightsFor(unit.pdf, m)) {
+            highlights.push({ matchId: id, page: unit.page, ...rect });
+          }
         }
         id++;
       };
@@ -2722,37 +2724,62 @@ function collectPdfStrings(doc: PDFDocument): string[] {
 
 // ─────────────────────── PDF-megjelenítés ───────────────────────
 
-/** Kiemelő téglalap a lap méretének arányában. */
-function highlightFor(
+/**
+ * KIEMELŐ TÉGLALAPOK — SORONKÉNT EGY, mert a találat átnyúlhat a sortörésen.
+ *
+ * EZ VOLT AZ A HIBA, AMITŐL A DÁTUM FELE MARADT JELÖLETLEN. A PDF-ben a
+ * sortörés fizikai: a „1968. április 3." dátum úgy áll az iratban, hogy az
+ * „1968." a sor végén, az „április 3." a következő sor elején — két külön
+ * rajzolási utasítás. A keresés ezt helyesen EGY találatnak látja (az
+ * oldalszintű szöveg a sorokat szóközzel fűzi össze), a kiemelés viszont
+ * csak az ELSŐ szakaszban rajzolt téglalapot: a képernyőn a dátumnak csak a
+ * fele volt bekarikázva, a másik fele érintetlennek látszott.
+ *
+ * Ugyanez állt az összegekre („3 550 000 Ft") és minden hosszabb névre.
+ *
+ * Mostantól annyi téglalap készül, ahány sorba a találat belelóg. Egyetlen,
+ * két sort átfogó doboz nem volna jó: a köztük lévő sor teljes szélességét is
+ * bekarikázná.
+ */
+function highlightsFor(
   pdf: NonNullable<TextUnit['pdf']>,
   m: Match,
-): { left: number; top: number; width: number; height: number } | null {
-  const span = pdf.pageText.spans.find((s) => s.start <= m.start && m.start < s.end);
-  if (!span) return null;
-  const seg = span.segment;
-  const localStart = m.start - span.start;
-  const localEnd = Math.min(m.end - span.start, seg.text.length);
+): { left: number; top: number; width: number; height: number }[] {
+  const out: { left: number; top: number; width: number; height: number }[] = [];
+  // Minden szakasz, amibe a találat belelóg — nem csak az, amelyikben kezdődik.
+  for (const span of pdf.pageText.spans) {
+    if (span.end <= m.start || m.end <= span.start) continue;
+    const seg = span.segment;
+    // A találat része EBBEN a szakaszban, a szakasz saját koordinátáiban.
+    const localStart = Math.max(0, m.start - span.start);
+    const localEnd = Math.min(m.end - span.start, seg.text.length);
+    if (localEnd <= localStart) continue;
 
-  const startRun = seg.runs.find((r) => r.textStart <= localStart && localStart < r.textEnd) ?? seg.runs[0];
-  if (!startRun) return null;
-  const endRunIndex = seg.runs.findIndex((r) => r.textStart < localEnd && localEnd <= r.textEnd);
-  const endRun = endRunIndex >= 0 ? seg.runs[endRunIndex] : seg.runs[seg.runs.length - 1];
-  if (!endRun) return null;
+    const startRun =
+      seg.runs.find((r) => r.textStart <= localStart && localStart < r.textEnd) ?? seg.runs[0];
+    if (!startRun) continue;
+    const endRunIndex = seg.runs.findIndex((r) => r.textStart < localEnd && localEnd <= r.textEnd);
+    const endRun = endRunIndex >= 0 ? seg.runs[endRunIndex] : seg.runs[seg.runs.length - 1];
+    if (!endRun) continue;
 
-  const after = endRunIndex >= 0 ? seg.runs[endRunIndex + 1] : undefined;
-  const endX = after ? after.x : endRun.x + seg.fontSize * 0.55 * Math.max(1, endRun.textEnd - endRun.textStart);
+    const after = endRunIndex >= 0 ? seg.runs[endRunIndex + 1] : undefined;
+    const endX = after
+      ? after.x
+      : endRun.x + seg.fontSize * 0.55 * Math.max(1, endRun.textEnd - endRun.textStart);
 
-  const x = Math.min(startRun.x, endX);
-  const w = Math.max(seg.fontSize * 0.4, Math.abs(endX - startRun.x));
-  const ascent = seg.fontSize * 0.82;
-  const descent = seg.fontSize * 0.24;
+    const x = Math.min(startRun.x, endX);
+    const w = Math.max(seg.fontSize * 0.4, Math.abs(endX - startRun.x));
+    const ascent = seg.fontSize * 0.82;
+    const descent = seg.fontSize * 0.24;
 
-  return {
-    left: x / pdf.pageWidth,
-    top: (pdf.pageHeight - (startRun.y + ascent)) / pdf.pageHeight,
-    width: w / pdf.pageWidth,
-    height: (ascent + descent) / pdf.pageHeight,
-  };
+    out.push({
+      left: x / pdf.pageWidth,
+      top: (pdf.pageHeight - (startRun.y + ascent)) / pdf.pageHeight,
+      width: w / pdf.pageWidth,
+      height: (ascent + descent) / pdf.pageHeight,
+    });
+  }
+  return out;
 }
 
 /**

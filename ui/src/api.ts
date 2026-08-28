@@ -727,6 +727,15 @@ interface SzivecskeApi {
    * meg sem mutatja — egy gomb, ami semmit nem tesz, rosszabb a hiányánál.
    */
   reassignNames?(): Promise<void>;
+  /**
+   * A RENDSZER TÉMÁJA — sötét módban van-e a Windows.
+   *
+   * A program ezt követi; saját téma-kapcsoló nincs. Opcionális, mert egy
+   * régebbi híd nem ismeri: olyankor a világos téma marad, ami eddig is volt.
+   */
+  rendszerTema?(): Promise<FeluletTema>;
+  /** Értesítés a rendszer témájának változásáról; a visszatérés leiratkoztat. */
+  onTemaValtozott?(cb: (tema: FeluletTema) => void): () => void;
   suggestOutputPath(mode: string): Promise<string>;
   chooseSaveTarget(suggested: string): Promise<string | null>;
   exportDocument(opts: ExportOptions): Promise<ExportResult>;

@@ -316,6 +316,19 @@ const api = {
   previewPages: (path?: string) => ipcRenderer.invoke('doc:previewPages', path),
   /** Az ügy álnév-kiosztásának eldobása — a következő elemzés újraosztja. */
   reassignNames: () => ipcRenderer.invoke('doc:reassignNames'),
+  /**
+   * A RENDSZER TÉMÁJA, és értesítés a változásáról.
+   *
+   * A program a Windows beállítását követi; saját kapcsoló nincs hozzá. A
+   * `figyel` visszatérése leiratkoztat — enélkül minden ablaknyitás új
+   * figyelőt hagyna maga után.
+   */
+  rendszerTema: () => ipcRenderer.invoke('ui:rendszerTema'),
+  onTemaValtozott: (cb: (tema: 'vilagos' | 'sotet') => void) => {
+    const h = (_e: unknown, tema: 'vilagos' | 'sotet'): void => cb(tema);
+    ipcRenderer.on('ui:temaValtozott', h);
+    return () => ipcRenderer.removeListener('ui:temaValtozott', h);
+  },
   suggestOutputPath: (mode: string) => ipcRenderer.invoke('doc:suggestOutputPath', mode),
   chooseSaveTarget: (suggested: string) => ipcRenderer.invoke('doc:chooseSaveTarget', suggested),
   exportDocument: (opts: unknown) => ipcRenderer.invoke('doc:export', opts),

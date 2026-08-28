@@ -19,6 +19,7 @@ import {
   type IratBeallitas,
   type AzonositoKind,
   type EntityKind,
+  type FeluletTema,
   type PartyInput,
   type PreviewPages,
   type DetectionResult,
@@ -571,6 +572,16 @@ export default function App() {
    */
   const [sajatDontes, setSajatDontes] = useState(false);
   const [caseSecret, setCaseSecret] = useState(newCaseSecret);
+  /**
+   * A FELÜLET TÉMÁJA — a WINDOWS beállítása szerint.
+   *
+   * Nincs hozzá kapcsoló a programban, és szándékosan: egy irodai
+   * alkalmazástól azt várja az ember, hogy úgy nézzen ki, mint a többi ablak
+   * a képernyőn. A rendszer menet közbeni váltását is követjük (naplemente,
+   * kézi átbillentés) — enélkül a program a régi palettán ragadna, amíg újra
+   * nem indítják, és pont az volna a benyomás, hogy nem követi a rendszert.
+   */
+  const [tema, setTema] = useState<FeluletTema>('vilagos');
   const [view, setView] = useState<View>('source');
   /**
    * A JOBB GOMBOS MENÜ ÁLLÁSA — hol áll, és mi van benne.
@@ -1604,6 +1615,30 @@ export default function App() {
    * az eredeti nézetet külön is elrejtik, hogy egy versenyhelyzet se
    * fordíthassa vissza ezt a döntést.
    */
+  /*
+    A TÉMA A GYÖKÉR ELEMRE KERÜL, nem egy React-osztályra.
+
+    A stíluslap `:root[data-theme='dark']` alatt írja felül a színtokeneket —
+    így minden szabály egyetlen helyről vált át, és nincs olyan komponens,
+    ami kimaradhat. A `<html>` azért kell, és nem a `<body>`: a `:root`
+    magassága és háttere is innen származik.
+  */
+  useEffect(() => {
+    document.documentElement.dataset.theme = tema === 'sotet' ? 'dark' : 'light';
+  }, [tema]);
+
+  useEffect(() => {
+    let el = true;
+    void api.rendszerTema?.().then((t) => {
+      if (el && (t === 'sotet' || t === 'vilagos')) setTema(t);
+    });
+    const le = api.onTemaValtozott?.((t) => setTema(t));
+    return () => {
+      el = false;
+      le?.();
+    };
+  }, []);
+
   const doPrint = useCallback(async () => {
     /*
       A NYOMTATÁS A KÉPERNYŐ TARTALMÁT VISZI PAPÍRRA, tehát csak ott van
@@ -1905,7 +1940,9 @@ export default function App() {
       );
     }
     void Promise.resolve(
-      api.ablakkeretetIgazit?.({ halvanyitva: dialog !== null, tema: 'vilagos' }),
+      // A keret a VALÓDI témát kapja: a natív ablakgombok különben fehér sávon
+      // ülnének egy sötét felület tetején.
+      api.ablakkeretetIgazit?.({ halvanyitva: dialog !== null, tema }),
     ).catch(() => {
       // Az elutasítást elnyeljük: a keret színe díszítés, a munka nem áll meg tőle.
     });

@@ -1570,6 +1570,20 @@ export function installDevMock(): void {
       találkozik vele.
     */
     reassignNames: () => wait(undefined, 0),
+    /*
+      A RENDSZER TÉMÁJA böngészőben: amit a böngésző mond a rendszerről.
+
+      Az álkimenetnek itt van valódi dolga — enélkül a sötét témát fejlesztés
+      közben egyáltalán nem lehetne látni, csak a kész alkalmazásban.
+    */
+    rendszerTema: () =>
+      wait(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'sotet' : 'vilagos', 0),
+    onTemaValtozott: (cb: (tema: 'vilagos' | 'sotet') => void) => {
+      const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      const h = (): void => cb(mq.matches ? 'sotet' : 'vilagos');
+      mq.addEventListener('change', h);
+      return () => mq.removeEventListener('change', h);
+    },
     suggestOutputPath: () => wait(EXPORT.outputPath, 0),
     chooseSaveTarget: () => wait(EXPORT.outputPath),
     exportDocument: () =>

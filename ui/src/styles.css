@@ -57,7 +57,170 @@
   --ui-display: "Segoe UI Variable Display", "Segoe UI Semibold", "Segoe UI", system-ui, sans-serif;
   --doc: Georgia, "Times New Roman", serif;
   --mono: "Cascadia Mono", "Consolas", ui-monospace, monospace;
+  /*
+    A TÖBBI FELÜLETI SZÍN IS NEVET KAP.
+
+    Eddig szétszórva, beégetve álltak a stíluslapban: harmincnyolc helyen egy
+    `#fff`, egy `#6b4a10`, egy `#e8d5ae`. Amíg egyetlen téma volt, ez csak
+    rendetlenség; sötét témával viszont mindegyik külön hibaforrás — elég
+    egyet kihagyni, és fehér szöveg marad fehér alapon.
+
+    AMI SZÁNDÉKOSAN NEM KERÜLT IDE: az iraton lévő kiemelések áttetsző színei
+    (`rgba(196, 87, 125, 0.19)` és társai). Azok a LAPKÉPEN ülnek, ami fehér
+    papír marad sötét témában is — a rájuk festett jelölés tehát ugyanaz.
+  */
+  /** Fehér a hangsúlyszínen: a rózsaszín gombon mindkét témában fehér a betű. */
+  --on-accent: #ffffff;
+  /** Harmadik felületárnyalat: kártyák, sávok halvány alapja. */
+  --surface-3: #fdf9fb;
+  --surface-4: #fdfbfc;
+  /** Erősebb vonal: gomb kerete rámutatáskor. */
+  --line-strong: #ddcfd8;
+  --gorgeto: #dcc9d5;
+  --gorgeto-hover: #c9b7c3;
+  /** A hangsúlyszínek SÖTÉT árnyalata — szövegre, halvány alapon. */
+  --rose-ink: #7d2c4c;
+  --mint-deep: #23594a;
+  --amber-deep: #6b4a10;
+  --amber-line: #e8d5ae;
+  /** A négy fajtaszín tömören — pöttyre, jelvényre, szövegre. */
+  --zold: #17806a;
+  --ibolya: #7a4fa8;
+  /** A párbeszédek mögé húzott fátyol. */
+  --fatyol: rgba(46, 33, 48, 0.32);
+
 }
+
+/*
+  ─────────────────────────── SÖTÉT TÉMA ───────────────────────────
+
+  A program a WINDOWS beállítását követi: a főfolyamat megmondja, sötét
+  módban van-e a rendszer (`nativeTheme`), a felület pedig `data-theme`
+  jelzést tesz a gyökérre. Kapcsoló nincs hozzá, és szándékosan: egy
+  irodai programtól azt várja az ember, hogy úgy nézzen ki, mint a többi
+  ablak a képernyőn.
+
+  A PALETTA NEM AZ INVERZE A VILÁGOSNAK. A rózsaszín, ami fehéren jól
+  olvasható (`#a5416a`, 5,9:1), sötét alapon szinte fekete folt lenne —
+  ezért a hangsúlyszínek VILÁGOSODNAK, a felületek pedig nem tiszta feketék,
+  hanem a program saját ibolyás árnyalatai. Egy tiszta fekete UI mellett a
+  fehér lapkép elvakít.
+
+  AMI VÁLTOZATLAN MARAD: az iraton lévő kiemelések áttetsző színei. Azok a
+  LAPKÉPEN ülnek, ami fehér papír marad — a rájuk festett jelölésnek tehát
+  ugyanúgy kell kinéznie. Ezért nincsenek itt felülírva.
+*/
+:root[data-theme='dark'] {
+  --paper: #171219;
+  --surface: #211a24;
+  --surface-2: #2a2130;
+  --surface-3: #251d29;
+  --surface-4: #241c28;
+  --ink: #f2ebf3;
+  --ink-soft: #c3b5c6;
+  /* Világosabb, mint az első nekifutásra: a halvány feliratok (a példa-nevek,
+     a készlet mérete) a `--surface-2`-n 4,4:1-et adtak, ami a 4,5-ös
+     olvashatósági határ alatt van. Ez a két árnyalatnyi emelés viszi át. */
+  --muted: #a1949f;
+  --line: #3b3040;
+  --line-soft: #322838;
+  --line-strong: #4a3d50;
+
+  --rose: #e08cb0;
+  --rose-deep: #eda6c4;
+  --rose-soft: #33202a;
+  --rose-tint: #4a2c3b;
+  --rose-ink: #f3c2d6;
+
+  --mint: #6fc0a5;
+  --mint-soft: #1b2f29;
+  --mint-deep: #9ad9c2;
+
+  --kek: #8ab6e4;
+  --kek-soft: #1c2836;
+
+  --amber: #d9ae5e;
+  --amber-soft: #332813;
+  --amber-deep: #edcb8c;
+  --amber-line: #5a4620;
+
+  --zold: #5cb69b;
+  --ibolya: #b697dd;
+
+  --on-accent: #1a1420;
+  --gorgeto: #453a4b;
+  --gorgeto-hover: #5b4d62;
+  --kijeloles: rgba(200, 190, 205, 0.26);
+  --fatyol: rgba(8, 5, 10, 0.55);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 12px 28px -16px rgba(0, 0, 0, 0.7);
+}
+
+/*
+  A LAPKÉP ÉS A SZÖVEGES IRAT MARAD PAPÍR.
+
+  A dokumentum nem a felület része: fehér lapra nyomtatott irat, és sötét
+  módban is annak kell látszania — a bíróságra menő szöveget nem színezzük
+  át. A körülötte lévő panel viszont sötét, ezért a lap SZÉLÉT itt erősítjük
+  meg, hogy ne fehér folt legyen a semmiben.
+*/
+:root[data-theme='dark'] .viewport {
+  background: #141016;
+}
+:root[data-theme='dark'] .textview,
+:root[data-theme='dark'] .page {
+  background: #ffffff;
+  color: #1f1722;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5), 0 14px 30px -16px rgba(0, 0, 0, 0.8);
+}
+/*
+  AMI NEM TOKENBŐL JÖTT — a maradék néhány felületi szín.
+
+  Ezek egyenként, a helyükön kaptak sötét párt: mindegyik olyan halvány,
+  szinte fehér árnyalat, aminek sötét alapon nincs értelme (egy fehér fátyol
+  a sötét sávon világító folt volna, nem finom kiemelés). Nem tokenizáltam
+  őket, mert mindegyik EGY helyen áll, és a nevük semmivel nem mondana többet,
+  mint maga a szabály.
+*/
+:root[data-theme='dark'] .modelcard.active {
+  background: var(--surface-2);
+}
+:root[data-theme='dark'] .dropzone {
+  background: linear-gradient(180deg, var(--surface), var(--rose-soft));
+}
+:root[data-theme='dark'] .detected .ev,
+:root[data-theme='dark'] .partytable tr.low input[type='text'] {
+  background: var(--amber-soft);
+}
+/* A fülsáv rámutatás-fátyla: sötétben nem fehérrel világítunk, hanem a
+   következő felületárnyalattal. */
+:root[data-theme='dark'] .iratful:hover:not(.active),
+:root[data-theme='dark'] .iratplusz:hover {
+  background: var(--surface);
+}
+/* A két elfoglaltság-fátyol a papír színéből jön; sötétben a lap színéből. */
+:root[data-theme='dark'] .busy {
+  background: rgba(23, 18, 25, 0.78);
+}
+:root[data-theme='dark'] .iratbetoltes {
+  background: rgba(20, 16, 22, 0.84);
+}
+:root[data-theme='dark'] .btn.varakozik:hover:not(:disabled) {
+  background: #4a3a1c;
+  border-color: #6b5426;
+}
+
+/* A jelölések a lapon a VILÁGOS szövegszínt öröklik, mert fehér papíron
+   ülnek — a `.textview` saját színe fölülírja a sötét téma `--ink`-jét. */
+:root[data-theme='dark'] .textview mark,
+:root[data-theme='dark'] .viewport.osszevetes del {
+  color: inherit;
+}
+:root[data-theme='dark'] .viewport.osszevetes del {
+  color: #6b6270;
+}
+
 
 * {
   box-sizing: border-box;
@@ -104,7 +267,7 @@ textarea {
   background-clip: content-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #c9b7c3;
+  background: var(--gorgeto-hover);
   background-clip: content-box;
 }
 ::-webkit-scrollbar-track {
@@ -127,7 +290,7 @@ textarea {
   /* Jobbra hely a natív ablakgomboknak (kicsinyítés / teljes méret / bezárás). */
   padding-right: 148px;
   height: 46px;
-  background: #ffffff;
+  background: var(--surface);
   border-bottom: 1px solid var(--line);
   flex: 0 0 auto;
   /* Az egész sáv az ablak fogantyúja; a benne lévő gombok kivételek. */
@@ -383,7 +546,7 @@ textarea {
 }
 .step.active .num {
   background: var(--rose);
-  color: #fff;
+  color: var(--on-accent);
 }
 .step.done .num {
   background: var(--mint-soft);
@@ -427,7 +590,7 @@ textarea {
 }
 .btn:hover:not(:disabled) {
   background: var(--surface-2);
-  border-color: #ddcfd8;
+  border-color: var(--line-strong);
 }
 .btn:active:not(:disabled) {
   transform: translateY(1px);
@@ -440,7 +603,7 @@ textarea {
 .btn.primary {
   background: var(--rose);
   border-color: var(--rose);
-  color: #fff;
+  color: var(--on-accent);
   font-weight: 600;
 }
 .btn.primary:hover:not(:disabled) {
@@ -490,7 +653,7 @@ textarea {
 
 .page {
   position: relative;
-  background: #fff;
+  background: var(--surface);
   box-shadow: var(--shadow);
   border-radius: 3px;
   overflow: hidden;
@@ -620,7 +783,7 @@ textarea {
 .textview {
   max-width: 820px;
   margin: 0 auto;
-  background: #fff;
+  background: var(--surface);
   box-shadow: var(--shadow);
   border-radius: 4px;
   padding: 44px 52px;
@@ -765,7 +928,7 @@ textarea {
   border-bottom: 1px solid var(--line-soft);
 }
 .castrow:hover {
-  background: #fdf9fb;
+  background: var(--surface-3);
 }
 .castrow .orig {
   font-weight: 600;
@@ -808,7 +971,7 @@ textarea {
 .castrow input.rename:focus {
   outline: 2px solid var(--rose-tint);
   outline-offset: 1px;
-  background: #fff;
+  background: var(--surface);
 }
 
 .matchrow {
@@ -817,7 +980,7 @@ textarea {
   cursor: pointer;
 }
 .matchrow:hover {
-  background: #fdf9fb;
+  background: var(--surface-3);
 }
 .matchrow.selected {
   background: var(--rose-soft);
@@ -1012,7 +1175,7 @@ textarea {
   flex-wrap: wrap;
   margin-bottom: 20px;
   padding: 9px 14px;
-  border: 1px solid #e8d5ae;
+  border: 1px solid var(--amber-line);
   border-radius: var(--radius);
   background: var(--amber-soft);
   font-size: 12.5px;
@@ -1244,7 +1407,7 @@ textarea {
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(46, 33, 48, 0.32);
+  background: var(--fatyol);
   backdrop-filter: blur(2px);
   display: grid;
   place-items: center;
@@ -1293,7 +1456,7 @@ textarea {
   display: flex;
   gap: 9px;
   justify-content: flex-end;
-  background: #fdfbfc;
+  background: var(--surface-4);
 }
 
 /*
@@ -1625,7 +1788,7 @@ textarea:focus {
 }
 .langchip.on {
   background: var(--rose);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 /*
@@ -1728,14 +1891,14 @@ textarea:focus {
    kártya legfontosabb ténye — ezért kiemelt, de nem riasztó szín. */
 .kartyajel.sajat {
   background: var(--amber-soft);
-  border: 1px solid #e8d5ae;
+  border: 1px solid var(--amber-line);
   color: var(--amber);
 }
 /* AMIHEZ ELŐBB TÖLTENI KELL. Ugyanaz a borostyán jelentés, mint a modellsávé:
    „ez így még nem működik, de van rá teendő”. */
 .kartyajel.letoltes {
   background: var(--amber-soft);
-  border: 1px solid #e8d5ae;
+  border: 1px solid var(--amber-line);
   color: var(--amber);
 }
 
@@ -1873,18 +2036,18 @@ textarea:focus {
   padding: 10px 13px;
   font-size: 12.5px;
   line-height: 1.55;
-  color: #6b4a10;
+  color: var(--amber-deep);
   margin-bottom: 13px;
 }
 .note.good {
   border-left-color: var(--mint);
   background: var(--mint-soft);
-  color: #23594a;
+  color: var(--mint-deep);
 }
 .note.bad {
   border-left-color: var(--rose);
   background: var(--rose-soft);
-  color: #7d2c4c;
+  color: var(--rose-ink);
 }
 .note b {
   font-weight: 700;
@@ -1973,13 +2136,13 @@ textarea:focus {
   background: var(--rose);
 }
 .resultrow.al .dot.k-osszeg {
-  background: #17806a;
+  background: var(--zold);
 }
 .resultrow.al .dot.k-datum {
-  background: #2e6aa8;
+  background: var(--kek);
 }
 .resultrow.al .dot.k-hivatalos {
-  background: #7a4fa8;
+  background: var(--ibolya);
 }
 /*
   A `.panel-foot` KIKERÜLT: a mentés gombja a beállító lap KÖZÖS láblécébe
@@ -2289,7 +2452,7 @@ textarea:focus {
 }
 .step.warn .num {
   background: var(--rose);
-  color: #fff;
+  color: var(--on-accent);
 }
 .step.warn .label .t {
   color: var(--rose-deep);
@@ -2441,7 +2604,7 @@ textarea:focus {
   font-size: 12px;
   font-weight: 700;
   background: var(--muted);
-  color: #fff;
+  color: var(--on-accent);
 }
 .modelnote .macts {
   margin-top: 10px;
@@ -2459,7 +2622,7 @@ textarea:focus {
   background: var(--mint);
 }
 .modelnote.ok .mhead .t {
-  color: #23594a;
+  color: var(--mint-deep);
 }
 
 .modelnote.missing {
@@ -2471,7 +2634,7 @@ textarea:focus {
   background: var(--amber);
 }
 .modelnote.missing .mhead .t {
-  color: #6b4a10;
+  color: var(--amber-deep);
 }
 
 /* A hiba az egyetlen állapot, ami keretet is kap: ezen a ponton nem elég
@@ -2488,7 +2651,7 @@ textarea:focus {
   color: var(--rose-deep);
 }
 .modelnote.failed p.loud {
-  color: #7d2c4c;
+  color: var(--rose-ink);
   font-weight: 600;
 }
 
@@ -2499,7 +2662,7 @@ textarea:focus {
 }
 .step.soft .num {
   background: var(--muted);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 /*
@@ -2667,7 +2830,7 @@ textarea:focus {
   margin-bottom: 8px;
   font-size: 12.5px;
   line-height: 1.55;
-  color: #6b4a10;
+  color: var(--amber-deep);
 }
 .warnitem:last-child {
   margin-bottom: 0;
@@ -2697,7 +2860,7 @@ textarea:focus {
   gap: 10px;
   font-weight: 700;
   font-size: 12.5px;
-  color: #6b4a10;
+  color: var(--amber-deep);
   margin-bottom: 4px;
 }
 .autoreport .kfej .cut {
@@ -2717,7 +2880,7 @@ textarea:focus {
 .autoreport .kline {
   font-size: 12.5px;
   line-height: 1.55;
-  color: #6b4a10;
+  color: var(--amber-deep);
   margin-bottom: 6px;
 }
 .autoreport .kline b {
@@ -3312,7 +3475,7 @@ textarea:focus {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--surface);
   box-shadow: var(--shadow-sm);
   transition: transform 0.16s;
 }
@@ -3371,7 +3534,7 @@ textarea:focus {
   font-size: 12px;
 }
 .modellsav.hianyzik {
-  border-color: #e8d5ae;
+  border-color: var(--amber-line);
   background: var(--amber-soft);
 }
 .modellsav .t {
@@ -3418,7 +3581,7 @@ textarea:focus {
 .ds-teteje {
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: #fdfbfc;
+  background: var(--surface-4);
   padding: 4px 13px;
   margin-bottom: 14px;
 }
@@ -3534,17 +3697,17 @@ textarea:focus {
   --fghatter-ki: rgba(196, 87, 125, 0.03);
 }
 .fgroup.k-osszeg {
-  --fgszin: #17806a;
+  --fgszin: var(--zold);
   --fghatter: rgba(23, 128, 106, 0.08);
   --fghatter-ki: rgba(23, 128, 106, 0.03);
 }
 .fgroup.k-datum {
-  --fgszin: #2e6aa8;
+  --fgszin: var(--kek);
   --fghatter: rgba(46, 106, 168, 0.08);
   --fghatter-ki: rgba(46, 106, 168, 0.03);
 }
 .fgroup.k-hivatalos {
-  --fgszin: #7a4fa8;
+  --fgszin: var(--ibolya);
   --fghatter: rgba(122, 79, 168, 0.09);
   --fghatter-ki: rgba(122, 79, 168, 0.03);
 }
@@ -3658,7 +3821,7 @@ textarea:focus {
   border-bottom: 0;
 }
 .findrow:hover {
-  background: #fdf9fb;
+  background: var(--surface-3);
 }
 /*
   A LÉPEGETETT SOR: HÁTTÉR, NEM OLDALSÓ CSÍK.
@@ -3856,7 +4019,7 @@ textarea:focus {
 .lepbtn.szo.on {
   background: var(--fgszin, var(--rose));
   border-color: transparent;
-  color: #fff;
+  color: var(--on-accent);
   font-weight: 600;
 }
 /* A „Kihagy" bekapcsolva NEM a fajta színét kapja: az a csere színe. Sötét,
@@ -3935,7 +4098,7 @@ textarea:focus {
 */
 .btn.varakozik {
   background: var(--amber-soft);
-  border-color: #e6d3a8;
+  border-color: var(--amber-line);
   color: var(--amber);
   font-weight: 600;
   box-shadow: var(--shadow-sm);
@@ -4054,7 +4217,7 @@ textarea:focus {
   flex-wrap: wrap;
   padding: 12px 20px;
   border-top: 1px solid var(--line-soft);
-  background: #fdfbfc;
+  background: var(--surface-4);
 }
 .ds-sum {
   font-size: 12px;
@@ -4175,7 +4338,7 @@ textarea:focus {
   .app {
     height: auto;
     overflow: visible;
-    background: #fff;
+    background: var(--surface);
   }
   .setuppage,
   .setupdoc {
@@ -4184,7 +4347,7 @@ textarea:focus {
   .viewport {
     overflow: visible;
     padding: 0;
-    background: #fff;
+    background: var(--surface);
   }
   .textview {
     max-width: none;
@@ -4517,9 +4680,9 @@ textarea:focus {
   margin-right: 4px;
 }
 .viewport.osszevetes del.k-nev { text-decoration-color: var(--rose); }
-.viewport.osszevetes del.k-osszeg { text-decoration-color: #17806a; }
+.viewport.osszevetes del.k-osszeg { text-decoration-color: var(--zold); }
 .viewport.osszevetes del.k-datum { text-decoration-color: var(--kek); }
-.viewport.osszevetes del.k-hivatalos { text-decoration-color: #7a4fa8; }
+.viewport.osszevetes del.k-hivatalos { text-decoration-color: var(--ibolya); }
 
 /* A kijelölés KERET, nem kitöltés — ugyanaz a szabály, mint a lapképes
    kiemelésen: a kitöltés azt mondja meg, mi történik, a keret azt, melyiket
@@ -4620,4 +4783,23 @@ textarea:focus {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/*
+  A BIZONYTALAN ELŐFORDULÁSOK SZÁMA — pötty helyett szám.
+
+  Egy üres kis kör csak annyit mondott, hogy „van itt valami". A szám azt
+  mondja meg, amiből a felhasználó eldönti, nekiálljon-e: négy eldöntetlen
+  tizenhatból egészen más munka, mint tizenhatból tizenhat.
+
+  A BOROSTYÁN UGYANAZ, mint az iraton a bizonytalan kiemelésé, a
+  jelmagyarázatban és a „Végignézem" gombon — egy szín, egy jelentés.
+*/
+.fmeta .pill.bizonytalan {
+  background: var(--amber-soft);
+  border-color: var(--amber-line);
+  color: var(--amber);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }

@@ -1623,21 +1623,25 @@ function TalaltSor({
           )}
         </span>
         {/*
-          A „BIZONYTALAN” JELVÉNY HELYETT PÖTTY.
+          A PÖTTY HELYETT SZÁM: HÁNYBÓL HÁNY.
 
-          A felirat sok helyet vett el, és nem is mondta el, MI a bizonytalan
-          benne. A pötty csak jelez; a buboréksúgó megmondja, hány előfordulás
-          vár döntésre, és hogy a lépegetéssel lehet végigmenni rajtuk. A
-          pötty SOSEM az egyetlen jel: az iraton ugyanezek az előfordulások
-          borostyán színnel állnak, és a lap tetején is ott a darabszám.
+          Egy üres kis kör csak annyit mondott, hogy „van itt valami" — sem
+          azt, MI a bizonytalan, sem azt, MENNYI. A felhasználó vagy fölé vitte
+          az egeret a buboréksúgóért, vagy nem tudta meg. Márpedig épp ez az a
+          szám, ami alapján eldönti, hogy nekiáll-e a végignézésnek: négy
+          eldöntetlen tizenhatból egészen más munka, mint tizenhatból tizenhat.
+
+          A BOROSTYÁN MARAD. Ugyanaz a szín, mint az iraton a bizonytalan
+          kiemelésé, a jelmagyarázatban és a „Végignézem" gombon — a szem
+          ebből köti össze, hogy ugyanarról a négy előfordulásról van szó.
         */}
         {tetel.bizonytalanDb > 0 && (
           <span
-            className="dot bizonytalan"
-            role="img"
-            aria-label={`${tetel.bizonytalanDb} előfordulás döntésre vár`}
+            className="pill bizonytalan"
             title={`${tetel.bizonytalanDb} előfordulásról nem biztos a program, hogy név — ezekről még senki nem döntött. A „Végignézem” gombbal egyesével eldöntheted.`}
-          />
+          >
+            {tetel.bizonytalanDb}/{tetel.elofordulas} bizonytalan
+          </span>
         )}
         {/* A program döntött helyette: ez nem a felhasználó döntése volt,
             tehát jelezni kell — de elég egy üres pötty, a részletes lista a
