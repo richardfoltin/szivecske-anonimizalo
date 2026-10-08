@@ -1,0 +1,57 @@
+{
+  "name": "szivecske-anonymizer",
+  "language": "hu",
+  "description": "„Szivecske Anonimizáló”, a Windows desktop program (Electron) that pseudonymises Hungarian legal documents (PDF and Word) on the owner's machine; nothing goes to the internet; one area per top-level folder.",
+  "glossary": {
+    "src": "the anonymiser itself",
+    "test": "the tests",
+    "ui": "the user interface",
+    "samples": "synthetic sample documents (tracked test data)",
+    "data": "the dictionaries and data files",
+    "build": "the packaging",
+    "docs": "the documentation",
+    "spike": "the spike and its synthetic output",
+    "scripts": "the helper scripts (the old auto-commit among them)",
+    "electron": "the Electron shell",
+    ".github": "the CI workflow",
+    ".claude": "the Claude Code project settings",
+    "root": "a file at the top: README.md, SPIKE.md, package.json, package-lock.json, the Vite and TypeScript configs"
+  },
+  "areas": [
+    {
+      "pattern": "^([^/]+)/",
+      "area": "{1}"
+    },
+    {
+      "pattern": "^[^/]+$",
+      "area": "root"
+    }
+  ],
+  "tests": "^test/",
+  "diff_exclude": [
+    "package-lock.json"
+  ],
+  "prompt": {
+    "scopes": [
+      "src",
+      "src,ui"
+    ]
+  },
+  "veto": {
+    "paths": [
+      "\\.szkulcs$",
+      "\\.(pfx|p12|pem|key)$",
+      "(^|/)\\.env",
+      "\\.(pdf|docx|doc|rtf|xlsx)$"
+    ],
+    "except": [
+      "^(samples|spike/out)/"
+    ],
+    "tokens": [
+      "hf_[A-Za-z0-9]{20,}",
+      "ghp_[A-Za-z0-9]{20,}",
+      "github_pat_[A-Za-z0-9_]{20,}",
+      "sk-[A-Za-z0-9]{20,}"
+    ]
+  }
+}
