@@ -78,9 +78,9 @@ spike/out/*
 # tesztkészlet dőlne el tőle.
 #
 # A rés, amit ez nyitva hagy: egy alkönyvtárba (docs/, test/) mentett valódi
-# irat nem akad fenn rajta. Ezt a MÁSODIK ZÁR fogja meg — a
-# `scripts/auto-commit.sh` a commit előtt átnézi, mit venne fel, és veszélyes
-# mintánál megáll. A gitignore a szokásos utat zárja, a vészfék a szokatlant.
+# irat nem akad fenn rajta. Ezt a MÁSODIK ZÁR fogja meg — a fiók auto-commitja
+# (`~/.claude-board/scripts/auto-commit.sh`, a `.claude/auto-commit.json` vétója) a
+# commit előtt átnézi, mit venne fel, és veszélyes mintánál megáll. A gitignore a szokásos utat zárja, a vészfék a szokatlant.
 /*.pdf
 /*.docx
 /*.doc
